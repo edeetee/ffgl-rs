@@ -1,0 +1,6 @@
+[submodule "FFGLSDK"]
+    path = ./FFGLSDK
+    url = git@github.com:robksawyer/FFGLSDK.git
+[submodule "ffgl-resolume"]
+    path = ./ffgl-resolume
+    url = git@github.com:resolume/ffgl.git
