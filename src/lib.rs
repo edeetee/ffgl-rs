@@ -1,22 +1,24 @@
-#![feature(const_cstr_methods)]
-// #![feature(strict_provenance)]
-
-mod ffglrs;
-mod ffgl;
+mod conversions;
+mod ffi;
 mod instance;
 mod nenum_derive;
-mod gl;
 mod log;
-mod ffgl2;
+mod test_gl;
+mod renderer;
 
 use log::logln;
+use test_gl::TestGl;
 
 use std::{
     ffi::{c_void}, mem::transmute,
 };
 
-use ffglrs::*;
-use instance::FFGLInstance;
+use ffi::*;
+
+use conversions::*;
+use instance::FFGLData;
+
+type Instance = (FFGLData,TestGl);
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -24,7 +26,7 @@ use instance::FFGLInstance;
 pub extern "C" fn plugMain(
     functionCode: u32,
     inputValue: FFGLVal,
-    instanceID: *mut FFGLInstance,
+    instanceID: *mut Instance,
 ) -> FFGLVal {
     match Op::try_from(functionCode) {
         Ok(function) => {
@@ -75,7 +77,6 @@ static mut INFO: ffgl::PluginInfoStruct = ffgl::PluginInfoStruct {
     PluginType: ffgl::FF_SOURCE,
 };
 
-
 static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct = ffgl::PluginExtendedInfoStruct {
     PluginMajorVersion: 0,
     PluginMinorVersion: 0,
@@ -92,7 +93,7 @@ fn get_max_coords(tex: &ffgl::FFGLTextureStruct) -> (f32, f32) {
     (s, t)
 }
 
-fn plug_main(function: Op, inputValue: FFGLVal, instance: Option<&mut FFGLInstance>) -> FFGLVal {
+fn plug_main(function: Op, inputValue: FFGLVal, instance: Option<&mut Instance>) -> FFGLVal {
     match function {
         Op::FF_GETPLUGINCAPS => {
             let cap_num = unsafe { inputValue.num };
@@ -119,57 +120,58 @@ fn plug_main(function: Op, inputValue: FFGLVal, instance: Option<&mut FFGLInstan
             FFGLVal::from_static_mut(&mut INFO_EXTENDED)
         },
 
-
         Op::FF_INSTANTIATEGL => {
             let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
 
-            let new_inst = FFGLInstance::new(viewport);
-            log::logln!("INSTGL {new_inst:?} with viewport {viewport:?}");
+            let new_data = FFGLData::new(viewport);
+            let new_renderer = unsafe { TestGl::new() };
 
-            FFGLVal::from_static_mut(Box::leak(Box::new(new_inst)))
+            log::logln!("INSTGL\n{new_data:?} Renderer\n{new_renderer:?}");
+
+            FFGLVal::from_static_mut(Box::leak(Box::<Instance>::new((new_data, new_renderer))))
         }
 
         Op::FF_DEINSTANTIATEGL => {
             let inst = instance.unwrap();
 
             log::logln!("Deallocating instance {inst:?}");
+            unsafe {
+                drop(Box::from_raw(inst as *mut Instance));
+            }
 
             SuccessVal::FF_SUCCESS.into()
         }
 
         Op::FF_PROCESSOPENGL => {
             let gl_process_info: &ffgl::ProcessOpenGLStruct = unsafe { inputValue.as_ref() };
-            let inst = instance.unwrap();
+            let (data,renderer) = instance.unwrap();
 
             unsafe {
-                // gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, gl_process_info.HostFBO);
-                // gl::Viewport(
-                //     inst.viewport.x as i32,
-                //     inst.viewport.y as i32,
-                //     inst.viewport.width as i32,
-                //     inst.viewport.height as i32,
-                // );
-                gl::ClearColor(inst.host_beat.barPhase, 0.0, 0.0, 1.0);
+                gl::ClearColor(data.host_beat.barPhase, data.host_beat.barPhase*3.123, 0.0, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+
+                renderer.draw();
+
+                // gl::
             }
 
-            log::logln!("ProcessGL with struct\n{gl_process_info:#?} and\n{inst:#?}");
+            log::logln!("ProcessGL with struct\n{gl_process_info:#?} and\n{data:#?}");
 
             SuccessVal::FF_SUCCESS.into()
         }
 
         Op::FF_SETTIME => {
             let seconds: f64 = *unsafe { inputValue.as_ref() };
-            // log::logln!("Seconds: {seconds}");
-            instance.unwrap().set_time(seconds);
+            instance.unwrap().0.set_time(seconds);
             SuccessVal::FF_SUCCESS.into()
         }
+
+        //This is called before GLInitialize
         Op::FF_SET_BEATINFO => {
             let beat_info: &ffgl2::SetBeatinfoStruct = unsafe { inputValue.as_ref() };
-            // logln!("Beat Info {beat_info:?}");
             if let Some(instance) = instance {
-                instance.set_beat(*beat_info);
+                instance.0.set_beat(*beat_info);
             }
-            // instance.unwrap()
             SuccessVal::FF_SUCCESS.into()
         }
 

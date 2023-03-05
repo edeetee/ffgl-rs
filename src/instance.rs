@@ -2,16 +2,18 @@ use std::time::{Instant, Duration, UNIX_EPOCH, SystemTime};
 
 use crate::ffgl2;
 
+///Standard data that hosts provide to all programs
 #[derive(Debug)]
-pub struct FFGLInstance {
+pub struct FFGLData {
     pub created_at: Instant,
     pub viewport: crate::ffgl::FFGLViewportStruct,
     pub host_time: SystemTime,
-    pub host_beat: ffgl2::SetBeatinfoStruct
+    pub host_beat: ffgl2::SetBeatinfoStruct,
+    // pub ctx: 
 }
 
-impl FFGLInstance {
-    pub fn new(viewport: &crate::ffgl::FFGLViewportStruct) -> FFGLInstance {
+impl FFGLData {
+    pub fn new(viewport: &crate::ffgl::FFGLViewportStruct) -> FFGLData {
         Self {
             created_at: Instant::now(),
             viewport: viewport.clone(),
