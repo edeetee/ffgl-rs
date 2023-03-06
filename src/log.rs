@@ -1,13 +1,8 @@
-use std::{ffi::{CStr, c_char, CString}, sync::RwLock};
+use std::{ffi::{c_char, CString}, sync::RwLock};
 
-static mut loading_logger: std::sync::RwLock<Option<FFGLLogger>> = RwLock::new(None);
+pub static mut loading_logger: std::sync::RwLock<Option<FFGLLogger>> = RwLock::new(None);
 // #[repr("C")]
-type FFGLLogger = unsafe extern "C" fn(*const c_char) -> ();
-
-#[no_mangle]
-pub extern "C" fn SetLogCallback(logCallback: FFGLLogger) {
-    unsafe { *loading_logger.write().unwrap() = Some(logCallback) };
-}
+pub type FFGLLogger = unsafe extern "C" fn(*const c_char) -> ();
 
 pub fn inner_log(str: &str) {
     unsafe {
@@ -20,13 +15,14 @@ pub fn inner_log(str: &str) {
     }
 }
 
+#[macro_export]
 macro_rules! logln {
     () => {
        log!("/n");
     };
     ($($arg:tt)*) => {{
-        crate::log::inner_log(&format!($($arg)*));
+        $crate::log::inner_log(&format!($($arg)*));
     }};
 }
 
-pub(crate) use logln;
+pub use logln;

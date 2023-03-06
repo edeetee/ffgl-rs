@@ -1,3 +1,5 @@
+#![allow(clashing_extern_declarations)]
+
 #[cfg(target_os = "macos")]
 #[link(name = "OpenGL", kind = "framework")]
 extern "C" {}

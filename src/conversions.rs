@@ -79,10 +79,10 @@ enum_const!(
         FF_CAP_COPYORINPLACE,
         
         // Plugin optimization
-        FF_CAP_PREFER_NONE,
-        FF_CAP_PREFER_INPLACE,
-        FF_CAP_PREFER_COPY,
-        FF_CAP_PREFER_BOTH,
+        // FF_CAP_PREFER_NONE,
+        // FF_CAP_PREFER_INPLACE,
+        // FF_CAP_PREFER_COPY,
+        // FF_CAP_PREFER_BOTH,
         
         // new plugin capabilities for FFGL
         FF_CAP_SETTIME,

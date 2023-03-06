@@ -1,6 +1,6 @@
 use std::{mem::{size_of_val, size_of}, ffi::c_void, os::raw, ptr::null};
 
-use crate::gl;
+use crate::{ffgl::ffi::gl, ffgl::FFGLData, ffgl::FFGLHandler};
 
 #[derive(Debug)]
 pub struct TestGl {
@@ -8,8 +8,8 @@ pub struct TestGl {
     vertex_buffer_id: u32
 }
 
-impl TestGl {
-    pub unsafe fn new() -> Self {
+impl FFGLHandler for TestGl {
+    unsafe fn new(data: &FFGLData) -> Self {
         let mut vertex_array_id = 0;
         let mut vertex_buffer_id = 0;
 
@@ -47,7 +47,11 @@ impl TestGl {
         }
     }
 
-    pub unsafe fn draw(&self) {
+    unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct) {
+        //most basic test here
+        gl::ClearColor(data.host_beat.barPhase, data.host_beat.barPhase*3.123, 0.0, 1.0);
+        gl::Clear(gl::COLOR_BUFFER_BIT);
+
         gl::BindVertexArray(self.vertex_array_id);
         // gl::BindBuffer(gl::ARRAY_BUFFER, self.vertex_buffer_id);
 
