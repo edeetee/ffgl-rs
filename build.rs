@@ -4,12 +4,6 @@ use std::path::PathBuf;
 use std::path::Path;
 
 use bindgen::Bindings;
-use gl_generator::Api;
-use gl_generator::Fallbacks;
-use gl_generator::GlobalGenerator;
-use gl_generator::Profile;
-use gl_generator::Registry;
-use gl_generator::StaticGenerator;
 
 //shamelessly stolen from https://github.com/simlay/uikit-sys/blob/master/build.rs
 
@@ -87,13 +81,6 @@ fn main() {
             .generate().unwrap(),
         &out_dir.join("ffgl2.rs")
     );
-
-    // let dest = env::var("OUT_DIR").unwrap();
-    let mut file = File::create(&Path::new(&out_dir).join("gl.rs")).unwrap();
-
-    Registry::new(Api::Gl, (4, 6), Profile::Core, Fallbacks::All, [])
-        .write_bindings(StaticGenerator, &mut file)
-        .unwrap();
 }
 
 

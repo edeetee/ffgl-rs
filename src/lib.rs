@@ -9,14 +9,26 @@ pub use instance::FFGLData;
 
 // use log::logln;
 
-use std::{ffi::c_void, mem::transmute};
+use std::{ffi::c_void, mem::transmute, fmt::Debug};
 use ffi::*;
 
 pub use ffi::ffgl::ProcessOpenGLStruct;
 pub use conversions::*;
 pub use log::{loading_logger, FFGLLogger};
-pub type Instance<T> = (FFGLData, T);
 
+pub struct Instance<T> {
+    data: FFGLData,
+    renderer: T
+}
+
+impl <T> Debug for Instance<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Instance")
+            .field("data", &self.data)
+            .field("renderer", &stringify!(T))
+            .finish()
+    }
+}
 
 #[derive(PartialEq)]
 enum FFGLVersion {
@@ -77,7 +89,7 @@ fn get_max_coords(tex: &ffgl::FFGLTextureStruct) -> (f32, f32) {
     (s, t)
 }
 
-pub trait FFGLHandler: std::fmt::Debug {
+pub trait FFGLHandler {
     unsafe fn info() -> &'static mut ffgl::PluginInfoStruct {
         static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
         &mut INFO
@@ -124,12 +136,13 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         Op::FF_INSTANTIATEGL => {
             let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
 
-            let new_data = FFGLData::new(viewport);
-            let new_renderer = unsafe { T::new(&new_data) };
+            let data = FFGLData::new(viewport);
+            let renderer = unsafe { T::new(&data) };
+            let instance = Instance { data, renderer };
 
-            log::logln!("INSTGL\n{new_data:?} Renderer\n{new_renderer:?}");
+            log::logln!("INSTGL\n{instance:?}");
 
-            FFGLVal::from_static_mut(Box::leak(Box::<Instance<T>>::new((new_data, new_renderer))))
+            FFGLVal::from_static_mut(Box::leak(Box::<Instance<T>>::new(instance)))
         }
 
         Op::FF_DEINSTANTIATEGL => {
@@ -145,20 +158,20 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         Op::FF_PROCESSOPENGL => {
             let gl_process_info: &ffgl::ProcessOpenGLStruct = unsafe { inputValue.as_ref() };
-            let (data, renderer) = instance.unwrap();
+            let Instance{data, renderer} = instance.unwrap();
 
             unsafe {
                 renderer.draw(&data, &gl_process_info);
             }
 
-            log::logln!("ProcessGL with struct\n{gl_process_info:#?}\n{data:#?}\n{renderer:#?}");
+            log::logln!("ProcessGL with struct\n{gl_process_info:#?}\n{data:#?}\n{:#?}", stringify!(renderer));
 
             SuccessVal::FF_SUCCESS.into()
         }
 
         Op::FF_SETTIME => {
             let seconds: f64 = *unsafe { inputValue.as_ref() };
-            instance.unwrap().0.set_time(seconds);
+            instance.unwrap().data.set_time(seconds);
             SuccessVal::FF_SUCCESS.into()
         }
 
@@ -166,7 +179,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         Op::FF_SET_BEATINFO => {
             let beat_info: &ffgl2::SetBeatinfoStruct = unsafe { inputValue.as_ref() };
             if let Some(instance) = instance {
-                instance.0.set_beat(*beat_info);
+                instance.data.set_beat(*beat_info);
             }
             SuccessVal::FF_SUCCESS.into()
         }

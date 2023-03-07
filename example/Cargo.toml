@@ -11,3 +11,7 @@ panic="abort"
 
 [dependencies]
 ffgl = { path=".." }
+gl_loader = { version = "0.1.2" }
+
+[build-dependencies]
+gl_generator = "0.14.0"

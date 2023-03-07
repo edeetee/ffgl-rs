@@ -14,7 +14,6 @@ panic="abort"
 
 [build-dependencies]
 bindgen = "0.63.0"
-gl_generator = "0.14.0"
 
 [profile.release]
 panic = 'abort'
