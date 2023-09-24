@@ -1,15 +1,14 @@
-
-
+///Auto conversion between enum and numbers
 macro_rules! enum_const {
-    ( 
+    (
         $ty:ty,
-        $vis:vis enum $enum:ident { 
-            $( $item:ident ), 
+        $vis:vis enum $enum:ident {
+            $( $item:ident ),
             *
             // $(item:ident = $expr:expr),*
             $(,)*
-        } 
-    ) => {					
+        }
+    ) => {
         #[derive(Debug)]
         $vis enum $enum {
             $(
@@ -29,7 +28,7 @@ macro_rules! enum_const {
                 }
             }
         }
-        
+
         impl Into<$ty> for $enum {
             fn into(self) -> $ty {
                 match self {

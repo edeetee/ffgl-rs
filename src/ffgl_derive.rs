@@ -14,14 +14,16 @@ macro_rules! ffgl_handler {
         ) -> $crate::conversions::FFGLVal {
             match $crate::conversions::Op::try_from(functionCode) {
                 Ok(function) => {
-                    $crate::logln!("Op::{function:?}");
-                    $crate::default_ffgl_callback(function, inputValue, unsafe{ instanceID.as_mut() })
-                },
+                    // $crate::logln!("Op::{function:?}");
+                    $crate::default_ffgl_callback(function, inputValue, unsafe {
+                        instanceID.as_mut()
+                    })
+                }
                 Err(err) => {
                     let err_text = format!("Received fnCode {functionCode:?}");
                     $crate::logln!("Failed to parse fnCode {functionCode}");
                     panic!();
-                },
+                }
             }
         }
 

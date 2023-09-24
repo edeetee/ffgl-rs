@@ -2,30 +2,31 @@ mod ffgl_derive;
 mod instance;
 mod nenum_derive;
 
-pub mod ffi;
 pub mod conversions;
+pub mod ffi;
 pub mod log;
 pub use instance::FFGLData;
 
 // use log::logln;
 
-use std::{ffi::c_void, mem::transmute, fmt::Debug};
+use core::fmt;
 use ffi::*;
+use std::{ffi::c_void, fmt::Debug, mem::transmute};
 
-pub use ffi::ffgl::ProcessOpenGLStruct;
 pub use conversions::*;
+pub use ffi::ffgl::*;
 pub use log::{loading_logger, FFGLLogger};
 
 pub struct Instance<T> {
     data: FFGLData,
-    renderer: T
+    renderer: T,
 }
 
-impl <T> Debug for Instance<T> {
+impl<T> Debug for Instance<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Instance")
             .field("data", &self.data)
-            .field("renderer", &stringify!(T))
+            .field("renderer", &std::any::type_name::<T>())
             .finish()
     }
 }
@@ -59,9 +60,9 @@ const fn chars<const N: usize>(input: &[u8; N]) -> &[i8; N] {
 }
 
 // static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
-// static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct = 
+// static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct =
 
-pub const fn plugin_info(uniqueId: &[u8;4], name: &[u8;16]) -> ffgl::PluginInfoStruct {
+pub const fn plugin_info(uniqueId: &[u8; 4], name: &[u8; 16]) -> ffgl::PluginInfoStruct {
     ffgl::PluginInfoStruct {
         APIMajorVersion: FFGL_VERSION.major(),
         APIMinorVersion: FFGL_VERSION.minor(),
@@ -71,7 +72,10 @@ pub const fn plugin_info(uniqueId: &[u8;4], name: &[u8;16]) -> ffgl::PluginInfoS
     }
 }
 
-pub const fn plugin_info_extended(about: &'static str, description: &'static str) -> ffgl::PluginExtendedInfoStruct {
+pub const fn plugin_info_extended(
+    about: &'static str,
+    description: &'static str,
+) -> ffgl::PluginExtendedInfoStruct {
     ffgl::PluginExtendedInfoStruct {
         PluginMajorVersion: 0,
         PluginMinorVersion: 0,
@@ -89,17 +93,19 @@ fn get_max_coords(tex: &ffgl::FFGLTextureStruct) -> (f32, f32) {
     (s, t)
 }
 
-pub trait FFGLHandler {
+pub trait FFGLHandler: Debug {
     unsafe fn info() -> &'static mut ffgl::PluginInfoStruct {
         static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
         &mut INFO
     }
 
     unsafe fn info_extended() -> &'static mut ffgl::PluginExtendedInfoStruct {
-        static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct = plugin_info_extended("Edward Taylor\0", "Built with Rust\0");
+        static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct =
+            plugin_info_extended("Edward Taylor\0", "Built with Rust\0");
         &mut INFO_EXTENDED
     }
 
+    ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct);
 }
@@ -107,16 +113,24 @@ pub trait FFGLHandler {
 pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     function: Op,
     inputValue: FFGLVal,
-    instance: Option<&mut Instance<T>>
+    instance: Option<&mut Instance<T>>,
 ) -> FFGLVal {
+    match function {
+        Op::FF_PROCESSOPENGL
+        | Op::FF_SET_BEATINFO
+        | Op::FF_SETTIME
+        | Op::FF_GET_PARAMETER_EVENTS => {}
+        _ => {
+            log::logln!("Op::{function:?}({})", unsafe { inputValue.num });
+        }
+    }
+
     match function {
         Op::FF_GETPLUGINCAPS => {
             let cap_num = unsafe { inputValue.num };
-            log::logln!("Parsing CAP{cap_num}");
-            let cap = PluginCapacity::try_from(cap_num).expect("Unexpected cap value{cap_num}");
-            log::logln!("Cap: {cap:?}");
+            let cap = num::FromPrimitive::from_u32(cap_num).expect("Unexpected cap n{cap_num}");
 
-            match cap {
+            let result = match cap {
                 PluginCapacity::FF_CAP_MINIMUMINPUTFRAMES => FFGLVal { num: 0 },
                 PluginCapacity::FF_CAP_MAXIMUMINPUTFRAMES => FFGLVal { num: 0 },
 
@@ -124,7 +138,11 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 PluginCapacity::FF_CAP_SETTIME => SupportVal::FF_SUPPORTED.into(),
 
                 _ => SupportVal::FF_UNSUPPORTED.into(),
-            }
+            };
+
+            log::logln!("{cap:?} => {}", unsafe { result.num });
+
+            result
         }
 
         Op::FF_GETNUMPARAMETERS => FFGLVal { num: 0 },
@@ -140,15 +158,19 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let renderer = unsafe { T::new(&data) };
             let instance = Instance { data, renderer };
 
-            log::logln!("INSTGL\n{instance:?}");
+            log::logln!("INSTGL\n{instance:#?}");
 
             FFGLVal::from_static_mut(Box::leak(Box::<Instance<T>>::new(instance)))
         }
 
+        // Op::FF_RESIZE => {
+        //     let inst = instance.unwrap();
+        //     inst.data.viewport = unsafe { inputValue.as_ref() };
+        // }
         Op::FF_DEINSTANTIATEGL => {
             let inst = instance.unwrap();
 
-            log::logln!("Deallocating instance {inst:?}");
+            log::logln!("DEINSTGL\n{inst:#?}");
             unsafe {
                 drop(Box::from_raw(inst as *mut Instance<T>));
             }
@@ -158,13 +180,11 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         Op::FF_PROCESSOPENGL => {
             let gl_process_info: &ffgl::ProcessOpenGLStruct = unsafe { inputValue.as_ref() };
-            let Instance{data, renderer} = instance.unwrap();
+            let Instance { data, renderer } = instance.unwrap();
 
             unsafe {
                 renderer.draw(&data, &gl_process_info);
             }
-
-            log::logln!("ProcessGL with struct\n{gl_process_info:#?}\n{data:#?}\n{:#?}", stringify!(renderer));
 
             SuccessVal::FF_SUCCESS.into()
         }
@@ -181,6 +201,13 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             if let Some(instance) = instance {
                 instance.data.set_beat(*beat_info);
             }
+            SuccessVal::FF_SUCCESS.into()
+        }
+
+        Op::FF_RESIZE => {
+            let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
+            log::logln!("RESIZE\n{viewport:#?}");
+            // instance.unwrap().data.set_viewport(viewport);
             SuccessVal::FF_SUCCESS.into()
         }
 

@@ -4,16 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type=["lib"]
-panic="abort"
+crate-type = ["lib"]
+panic = "abort"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+num = "0.4"
+num-derive = "0.4.0"
+num-traits = "0.2"
 # gl = "0.14.0"
 
 [build-dependencies]
 bindgen = "0.63.0"
+
 
 [profile.release]
 panic = 'abort'
