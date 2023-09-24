@@ -1,15 +1,10 @@
-mod ffgl_derive;
-mod instance;
-mod nenum_derive;
-
 pub mod conversions;
+mod ffgl_derive;
 pub mod ffi;
+mod instance;
 pub mod log;
 pub use instance::FFGLData;
 
-// use log::logln;
-
-use core::fmt;
 use ffi::*;
 use std::{ffi::c_void, fmt::Debug, mem::transmute};
 
