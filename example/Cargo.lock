@@ -79,6 +79,7 @@ name = "ffgl"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "gl",
  "num",
  "num-derive",
  "num-traits",
@@ -91,6 +92,15 @@ dependencies = [
  "ffgl",
  "gl_generator",
  "gl_loader",
+]
+
+[[package]]
+name = "gl"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a94edab108827d67608095e269cf862e60d920f144a5026d3dbcfd8b877fb404"
+dependencies = [
+ "gl_generator",
 ]
 
 [[package]]

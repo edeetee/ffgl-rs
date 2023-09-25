@@ -4,6 +4,7 @@ pub mod ffi;
 mod instance;
 pub mod log;
 pub use instance::FFGLData;
+pub mod validate;
 
 use ffi::*;
 use std::{ffi::c_void, fmt::Debug, mem::transmute};
@@ -132,6 +133,10 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 PluginCapacity::FF_CAP_PROCESSOPENGL => SupportVal::FF_SUPPORTED.into(),
                 PluginCapacity::FF_CAP_SETTIME => SupportVal::FF_SUPPORTED.into(),
 
+                PluginCapacity::FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION => {
+                    SupportVal::FF_UNSUPPORTED.into()
+                }
+
                 _ => SupportVal::FF_UNSUPPORTED.into(),
             };
 
@@ -178,7 +183,9 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let Instance { data, renderer } = instance.unwrap();
 
             unsafe {
+                // validate::validate_context_state();
                 renderer.draw(&data, &gl_process_info);
+                // validate::validate_context_state();
             }
 
             SuccessVal::FF_SUCCESS.into()
