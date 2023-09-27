@@ -6,54 +6,54 @@ use std::ffi::c_void;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::ffgl::*;
-use crate::ffgl2::{
-    FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION, FF_ENABLE_PLUGIN_CAP, FF_GET_PARAMETER_EVENTS,
-    FF_GET_THUMBNAIL, FF_INITIALISE_V2,
+use crate::ffgl::{FF_CAP_MINIMUMINPUTFRAMES, FF_CAP_SETTIME};
+use crate::{
+    ffgl2::*, FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_PROCESSFRAMECOPY,
+    FF_CAP_PROCESSOPENGL,
 };
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum Op {
-    FF_GETINFO,
-    FF_INITIALISE,
-    FF_DEINITIALISE,
-    FF_PROCESSFRAME,
-    FF_GETNUMPARAMETERS,
-    FF_GETPARAMETERNAME,
-    FF_GETPARAMETERDEFAULT,
-    FF_GETPARAMETERDISPLAY,
-    FF_SETPARAMETER,
-    FF_GETPARAMETER,
-    FF_GETPLUGINCAPS,
-    FF_INSTANTIATE,
-    FF_DEINSTANTIATE,
-    FF_GETEXTENDEDINFO,
-    FF_PROCESSFRAMECOPY,
-    FF_GETPARAMETERTYPE,
-    FF_GETIPUTSTATUS,
+    GetInfo = 0,
+    Initialise,
+    Deinitialise,
+    ProcessFrame,
+    GetNumParameters,
+    GetParameterName,
+    GetParameterDefault,
+    GetParameterDisplay,
+    SetParameter,
+    GetParameter,
+    GetPluginCaps,
+    Instantiate,
+    Deinstantiate,
+    GetExtendedInfo,
+    ProcessFrameCopy,
+    GetParameterType,
+    GetInputStatus,
 
-    FF_PROCESSOPENGL,
-    FF_INSTANTIATEGL,
-    FF_DEINSTANTIATEGL,
-    FF_SETTIME,
-    FF_CONNECT,
-    FF_DISCONNECT,
-    FF_RESIZE,
-    FF_INITIALISE_V2 = FF_INITIALISE_V2,
+    ProcessOpenGL,
+    InstantiateGL,
+    DeinstantiateGL,
+    SetTime,
+    Connect,
+    Disconnect,
+    Resize,
+    InitialiseV2 = FF_INITIALISE_V2,
 
-    //FFGL2
-    FF_GET_PLUGIN_SHORT_NAME = 33,
+    // FFGL2
+    GetPluginShortName = FF_GET_PLUGIN_SHORT_NAME,
 
-    FF_SET_BEATINFO = 38,
-    FF_SET_HOSTINFO,
-    FF_SET_SAMPLERATE,
+    SetBeatInfo = FF_SET_BEATINFO,
+    SetHostInfo,
+    SetSampleRate,
 
-    FF_GET_THUMBNAIL = FF_GET_THUMBNAIL,
+    GetThumbnail = FF_GET_THUMBNAIL,
 
-    FF_GET_PARAMETER_EVENTS = FF_GET_PARAMETER_EVENTS,
+    GetParameterEvents = FF_GET_PARAMETER_EVENTS,
 
-    FF_ENABLE_PLUGIN_CAP = FF_ENABLE_PLUGIN_CAP,
+    EnablePluginCap = FF_ENABLE_PLUGIN_CAP,
 }
 
 impl TryFrom<u32> for Op {
@@ -67,40 +67,41 @@ impl TryFrom<u32> for Op {
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum PluginCapacity {
-    ///DEPRECIATED
-    FF_CAP_16BITVIDEO,
-    FF_CAP_24BITVIDEO,
-    FF_CAP_32BITVIDEO,
-    FF_CAP_PROCESSFRAMECOPY,
-    FF_CAP_PROCESSOPENGL,
+    ///old
+    Video16b = FF_CAP_16BITVIDEO,
+    Video24 = FF_CAP_24BITVIDEO,
+    Video32 = FF_CAP_32BITVIDEO,
+    ProcessFrameCopy = FF_CAP_PROCESSFRAMECOPY,
 
-    FF_CAP_SETTIME = FF_CAP_SETTIME,
+    ProcessOpenGl = FF_CAP_PROCESSOPENGL,
 
-    FF_CAP_MINIMUMINPUTFRAMES = FF_CAP_MINIMUMINPUTFRAMES,
-    FF_CAP_MAXIMUMINPUTFRAMES,
+    SetTime = FF_CAP_SETTIME,
 
-    FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION = FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION,
+    MinInputFrames = FF_CAP_MINIMUMINPUTFRAMES,
+    MaxInputFrames = FF_CAP_MAXIMUM_INPUT_FRAMES,
+
+    TopLeftTextureOrientation = FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION,
 }
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum SuccessVal {
-    FF_SUCCESS,
-    FF_FAIL = FF_FAIL,
+    Success = FF_SUCCESS,
+    Fail = FF_FAIL,
 }
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum BoolVal {
-    FF_TRUE = FF_TRUE,
-    FF_FALSE = FF_FALSE,
+    True = FF_TRUE,
+    False = FF_FALSE,
 }
 
 #[repr(u32)]
 #[derive(FromPrimitive, ToPrimitive, Debug)]
 pub enum SupportVal {
-    FF_SUPPORTED = FF_SUPPORTED,
-    FF_UNSUPPORTED = FF_UNSUPPORTED,
+    Supported = FF_SUPPORTED,
+    Unsupported = FF_UNSUPPORTED,
 }
 
 #[repr(C)]

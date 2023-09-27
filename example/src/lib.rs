@@ -1,4 +1,3 @@
-mod gl;
 mod test_empty;
 mod test_gl;
 use ffgl;

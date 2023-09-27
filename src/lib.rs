@@ -3,6 +3,7 @@ mod ffgl_derive;
 pub mod ffi;
 mod instance;
 pub mod log;
+pub mod parameters;
 pub use instance::FFGLData;
 pub mod validate;
 
@@ -112,32 +113,27 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     instance: Option<&mut Instance<T>>,
 ) -> FFGLVal {
     match function {
-        Op::FF_PROCESSOPENGL
-        | Op::FF_SET_BEATINFO
-        | Op::FF_SETTIME
-        | Op::FF_GET_PARAMETER_EVENTS => {}
+        Op::ProcessOpenGL | Op::SetBeatInfo | Op::SetTime | Op::GetParameterEvents => {}
         _ => {
             log::logln!("Op::{function:?}({})", unsafe { inputValue.num });
         }
     }
 
     match function {
-        Op::FF_GETPLUGINCAPS => {
+        Op::GetPluginCaps => {
             let cap_num = unsafe { inputValue.num };
             let cap = num::FromPrimitive::from_u32(cap_num).expect("Unexpected cap n{cap_num}");
 
             let result = match cap {
-                PluginCapacity::FF_CAP_MINIMUMINPUTFRAMES => FFGLVal { num: 0 },
-                PluginCapacity::FF_CAP_MAXIMUMINPUTFRAMES => FFGLVal { num: 0 },
+                PluginCapacity::MinInputFrames => FFGLVal { num: 0 },
+                PluginCapacity::MaxInputFrames => FFGLVal { num: 0 },
 
-                PluginCapacity::FF_CAP_PROCESSOPENGL => SupportVal::FF_SUPPORTED.into(),
-                PluginCapacity::FF_CAP_SETTIME => SupportVal::FF_SUPPORTED.into(),
+                PluginCapacity::ProcessOpenGl => SupportVal::Supported.into(),
+                PluginCapacity::SetTime => SupportVal::Supported.into(),
 
-                PluginCapacity::FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION => {
-                    SupportVal::FF_UNSUPPORTED.into()
-                }
+                PluginCapacity::TopLeftTextureOrientation => SupportVal::Unsupported.into(),
 
-                _ => SupportVal::FF_UNSUPPORTED.into(),
+                _ => SupportVal::Unsupported.into(),
             };
 
             log::logln!("{cap:?} => {}", unsafe { result.num });
@@ -145,13 +141,13 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             result
         }
 
-        Op::FF_GETNUMPARAMETERS => FFGLVal { num: 0 },
+        Op::GetNumParameters => FFGLVal { num: 0 },
 
-        Op::FF_GETINFO => unsafe { FFGLVal::from_static_mut(T::info()) },
+        Op::GetInfo => unsafe { FFGLVal::from_static_mut(T::info()) },
 
-        Op::FF_GETEXTENDEDINFO => unsafe { FFGLVal::from_static_mut(T::info_extended()) },
+        Op::GetExtendedInfo => unsafe { FFGLVal::from_static_mut(T::info_extended()) },
 
-        Op::FF_INSTANTIATEGL => {
+        Op::InstantiateGL => {
             let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
 
             let data = FFGLData::new(viewport);
@@ -167,7 +163,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         //     let inst = instance.unwrap();
         //     inst.data.viewport = unsafe { inputValue.as_ref() };
         // }
-        Op::FF_DEINSTANTIATEGL => {
+        Op::DeinstantiateGL => {
             let inst = instance.unwrap();
 
             log::logln!("DEINSTGL\n{inst:#?}");
@@ -175,10 +171,10 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 drop(Box::from_raw(inst as *mut Instance<T>));
             }
 
-            SuccessVal::FF_SUCCESS.into()
+            SuccessVal::Success.into()
         }
 
-        Op::FF_PROCESSOPENGL => {
+        Op::ProcessOpenGL => {
             let gl_process_info: &ffgl::ProcessOpenGLStruct = unsafe { inputValue.as_ref() };
             let Instance { data, renderer } = instance.unwrap();
 
@@ -188,42 +184,41 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 // validate::validate_context_state();
             }
 
-            SuccessVal::FF_SUCCESS.into()
+            SuccessVal::Success.into()
         }
 
-        Op::FF_SETTIME => {
+        Op::SetTime => {
             let seconds: f64 = *unsafe { inputValue.as_ref() };
             instance.unwrap().data.set_time(seconds);
-            SuccessVal::FF_SUCCESS.into()
+            SuccessVal::Success.into()
         }
 
         //This is called before GLInitialize
-        Op::FF_SET_BEATINFO => {
+        Op::SetBeatInfo => {
             let beat_info: &ffgl2::SetBeatinfoStruct = unsafe { inputValue.as_ref() };
             if let Some(instance) = instance {
                 instance.data.set_beat(*beat_info);
             }
-            SuccessVal::FF_SUCCESS.into()
+            SuccessVal::Success.into()
         }
 
-        Op::FF_RESIZE => {
+        Op::Resize => {
             let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
             log::logln!("RESIZE\n{viewport:#?}");
             // instance.unwrap().data.set_viewport(viewport);
-            SuccessVal::FF_SUCCESS.into()
+            SuccessVal::Success.into()
         }
 
-        Op::FF_CONNECT => SuccessVal::FF_SUCCESS.into(),
+        Op::Connect => SuccessVal::Success.into(),
 
-        Op::FF_INSTANTIATE
-        | Op::FF_DEINSTANTIATE
-        | Op::FF_PROCESSFRAME
-        | Op::FF_PROCESSFRAMECOPY => SuccessVal::FF_FAIL.into(),
+        Op::Instantiate | Op::Deinstantiate | Op::ProcessFrame | Op::ProcessFrameCopy => {
+            SuccessVal::Fail.into()
+        }
 
-        Op::FF_INITIALISE_V2 => SuccessVal::FF_SUCCESS.into(),
-        Op::FF_INITIALISE => SuccessVal::FF_SUCCESS.into(),
-        Op::FF_DEINITIALISE => SuccessVal::FF_SUCCESS.into(),
+        Op::InitialiseV2 => SuccessVal::Success.into(),
+        Op::Initialise => SuccessVal::Success.into(),
+        Op::Deinitialise => SuccessVal::Success.into(),
 
-        _ => SuccessVal::FF_FAIL.into(),
+        _ => SuccessVal::Fail.into(),
     }
 }

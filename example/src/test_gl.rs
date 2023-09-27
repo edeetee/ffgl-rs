@@ -1,3 +1,5 @@
+use ffgl::validate;
+
 use crate::shader_helper::*;
 use std::{
     ffi::{c_void, CString},
@@ -6,11 +8,8 @@ use std::{
     ptr::{self, null},
 };
 
-use crate::{
-    ffgl::FFGLData,
-    ffgl::FFGLHandler,
-    gl::{self, types::*},
-};
+use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
+use gl::{self, types::*};
 
 #[derive(Debug)]
 pub struct TestGl {
@@ -120,6 +119,8 @@ impl FFGLHandler for TestGl {
         gl::DrawArrays(gl::TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 
         gl::BindVertexArray(0);
+
+        // validate::validate_context_state();
         // gl::UseProgram(0);
     }
 }

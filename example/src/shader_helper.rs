@@ -5,11 +5,9 @@ use std::{
     ptr::{self, null},
 };
 
-use crate::{
-    ffgl::FFGLData,
-    ffgl::FFGLHandler,
-    gl::{self, types::*},
-};
+use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
+
+use gl::{self, types::*};
 
 pub fn compile_shader(src: &str, ty: GLenum) -> GLuint {
     let shader;
