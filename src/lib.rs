@@ -1,6 +1,6 @@
 pub mod conversions;
 mod ffgl_derive;
-pub mod ffi;
+mod ffi;
 mod instance;
 pub mod log;
 pub mod parameters;
@@ -11,8 +11,6 @@ pub use ffi::*;
 pub use parameters::Param;
 
 use std::{ffi::c_void, fmt::Debug, mem::transmute};
-
-pub use ffi::ffgl::ProcessOpenGLStruct;
 
 pub use conversions::*;
 pub use log::{loading_logger, FFGLLogger};
@@ -107,7 +105,9 @@ pub trait FFGLHandler: Debug {
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
-    fn params(&self) -> &[Param];
+    fn params(&self) -> &[Param] {
+        &[]
+    }
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct);
 }
 
