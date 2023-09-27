@@ -8,8 +8,11 @@ pub use instance::FFGLData;
 pub mod validate;
 
 pub use ffi::*;
+pub use parameters::Param;
 
 use std::{ffi::c_void, fmt::Debug, mem::transmute};
+
+pub use ffi::ffgl::ProcessOpenGLStruct;
 
 pub use conversions::*;
 pub use log::{loading_logger, FFGLLogger};
@@ -104,7 +107,16 @@ pub trait FFGLHandler: Debug {
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
+    fn params(&self) -> &[Param];
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct);
+}
+
+fn params<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &[Param] {
+    instance.unwrap().renderer.params()
+}
+
+fn param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: FFGLVal) -> &Param {
+    &params(instance)[unsafe { index.num as usize }]
 }
 
 pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
@@ -141,11 +153,19 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             result
         }
 
-        Op::GetNumParameters => FFGLVal { num: 0 },
+        Op::GetNumParameters => FFGLVal {
+            num: params(instance).len() as u32,
+        },
 
-        Op::GetInfo => unsafe { FFGLVal::from_static_mut(T::info()) },
+        Op::GetParameterDefault => param(instance, inputValue).default().into(),
 
-        Op::GetExtendedInfo => unsafe { FFGLVal::from_static_mut(T::info_extended()) },
+        Op::GetParameterDisplay => param(instance, inputValue).display_name.into(),
+        Op::GetParameterName => param(instance, inputValue).name.into(),
+        Op::GetParameter => param(instance, inputValue).value.into(),
+
+        Op::GetInfo => unsafe { T::info().into() },
+
+        Op::GetExtendedInfo => unsafe { T::info_extended().into() },
 
         Op::InstantiateGL => {
             let viewport: &ffgl::FFGLViewportStruct = unsafe { inputValue.as_ref() };
@@ -156,7 +176,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             log::logln!("INSTGL\n{instance:#?}");
 
-            FFGLVal::from_static_mut(Box::leak(Box::<Instance<T>>::new(instance)))
+            FFGLVal::from_static(Box::leak(Box::<Instance<T>>::new(instance)))
         }
 
         // Op::FF_RESIZE => {

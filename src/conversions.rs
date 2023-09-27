@@ -118,9 +118,21 @@ impl std::fmt::Debug for FFGLVal {
     }
 }
 
+impl<T: ?Sized> From<&'static T> for FFGLVal {
+    fn from(a: &'static T) -> Self {
+        Self::from_static(a)
+    }
+}
+
+impl<T> From<&'static mut T> for FFGLVal {
+    fn from(a: &'static mut T) -> Self {
+        Self::from_static(a)
+    }
+}
+
 impl FFGLVal {
     ///Only use for const variables that will stick around
-    pub fn from_static_mut(a: &'static mut impl Any) -> Self {
+    pub fn from_static<T: ?Sized>(a: &'static T) -> Self {
         Self {
             ptr: a as *const _ as *const c_void,
         }
