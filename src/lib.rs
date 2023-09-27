@@ -7,11 +7,11 @@ pub mod parameters;
 pub use instance::FFGLData;
 pub mod validate;
 
-use ffi::*;
+pub use ffi::*;
+
 use std::{ffi::c_void, fmt::Debug, mem::transmute};
 
 pub use conversions::*;
-pub use ffi::ffgl::*;
 pub use log::{loading_logger, FFGLLogger};
 
 pub struct Instance<T> {

@@ -100,7 +100,7 @@ impl FFGLHandler for TestGl {
         }
     }
 
-    unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct) {
+    unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ffgl::ProcessOpenGLStruct) {
         //most basic test here
         gl::ClearColor(
             data.host_beat.barPhase,

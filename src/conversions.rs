@@ -6,16 +6,16 @@ use std::ffi::c_void;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::ffgl::{FF_CAP_MINIMUMINPUTFRAMES, FF_CAP_SETTIME};
-use crate::{
-    ffgl2::*, FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_PROCESSFRAMECOPY,
-    FF_CAP_PROCESSOPENGL,
+use crate::ffgl::{
+    FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
+    FF_CAP_PROCESSFRAMECOPY, FF_CAP_PROCESSOPENGL, FF_CAP_SETTIME, FF_GETINFO,
 };
+use crate::ffgl2::*;
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum Op {
-    GetInfo = 0,
+    GetInfo = FF_GETINFO,
     Initialise,
     Deinitialise,
     ProcessFrame,
