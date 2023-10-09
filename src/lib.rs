@@ -9,10 +9,10 @@ pub mod validate;
 
 pub use ffi::*;
 pub use parameters::Param;
-use parameters::{BasicParam, ParamValue, ParameterTypes, ParameterUsages};
+use parameters::{ParamValue};
 
 use std::{
-    ffi::{c_void, CStr},
+    ffi::{c_void},
     fmt::Debug,
     mem::transmute,
 };
@@ -131,7 +131,7 @@ pub trait FFGLHandler: Debug {
 //     &TEST_PARAMS
 // }
 
-fn param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
+fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
     &T::params()[unsafe { index.num as usize }]
 }
 
