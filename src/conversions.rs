@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 
 use std::any::Any;
-use std::ffi::c_void;
+use std::ffi::{c_void, CStr, CString};
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
@@ -52,6 +52,10 @@ pub enum Op {
     GetThumbnail = FF_GET_THUMBNAIL,
 
     GetParameterEvents = FF_GET_PARAMETER_EVENTS,
+
+    GetParameterRange = FF_GET_RANGE,
+    GetParameterVisibility = FF_GET_PRAMETER_VISIBILITY,
+    GetParameterGroup = FF_GET_PARAM_GROUP,
 
     EnablePluginCap = FF_ENABLE_PLUGIN_CAP,
 }
@@ -118,7 +122,15 @@ impl std::fmt::Debug for FFGLVal {
     }
 }
 
-impl<T: ?Sized> From<&'static T> for FFGLVal {
+impl From<&'static CStr> for FFGLVal {
+    fn from(a: &'static CStr) -> Self {
+        Self {
+            ptr: a.as_ptr() as *const c_void,
+        }
+    }
+}
+
+impl<T> From<&'static T> for FFGLVal {
     fn from(a: &'static T) -> Self {
         Self::from_static(a)
     }
@@ -140,6 +152,10 @@ impl FFGLVal {
 
     pub unsafe fn as_ref<T>(&self) -> &T {
         &*(self.ptr as *const T)
+    }
+
+    pub unsafe fn as_mut<T>(&mut self) -> &mut T {
+        &mut *(self.ptr as *mut T)
     }
 }
 

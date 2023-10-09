@@ -1,9 +1,6 @@
 #[macro_export]
 macro_rules! ffgl_handler {
     ($handler:ty) => {
-        // pub use $crate::conversions::*;
-        // pub use $crate::FFGLHandler;
-
         #[no_mangle]
         #[allow(non_snake_case)]
         #[allow(unused_variables)]
@@ -14,15 +11,25 @@ macro_rules! ffgl_handler {
         ) -> $crate::conversions::FFGLVal {
             match $crate::conversions::Op::try_from(functionCode) {
                 Ok(function) => {
-                    $crate::logln!("Op::{function:?}");
-                    $crate::default_ffgl_callback(function, inputValue, unsafe {
-                        instanceID.as_mut()
-                    })
+                    // $crate::logln!("Op::{function:?}");
+                    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        $crate::default_ffgl_callback(function, inputValue, unsafe {
+                            instanceID.as_mut()
+                        })
+                    }));
+
+                    match result {
+                        Ok(result) => result,
+                        Err(err) => {
+                            $crate::logln!("PANIC AT FFGL C BOUNDARY: {:#?}", err);
+                            $crate::SuccessVal::Fail.into()
+                        }
+                    }
                 }
                 Err(err) => {
                     let err_text = format!("Received fnCode {functionCode:?}");
-                    $crate::logln!("Failed to parse fnCode {functionCode}");
-                    panic!();
+                    $crate::logln!("ERR: UNKNOWN OPCODE {functionCode}");
+                    $crate::SuccessVal::Fail.into()
                 }
             }
         }

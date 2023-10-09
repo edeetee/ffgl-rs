@@ -1,6 +1,6 @@
 pub mod conversions;
 mod ffgl_derive;
-mod ffi;
+pub mod ffi;
 mod instance;
 pub mod log;
 pub mod parameters;
@@ -9,8 +9,15 @@ pub mod validate;
 
 pub use ffi::*;
 pub use parameters::Param;
+use parameters::{BasicParam, ParamValue, ParameterTypes, ParameterUsages};
 
-use std::{ffi::c_void, fmt::Debug, mem::transmute};
+use std::{
+    ffi::{c_void, CStr},
+    fmt::Debug,
+    mem::transmute,
+};
+
+pub use ffi::ffgl::ProcessOpenGLStruct;
 
 pub use conversions::*;
 pub use log::{loading_logger, FFGLLogger};
@@ -92,6 +99,8 @@ fn get_max_coords(tex: &ffgl::FFGLTextureStruct) -> (f32, f32) {
 }
 
 pub trait FFGLHandler: Debug {
+    type Param: Param + 'static;
+
     unsafe fn info() -> &'static mut ffgl::PluginInfoStruct {
         static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
         &mut INFO
@@ -105,33 +114,54 @@ pub trait FFGLHandler: Debug {
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
-    fn params(&self) -> &[Param] {
+    fn params() -> &'static [Self::Param] {
         &[]
+    }
+    fn params_mut(&mut self) -> &mut [Self::Param] {
+        &mut []
     }
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct);
 }
 
-fn params<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &[Param] {
-    instance.unwrap().renderer.params()
+// fn params<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &'static [T::Param] {
+//     T::params()
+// }
+
+// fn params<T: FFGLHandler<P>, P: Param>(instance: Option<&mut Instance<T>>) -> &[BasicParam] {
+//     &TEST_PARAMS
+// }
+
+fn param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
+    &T::params()[unsafe { index.num as usize }]
 }
 
-fn param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: FFGLVal) -> &Param {
-    &params(instance)[unsafe { index.num as usize }]
+fn params_mut<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &mut [T::Param] {
+    instance.unwrap().renderer.params_mut()
 }
+
+// const TEST_PARAMS: &'static [BasicParam] = &[];
 
 pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     function: Op,
-    inputValue: FFGLVal,
+    mut inputValue: FFGLVal,
     instance: Option<&mut Instance<T>>,
 ) -> FFGLVal {
-    match function {
-        Op::ProcessOpenGL | Op::SetBeatInfo | Op::SetTime | Op::GetParameterEvents => {}
-        _ => {
-            log::logln!("Op::{function:?}({})", unsafe { inputValue.num });
-        }
+    let noisy_op = match function {
+        Op::ProcessOpenGL
+        | Op::SetBeatInfo
+        | Op::SetTime
+        | Op::GetParameterEvents
+        | Op::SetParameter
+        | Op::GetParameterDisplay
+        | Op::GetParameterType => true,
+        _ => false,
+    };
+
+    if !noisy_op {
+        log::logln!("Op::{function:?}({})", unsafe { inputValue.num });
     }
 
-    match function {
+    let resp = match function {
         Op::GetPluginCaps => {
             let cap_num = unsafe { inputValue.num };
             let cap = num::FromPrimitive::from_u32(cap_num).expect("Unexpected cap n{cap_num}");
@@ -143,7 +173,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 PluginCapacity::ProcessOpenGl => SupportVal::Supported.into(),
                 PluginCapacity::SetTime => SupportVal::Supported.into(),
 
-                PluginCapacity::TopLeftTextureOrientation => SupportVal::Unsupported.into(),
+                PluginCapacity::TopLeftTextureOrientation => SupportVal::Supported.into(),
 
                 _ => SupportVal::Unsupported.into(),
             };
@@ -153,16 +183,67 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             result
         }
 
+        Op::EnablePluginCap => {
+            let cap_num = unsafe { inputValue.num };
+            let cap = num::FromPrimitive::from_u32(cap_num).expect("Unexpected cap n{cap_num}");
+
+            let result: FFGLVal = match cap {
+                PluginCapacity::TopLeftTextureOrientation => SuccessVal::Success.into(),
+                _ => SuccessVal::Fail.into(),
+            };
+
+            log::logln!("{cap:?} => {}", unsafe { result.num });
+
+            result
+        }
+
+        // Op::GetNumParameters => FFGLVal { num: 0 },
         Op::GetNumParameters => FFGLVal {
-            num: params(instance).len() as u32,
+            num: T::params().len() as u32,
         },
 
         Op::GetParameterDefault => param(instance, inputValue).default().into(),
+        // Op::GetParameterGroup => param(instance, inputValue).group().into(),
+        Op::GetParameterDisplay => param(instance, inputValue).display_name().into(),
+        Op::GetParameterName => param(instance, inputValue).name().into(),
+        Op::GetParameter => param(instance, inputValue).get().into(),
+        Op::GetParameterType => param(instance, inputValue).param_type().into(),
+        Op::SetParameter => {
+            let input: &ffgl2::SetParameterStruct = unsafe { inputValue.as_ref() };
+            let index = input.ParameterNumber;
 
-        Op::GetParameterDisplay => param(instance, inputValue).display_name.into(),
-        Op::GetParameterName => param(instance, inputValue).name.into(),
-        Op::GetParameter => param(instance, inputValue).value.into(),
+            let param = &mut params_mut(instance)[index as usize];
 
+            // log::logln!(
+            //     "SET PARAM\n{param:#?}\n{old_value:?} =>{new_value:#?}",
+            //     param = param,
+            //     old_value = param.value,
+            //     new_value = input.NewParameterValue
+            // );
+
+            //dunno why they store this in a u32, whatever..
+            let new_value =
+                unsafe { std::mem::transmute::<u32, f32>(input.NewParameterValue.UIntValue) };
+
+            unsafe { param.set(ParamValue::Float(new_value)) };
+
+            // log::logln!(
+            //     "SET PARAM {param:?} {old_value:?} => {new_value:?}",
+            //     param = param.display_name.to_str().unwrap(),
+            // );
+            SuccessVal::Success.into()
+        }
+        Op::GetParameterRange => {
+            let input: &mut ffgl2::GetRangeStruct = unsafe { (inputValue).as_mut() };
+
+            let index = input.parameterNumber;
+            let param = &T::params()[index as usize];
+
+            input.range = ffgl2::RangeStruct { min: 0.0, max: 1.0 };
+
+            SuccessVal::Success.into()
+        }
+        // Op::GetParameterGroup => param(instance, inputValue).group.into(),
         Op::GetInfo => unsafe { T::info().into() },
 
         Op::GetExtendedInfo => unsafe { T::info_extended().into() },
@@ -240,5 +321,11 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         Op::Deinitialise => SuccessVal::Success.into(),
 
         _ => SuccessVal::Fail.into(),
+    };
+
+    if !noisy_op {
+        log::logln!("=> {}", unsafe { resp.num });
     }
+
+    resp
 }
