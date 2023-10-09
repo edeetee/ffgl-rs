@@ -1,9 +1,9 @@
 #![allow(non_camel_case_types)]
 
-use std::ffi::{CStr};
+use std::ffi::CStr;
 
 use crate::{ffgl2::*, FFGLVal};
-use num_derive::{FromPrimitive};
+use num_derive::FromPrimitive;
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug, Clone, Copy)]

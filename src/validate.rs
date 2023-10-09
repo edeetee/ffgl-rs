@@ -16,16 +16,16 @@ pub unsafe fn validate_context_state() {
     );
 
     struct TextureType {
-        target: u32,
+        // target: u32,
         binding: u32,
     }
     const TEXTURE_TYPES: [TextureType; 2] = [
         TextureType {
-            target: gl::TEXTURE_1D,
+            // target: gl::TEXTURE_1D,
             binding: gl::TEXTURE_BINDING_1D,
         },
         TextureType {
-            target: gl::TEXTURE_2D,
+            // target: gl::TEXTURE_2D,
             binding: gl::TEXTURE_BINDING_2D,
         },
         // Add other texture types here...

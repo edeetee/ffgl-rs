@@ -1,11 +1,9 @@
-use ffgl::{parameters::BasicParam, validate};
+use ffgl::{parameters::BasicParam};
 
 use crate::shader_helper::*;
 use std::{
-    ffi::{c_void, CString},
-    mem::{size_of, size_of_val},
-    os::raw,
-    ptr::{self, null},
+    ffi::{CString},
+    ptr::{self},
 };
 
 use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
@@ -44,7 +42,7 @@ void main() {
 }";
 
 impl FFGLHandler for TestGl {
-    unsafe fn new(data: &FFGLData) -> Self {
+    unsafe fn new(_data: &FFGLData) -> Self {
         gl_loader::init_gl();
         gl::load_with(|s| gl_loader::get_proc_address(s).cast());
 
@@ -100,7 +98,7 @@ impl FFGLHandler for TestGl {
         }
     }
 
-    unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ffgl::ProcessOpenGLStruct) {
+    unsafe fn draw(&mut self, data: &FFGLData, _frame_data: &ffgl::ffgl::ProcessOpenGLStruct) {
         //most basic test here
         gl::ClearColor(
             data.host_beat.barPhase,

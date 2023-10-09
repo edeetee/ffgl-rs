@@ -1,9 +1,4 @@
-use std::{
-    ffi::c_void,
-    mem::{size_of, size_of_val},
-    os::raw,
-    ptr::null,
-};
+
 
 use ffgl::parameters::BasicParam;
 
@@ -13,11 +8,11 @@ use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
 pub struct TestEmpty;
 
 impl FFGLHandler for TestEmpty {
-    unsafe fn new(data: &FFGLData) -> Self {
+    unsafe fn new(_data: &FFGLData) -> Self {
         Self
     }
 
-    unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct) {}
+    unsafe fn draw(&mut self, _data: &FFGLData, _frame_data: &ffgl::ProcessOpenGLStruct) {}
 
     type Param = BasicParam;
 }

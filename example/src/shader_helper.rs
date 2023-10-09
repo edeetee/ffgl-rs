@@ -1,11 +1,7 @@
 use std::{
-    ffi::{c_void, CString},
-    mem::{size_of, size_of_val},
-    os::raw,
-    ptr::{self, null},
+    ffi::CString,
+    ptr::{self},
 };
-
-use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
 
 use gl::{self, types::*};
 

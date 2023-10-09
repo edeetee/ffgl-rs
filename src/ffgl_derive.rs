@@ -37,7 +37,7 @@ macro_rules! ffgl_handler {
         #[no_mangle]
         #[allow(non_snake_case)]
         pub extern "C" fn SetLogCallback(logCallback: $crate::FFGLLogger) {
-            unsafe { *$crate::loading_logger.write().unwrap() = Some(logCallback) };
+            unsafe { *$crate::LOADING_LOGGER.write().unwrap() = Some(logCallback) };
 
             std::panic::set_hook(Box::new(|cause| {
                 $crate::logln!("{}", cause);
