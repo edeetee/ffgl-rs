@@ -5,6 +5,8 @@ use std::{
     ptr::null,
 };
 
+use ffgl::parameters::BasicParam;
+
 use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
 
 #[derive(Debug)]
@@ -16,4 +18,6 @@ impl FFGLHandler for TestEmpty {
     }
 
     unsafe fn draw(&mut self, data: &FFGLData, frame_data: &ffgl::ProcessOpenGLStruct) {}
+
+    type Param = BasicParam;
 }

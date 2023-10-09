@@ -1,4 +1,4 @@
-use ffgl::validate;
+use ffgl::{parameters::BasicParam, validate};
 
 use crate::shader_helper::*;
 use std::{
@@ -123,6 +123,8 @@ impl FFGLHandler for TestGl {
         // validate::validate_context_state();
         // gl::UseProgram(0);
     }
+
+    type Param = BasicParam;
 }
 
 impl Drop for TestGl {
