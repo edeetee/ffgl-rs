@@ -239,7 +239,10 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let index = input.parameterNumber;
             let param = &T::params()[index as usize];
 
-            input.range = ffgl2::RangeStruct { min: 0.0, max: 1.0 };
+            input.range = ffgl2::RangeStruct {
+                min: param.min(),
+                max: param.max(),
+            };
 
             SuccessVal::Success.into()
         }

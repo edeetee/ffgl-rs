@@ -75,6 +75,14 @@ pub trait Param {
 
     fn set(&mut self, value: ParamValue);
 
+    fn min(&self) -> f32 {
+        0.0
+    }
+
+    fn max(&self) -> f32 {
+        1.0
+    }
+
     fn param_type(&self) -> ParameterTypes {
         ParameterTypes::Standard
     }
