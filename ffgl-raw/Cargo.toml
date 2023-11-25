@@ -1,0 +1,24 @@
+[package]
+name = "ffgl"
+version = "0.1.2"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["lib"]
+panic = "abort"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num = "0.4"
+num-derive = "0.4.0"
+num-traits = "0.2"
+gl.workspace = true
+
+[build-dependencies]
+bindgen = "0.63.0"
+
+# [profile.release]
+# panic = 'abort'

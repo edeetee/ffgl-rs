@@ -1,0 +1,19 @@
+[package]
+name = "ffgl-lib"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+panic = "abort"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gl.workspace = true
+ffgl = { path = "../ffgl-raw" }
+gl_loader = "0.1.2"
+itertools.workspace = true
+glium = "0.33.0"

@@ -1,6 +1,3 @@
 {
-  "rust-analyzer.linkedProjects": [
-    "./example/Cargo.toml",
-    "./example/Cargo.toml"
-  ]
+  "dotnet.defaultSolution": "disable"
 }
