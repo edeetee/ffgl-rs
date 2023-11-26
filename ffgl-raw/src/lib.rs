@@ -11,6 +11,7 @@ use ffi::*;
 pub use parameters::Param;
 use parameters::ParamValue;
 
+use core::slice;
 use std::{ffi::c_void, fmt::Debug};
 
 pub use conversions::*;
@@ -84,12 +85,11 @@ pub const fn plugin_info_extended(
 pub trait ParamHandler {
     type Param: Param + 'static;
 
-    fn params() -> &'static [Self::Param] {
-        &[]
+    fn num_params() -> usize {
+        0
     }
-    fn set_param(&mut self, _: usize, value: ParamValue) {
-        unimplemented!("Tried to get a mutable param from a plugin that doesn't have any")
-    }
+    fn param(index: usize) -> &'static Self::Param;
+    fn set_param(&mut self, _: usize, value: ParamValue);
 }
 
 pub trait FFGLHandler: Debug + ParamHandler {
@@ -119,7 +119,7 @@ pub trait FFGLHandler: Debug + ParamHandler {
 // }
 
 fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
-    &T::params()[unsafe { index.num as usize }]
+    &T::param(unsafe { index.num as usize })
 }
 
 fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
@@ -186,11 +186,29 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         // Op::GetNumParameters => FFGLVal { num: 0 },
         Op::GetNumParameters => FFGLVal {
-            num: T::params().len() as u32,
+            num: T::num_params() as u32,
         },
 
         Op::GetParameterDefault => param(instance, input_value).default().into(),
-        // Op::GetParameterGroup => param(instance, inputValue).group().into(),
+        Op::GetParameterGroup => {
+            let input: &ffgl2::GetStringStructTag = unsafe { input_value.as_ref() };
+            let buffer = input.stringBuffer;
+
+            let group = T::param(input.parameterNumber as usize).group();
+
+            let string_target: &mut [char] = unsafe {
+                slice::from_raw_parts_mut(buffer.address as *mut char, buffer.maxToWrite as usize)
+            };
+
+            let copied_chars = std::cmp::min(group.len(), buffer.maxToWrite as usize);
+
+            string_target[..copied_chars]
+                .copy_from_slice(&group[..copied_chars].chars().collect::<Vec<_>>());
+
+            log::logln!("GET PARAM GROUP {group:?} {string_target:#?}");
+
+            SuccessVal::Success.into()
+        }
         Op::GetParameterDisplay => param(instance, input_value).display_name().into(),
         Op::GetParameterName => param(instance, input_value).name().into(),
         Op::GetParameter => param(instance, input_value).get().into(),
@@ -224,7 +242,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let input: &mut ffgl2::GetRangeStruct = unsafe { (input_value).as_mut() };
 
             let index = input.parameterNumber;
-            let param = &T::params()[index as usize];
+            let param = &T::param(index as usize);
 
             input.range = ffgl2::RangeStruct {
                 min: param.min(),
@@ -233,7 +251,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             SuccessVal::Success.into()
         }
-        // Op::GetParameterGroup => param(instance, inputValue).group.into(),
+        // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
         Op::GetInfo => unsafe { T::info().into() },
 
         Op::GetExtendedInfo => unsafe { T::info_extended().into() },

@@ -37,8 +37,12 @@ pub trait FFGLGliumHandler: Sized + ParamHandler {
 impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
     type Param = Handler::Param;
 
-    fn params() -> &'static [Self::Param] {
-        Handler::params()
+    fn num_params() -> usize {
+        Handler::num_params()
+    }
+
+    fn param(index: usize) -> &'static Self::Param {
+        Handler::param(index)
     }
 
     fn set_param(&mut self, _: usize, value: parameters::ParamValue) {

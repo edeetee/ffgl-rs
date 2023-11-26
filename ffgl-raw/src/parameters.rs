@@ -6,7 +6,7 @@ use crate::{ffgl2::*, FFGLVal};
 use num_derive::FromPrimitive;
 
 #[repr(u32)]
-#[derive(FromPrimitive, Debug, Clone, Copy)]
+#[derive(Default, FromPrimitive, Debug, Clone, Copy)]
 pub enum ParameterTypes {
     Boolean = FF_TYPE_BOOLEAN,
     Event = FF_TYPE_EVENT,
@@ -15,6 +15,7 @@ pub enum ParameterTypes {
     Blue = FF_TYPE_BLUE,
     X = FF_TYPE_XPOS,
     Y = FF_TYPE_YPOS,
+    #[default]
     Standard = FF_TYPE_STANDARD,
     Option = FF_TYPE_OPTION,
     Buffer = FF_TYPE_BUFFER,
@@ -91,22 +92,20 @@ pub trait Param {
         self.param_type().default_value()
     }
 
-    fn group(&self) -> &CStr {
-        unsafe { CStr::from_bytes_with_nul_unchecked(b"\0") }
+    fn group(&self) -> &str {
+        ""
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct BasicParam {
     pub name: CString,
     pub param_type: ParameterTypes,
     pub param_value: Option<ParamValue>,
-}
-
-impl Default for BasicParam {
-    fn default() -> Self {
-        Self::from_name("UnknownName\0")
-    }
+    pub default: Option<ParamValue>,
+    pub min: Option<f32>,
+    pub max: Option<f32>,
+    pub group: Option<String>,
 }
 
 impl BasicParam {
@@ -116,7 +115,7 @@ impl BasicParam {
         BasicParam {
             name: name.into(),
             param_type: ParameterTypes::Standard,
-            param_value: None,
+            ..Default::default()
         }
     }
 }
@@ -137,17 +136,37 @@ impl Param for BasicParam {
     fn set(&mut self, value: ParamValue) {
         self.param_value = Some(value);
     }
+
+    fn min(&self) -> f32 {
+        self.min.unwrap_or(0.0)
+    }
+
+    fn max(&self) -> f32 {
+        self.max.unwrap_or(1.0)
+    }
+
+    fn default(&self) -> ParamValue {
+        self.default.unwrap_or(self.param_type.default_value())
+    }
+
+    fn group(&self) -> &str {
+        self.group.as_deref().unwrap_or("")
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum ParamValue {
     Float(f32),
+    Bool(bool),
+    Int(u32),
 }
 
 impl ParamValue {
     pub fn set(&mut self, value: f32) {
         match self {
             ParamValue::Float(f) => *f = value,
+            ParamValue::Bool(b) => *b = value > 0.0,
+            ParamValue::Int(i) => *i = value as u32,
         }
     }
 }
@@ -158,6 +177,8 @@ impl From<ParamValue> for FFGLVal {
             ParamValue::Float(f) => FFGLVal {
                 num: unsafe { std::mem::transmute::<f32, u32>(f) },
             },
+            ParamValue::Bool(b) => FFGLVal { num: b as u32 },
+            ParamValue::Int(i) => FFGLVal { num: i },
         }
     }
 }
