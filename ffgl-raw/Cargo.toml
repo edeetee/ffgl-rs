@@ -1,13 +1,9 @@
 [package]
-name = "ffgl"
+name = "ffgl-raw"
 version = "0.1.2"
 edition = "2021"
 license.workspace = true
 authors.workspace = true
-
-[lib]
-crate-type = ["lib"]
-panic = "abort"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

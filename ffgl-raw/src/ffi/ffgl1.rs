@@ -2,4 +2,4 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(unused)]
-include!(concat!(env!("OUT_DIR"), "/ffgl.rs"));
+include!(concat!(env!("OUT_DIR"), "/ffgl1.rs"));

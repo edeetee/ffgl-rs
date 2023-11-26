@@ -3,3 +3,5 @@
 /rls
 
 .DS_Store
+
+artifacts/*.bundle/Contents/MacOS/*

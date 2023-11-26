@@ -1,4 +1,4 @@
-use std::time::{Instant, Duration, UNIX_EPOCH, SystemTime};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::ffgl2;
 
@@ -6,14 +6,14 @@ use crate::ffgl2;
 #[derive(Debug)]
 pub struct FFGLData {
     pub created_at: Instant,
-    pub viewport: crate::ffgl::FFGLViewportStruct,
+    pub viewport: crate::ffgl1::FFGLViewportStruct,
     pub host_time: SystemTime,
     pub host_beat: ffgl2::SetBeatinfoStruct,
-    // pub ctx: 
+    // pub ctx:
 }
 
 impl FFGLData {
-    pub fn new(viewport: &crate::ffgl::FFGLViewportStruct) -> FFGLData {
+    pub fn new(viewport: &crate::ffgl1::FFGLViewportStruct) -> FFGLData {
         Self {
             created_at: Instant::now(),
             viewport: viewport.clone(),
@@ -21,7 +21,7 @@ impl FFGLData {
             host_beat: ffgl2::SetBeatinfoStruct {
                 bpm: 120.0,
                 barPhase: 0.0,
-            }
+            },
         }
     }
 
@@ -30,7 +30,7 @@ impl FFGLData {
     }
 
     pub fn set_time(&mut self, host_seconds: f64) {
-        self.host_time = UNIX_EPOCH + Duration::from_secs_f64(host_seconds/1000.0)
+        self.host_time = UNIX_EPOCH + Duration::from_secs_f64(host_seconds / 1000.0)
     }
 
     pub fn get_dimensions(&self) -> (u32, u32) {

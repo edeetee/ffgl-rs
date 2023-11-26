@@ -15,7 +15,7 @@ pub(crate) const TEXTURE_TYPES: [TextureType; 2] = [
     // Add other texture types here...
 ];
 
-pub(crate) unsafe fn gl_reset(frame_data: &ffgl::ffgl::ProcessOpenGLStructTag) {
+pub(crate) unsafe fn gl_reset(frame_data: &ffgl_raw::ffi::ffgl1::ProcessOpenGLStructTag) {
     let mut gl_int = 0;
     gl::UseProgram(0);
 

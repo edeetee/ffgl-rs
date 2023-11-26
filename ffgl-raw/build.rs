@@ -27,7 +27,7 @@ fn main() {
             .header("wrapper.h")
             .generate()
             .unwrap(),
-        &out_dir.join("ffgl.rs"),
+        &out_dir.join("ffgl1.rs"),
     );
 
     build_to_out_file(

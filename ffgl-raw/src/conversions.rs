@@ -1,12 +1,11 @@
 // #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
-
 use std::ffi::{c_void, CStr};
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::ffgl::{
+use crate::ffgl1::{
     FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
     FF_CAP_PROCESSFRAMECOPY, FF_CAP_PROCESSOPENGL, FF_CAP_SETTIME, FF_GETINFO,
 };

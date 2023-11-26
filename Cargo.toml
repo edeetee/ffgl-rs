@@ -9,8 +9,8 @@ license = "	GPL-3.0-or-later"
 
 [workspace]
 resolver = "2"
-members = ["example-raw", "ffgl-glium", "ffgl-raw"]
-default-members = ["ffgl-raw", "ffgl-glium"]
+members = ["example-raw", "ffgl-glium", "ffgl-raw", "example-isf"]
+# default-members = ["ffgl-raw", "ffgl-glium", "example-isf"]
 
 # [lib]
 # crate-type = ["lib"]
@@ -21,6 +21,7 @@ default-members = ["ffgl-raw", "ffgl-glium"]
 [workspace.dependencies]
 gl = "0.14.0"
 itertools = "0.12.0"
+glium = "0.33.0"
 
 
 [profile.release]
