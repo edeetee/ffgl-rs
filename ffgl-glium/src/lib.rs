@@ -28,27 +28,27 @@ impl<Handler: Debug> Debug for FFGLGlium<Handler> {
     }
 }
 
-pub trait FFGLGliumHandler: Sized {
-    type Param: Param + 'static;
-
+pub trait FFGLGliumHandler: Sized + ParamHandler {
     fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct;
-
-    fn params() -> &'static [Self::Param];
-    fn param_mut(&mut self, index: usize) -> &mut Self::Param;
-
     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
     fn render_frame(&mut self, inst_data: &FFGLData, target: &mut impl Surface);
 }
 
-impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
+impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
     type Param = Handler::Param;
-
-    unsafe fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct {
-        Handler::info()
-    }
 
     fn params() -> &'static [Self::Param] {
         Handler::params()
+    }
+
+    fn set_param(&mut self, _: usize, value: parameters::ParamValue) {
+        self.handler.set_param(0, value);
+    }
+}
+
+impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
+    unsafe fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct {
+        Handler::info()
     }
 
     unsafe fn new(inst_data: &FFGLData) -> Self {
@@ -70,10 +70,6 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
             ctx,
             backend,
         }
-    }
-
-    fn param_mut(&mut self, index: usize) -> &mut Self::Param {
-        self.handler.param_mut(index)
     }
 
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffi::ffgl1::ProcessOpenGLStruct) {

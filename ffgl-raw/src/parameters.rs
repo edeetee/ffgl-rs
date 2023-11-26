@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 
 use crate::{ffgl2::*, FFGLVal};
 use num_derive::FromPrimitive;
@@ -98,23 +98,23 @@ pub trait Param {
 
 #[derive(Debug, Clone)]
 pub struct BasicParam {
-    pub name: &'static CStr,
+    pub name: CString,
     pub param_type: ParameterTypes,
     pub param_value: Option<ParamValue>,
 }
 
 impl Default for BasicParam {
     fn default() -> Self {
-        Self::standard("UnknownName\0")
+        Self::from_name("UnknownName\0")
     }
 }
 
 impl BasicParam {
-    pub const fn standard(name: &'static str) -> Self {
+    pub fn from_name(name: &str) -> Self {
         let name = unsafe { CStr::from_bytes_with_nul_unchecked(name.as_bytes()) };
 
         BasicParam {
-            name: name,
+            name: name.into(),
             param_type: ParameterTypes::Standard,
             param_value: None,
         }
@@ -123,7 +123,7 @@ impl BasicParam {
 
 impl Param for BasicParam {
     fn name(&self) -> &CStr {
-        self.name
+        &self.name
     }
 
     fn param_type(&self) -> ParameterTypes {

@@ -81,9 +81,18 @@ pub const fn plugin_info_extended(
     }
 }
 
-pub trait FFGLHandler: Debug {
+pub trait ParamHandler {
     type Param: Param + 'static;
 
+    fn params() -> &'static [Self::Param] {
+        &[]
+    }
+    fn set_param(&mut self, _: usize, value: ParamValue) {
+        unimplemented!("Tried to get a mutable param from a plugin that doesn't have any")
+    }
+}
+
+pub trait FFGLHandler: Debug + ParamHandler {
     unsafe fn info() -> &'static mut ffgl1::PluginInfoStruct {
         static mut INFO: ffgl1::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
         &mut INFO
@@ -97,12 +106,6 @@ pub trait FFGLHandler: Debug {
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
-    fn params() -> &'static [Self::Param] {
-        &[]
-    }
-    fn param_mut(&mut self, _: usize) -> &mut Self::Param {
-        unimplemented!("Tried to get a mutable param from a plugin that doesn't have any")
-    }
 
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl1::ProcessOpenGLStruct);
 }
@@ -119,8 +122,8 @@ fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) ->
     &T::params()[unsafe { index.num as usize }]
 }
 
-fn param_mut<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize) -> &mut T::Param {
-    instance.unwrap().renderer.param_mut(index)
+fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
+    instance.unwrap().renderer.set_param(index, value)
 }
 
 // const TEST_PARAMS: &'static [BasicParam] = &[];
@@ -196,7 +199,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let input: &ffgl2::SetParameterStruct = unsafe { input_value.as_ref() };
             let index = input.ParameterNumber;
 
-            let param = param_mut(instance, index as usize);
+            // let param = param_mut(instance, index as usize);
 
             // log::logln!(
             //     "SET PARAM\n{param:#?}\n{old_value:?} =>{new_value:#?}",
@@ -209,7 +212,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let new_value =
                 unsafe { std::mem::transmute::<u32, f32>(input.NewParameterValue.UIntValue) };
 
-            param.set(ParamValue::Float(new_value));
+            set_param(instance, index as usize, ParamValue::Float(new_value));
 
             // log::logln!(
             //     "SET PARAM {param:?} {old_value:?} => {new_value:?}",

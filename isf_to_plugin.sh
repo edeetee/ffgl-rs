@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-ISF_SOURCE=$1
+export ISF_SOURCE=$1
 FILENAME=$(basename "$ISF_SOURCE" .fs)
-ISF_NAME=$(echo "$FILENAME" | cut -c1-16)
+export ISF_NAME=$(echo "$FILENAME" | cut -c1-16)
 
 echo "NAME: $ISF_NAME, FILE: $ISF_SOURCE"
 
