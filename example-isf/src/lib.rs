@@ -1,33 +1,30 @@
-use std::{
-    fmt::{Debug, Formatter},
-    sync::OnceLock,
-};
-
+use std::fmt::{Debug, Formatter};
 mod fullscreen_shader;
 mod meta;
 mod shader;
 mod texture;
 mod util;
+use once_cell::sync::Lazy;
 
 pub struct StaticIsf {
     pub info: Isf,
 }
 
-const ISF_SOURCE: &'static str = include_str!("/Library/Graphics/ISF/Quad Tile.fs");
-static mut ISF_INFO: ffgl_glium::ffi::ffgl1::PluginInfoStruct =
-    plugin_info(b"0000", b"Quad Tile       ");
+const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
+static mut ISF_INFO: Lazy<ffgl_glium::ffi::ffgl1::PluginInfoStruct> = Lazy::new(|| {
+    let mut name = [0; 16];
+    let name_from_env = env!("ISF_NAME").as_bytes();
+    name[0..name_from_env.len()].copy_from_slice(&name_from_env);
+    plugin_info(b"0000", &name)
+});
 
-static mut INSTANCE: OnceLock<StaticIsf> = OnceLock::new();
+static INSTANCE: Lazy<StaticIsf> = Lazy::new(|| StaticIsf::new());
 
 impl StaticIsf {
     fn new() -> Self {
         let info = isf::parse(&ISF_SOURCE).unwrap();
 
         Self { info }
-    }
-
-    pub fn get() -> &'static Self {
-        unsafe { INSTANCE.get_or_init(Self::new) }
     }
 }
 
@@ -63,7 +60,7 @@ impl FFGLGliumHandler for IsfFFGLInstance {
     fn new(inst_data: &ffgl_glium::FFGLData, ctx: std::rc::Rc<glium::backend::Context>) -> Self {
         ffgl_glium::logln!("CREATED SHADER");
 
-        let shader = shader::IsfShader::new(&ctx, &StaticIsf::get().info, ISF_SOURCE).unwrap();
+        let shader = shader::IsfShader::new(&ctx, &INSTANCE.info, ISF_SOURCE).unwrap();
 
         Self { shader }
     }

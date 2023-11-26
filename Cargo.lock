@@ -329,6 +329,7 @@ dependencies = [
  "glium",
  "glsl",
  "isf",
+ "once_cell",
  "serde",
  "thiserror",
  "uneval",
