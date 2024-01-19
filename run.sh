@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 
 LIB_PATH="target/release/lib$LIB_NAME.dylib"
 
-FFGL_DIR="/Library/Graphics/FreeFrame Plug-Ins"
+FFGL_DIR="$HOME/Library/Graphics/FreeFrame Plug-Ins"
 OUT_BUNDLE_DIR="$FFGL_DIR/$BUNDLE_NAME.bundle"
 
 echo "Creating bundle in $OUT_BUNDLE_DIR"
@@ -32,4 +32,4 @@ echo "Running resolume"
 open "/Applications/Resolume Arena/Arena.app"
 
 echo "Listening to resolume logs"
-tail -F "/Users/edwardtaylor/Library/Logs/Resolume Arena/Resolume Arena log.txt"
+tail -F "$HOME/Library/Logs/Resolume Arena/Resolume Arena log.txt"
