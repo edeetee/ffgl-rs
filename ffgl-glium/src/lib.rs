@@ -1,4 +1,4 @@
-use std::{fmt::Formatter, rc::Rc};
+use std::{error::Error, fmt::Formatter, rc::Rc};
 
 use ffgl_raw::ffi::{ffgl1::FFGLTextureStruct, ffgl2};
 pub use ffgl_raw::*;
@@ -6,9 +6,9 @@ pub use ffgl_raw::*;
 // mod ffgl;
 // use ::ffgl::{ffgl_handler, FFGLHandler};
 use glium::{
-    backend::Context,
+    backend::{Context, Facade},
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
-    BlitTarget, Frame, Surface,
+    BlitTarget, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
 
@@ -30,14 +30,14 @@ impl<Handler: Debug> Debug for FFGLGlium<Handler> {
 }
 
 pub trait FFGLGliumHandler: Sized + ParamHandler {
-    fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct;
+    fn info() -> &'static ffi::ffgl1::PluginInfoStruct;
     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
     fn render_frame(
         &mut self,
-        inst_data: &FFGLData,
         target: &mut impl Surface,
-        textures: &[ffgl2::FFGLTextureStruct],
-    );
+        input_textures: Vec<Texture2d>,
+        inst_data: &FFGLData,
+    ) -> Result<(), Box<dyn Error>>;
 }
 
 impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
@@ -61,7 +61,7 @@ impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
 }
 
 impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
-    unsafe fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct {
+    unsafe fn info() -> &'static ffi::ffgl1::PluginInfoStruct {
         Handler::info()
     }
 
@@ -102,8 +102,27 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
         let fb = &mut SimpleFrameBuffer::new(&self.ctx, &rb).unwrap();
         // fb.clear_color(0.0, 0.0, 1.0, 1.0);
 
-        self.handler
-            .render_frame(inst_data, fb, frame_data.textures);
+        let textures: Vec<_> = frame_data
+            .textures
+            .iter()
+            .map(|texture_info| unsafe {
+                Texture2d::from_id(
+                    &self.ctx,
+                    glium::texture::UncompressedFloatFormat::U8U8U8U8,
+                    texture_info.Handle,
+                    false,
+                    glium::texture::MipmapsOption::NoMipmap,
+                    glium::texture::Dimensions::Texture2d {
+                        width: texture_info.Width,
+                        height: texture_info.Height,
+                    },
+                )
+            })
+            .collect();
+
+        if let Err(err) = self.handler.render_frame(fb, textures, inst_data) {
+            logln!("ERROR: {err}");
+        }
 
         // validate_viewport(&viewport);
 

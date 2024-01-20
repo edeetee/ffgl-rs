@@ -9,7 +9,7 @@ use crate::ffgl1::{
     self, FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
     FF_CAP_PROCESSFRAMECOPY, FF_CAP_PROCESSOPENGL, FF_CAP_SETTIME, FF_GETINFO,
 };
-use crate::ffgl2::*;
+use crate::ffgl2::{self, *};
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
@@ -182,6 +182,7 @@ impl Into<FFGLVal> for SupportVal {
     }
 }
 
+#[derive(Debug)]
 pub struct GLInput<'a> {
     pub textures: &'a [FFGLTextureStruct],
     pub host: u32,
@@ -199,4 +200,12 @@ impl<'a> Into<GLInput<'a>> for &'a ffgl1::ProcessOpenGLStruct {
             host: self.HostFBO,
         }
     }
+}
+
+#[repr(u32)]
+#[derive(FromPrimitive, ToPrimitive, Debug)]
+pub enum PluginType {
+    Effect = ffgl1::FF_EFFECT,
+    Source = ffgl1::FF_SOURCE,
+    Mixer = ffgl2::FF_MIXER,
 }

@@ -4,7 +4,7 @@ set -e
 trap cleanup EXIT
 
 function cleanup {
-  pkill -x Arena
+  pkill -9 -x Arena
   cd $OLDDIR
 }
 
@@ -30,9 +30,9 @@ echo "copying $LIB_PATH as $BUNDLE_NAME into $OUT_BUNDLE_DIR"
 
 
 echo "Running resolume"
-/Applications/Resolume\ Arena/Arena.app/Contents/MacOS/Arena
+/Applications/Resolume\ Arena/Arena.app/Contents/MacOS/Arena &
 
-# sleep 1
+sleep 0.5
 
-# echo "Listening to resolume logs"
-# tail -n 0 -F "$HOME/Library/Logs/Resolume Arena/Resolume Arena log.txt"
+echo "Listening to resolume logs"
+tail -n 0 -F "$HOME/Library/Logs/Resolume Arena/Resolume Arena log.txt"

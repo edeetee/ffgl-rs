@@ -11,45 +11,45 @@ mod util;
 use once_cell::sync::Lazy;
 
 use ffgl_glium::{
-    ffgl_handler, ffi::ffgl2, logln, parameters::BasicParamInfo, plugin_info, FFGLGlium,
-    FFGLGliumHandler, ParamHandler, ParamInfo,
+    ffgl_handler,
+    ffi::{ffgl1::PluginInfoStruct, ffgl2},
+    logln,
+    parameters::BasicParamInfo,
+    plugin_info, FFGLGlium, FFGLGliumHandler, ParamHandler, ParamInfo, PluginType,
 };
 use glium::{
+    backend::Facade,
     program::Uniform,
     uniforms::{AsUniformValue, EmptyUniforms, UniformValue, Uniforms},
+    Texture2d,
 };
 use isf::{Input, Isf};
 use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
 use rand_seeder::Seeder;
+use serde::de::Error;
+use util::MultiUniforms;
 
 #[derive(Debug, Clone)]
 pub struct IsfState {
     pub info: Isf,
     pub inputs: Vec<IsfInputParam>,
+    pub plugin_info: PluginInfoStruct,
 }
 
 impl Uniforms for IsfState {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut output: F) {
         for input in &self.inputs {
-            output(&input.name, input.as_uniform_value());
+            let uniform = input.as_uniform_optional();
+            if let Some(uniform) = uniform {
+                output(&input.name, uniform);
+            }
         }
     }
 }
 
-const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
-static mut ISF_INFO: Lazy<ffgl_glium::ffi::ffgl1::PluginInfoStruct> = Lazy::new(|| {
-    let mut name = [0; 16];
-    let name_from_env = env!("ISF_NAME").as_bytes();
-
-    name[0..name_from_env.len()].copy_from_slice(&name_from_env);
-
-    let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
-    let mut code = [0; 4];
-    rng.fill_bytes(&mut code);
-    plugin_info(&code, &name)
-});
-
 static INSTANCE: Lazy<IsfState> = Lazy::new(|| IsfState::new());
+
+const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
 
 #[derive(Debug, Clone)]
 enum IsfInputValue {
@@ -104,22 +104,28 @@ fn slice_from_vec(input: &Vec<f32>) -> [f32; 4] {
     slice
 }
 
-impl AsUniformValue for IsfInputParam {
-    fn as_uniform_value(&self) -> UniformValue<'_> {
+pub trait AsUniformOptional {
+    fn as_uniform_optional(&self) -> Option<UniformValue<'_>>;
+}
+
+impl AsUniformOptional for IsfInputParam {
+    fn as_uniform_optional(&self) -> Option<UniformValue<'_>> {
         let ty = &self.ty;
         let value = &self.value;
 
         match (ty, value) {
-            (isf::InputType::Event, IsfInputValue::Event(x)) => UniformValue::Bool(*x),
-            (isf::InputType::Bool(_), IsfInputValue::Bool(x)) => UniformValue::Bool(*x),
-            (isf::InputType::Long(_), IsfInputValue::Long(x)) => UniformValue::SignedInt(*x),
-            (isf::InputType::Float(_), IsfInputValue::Float(x)) => UniformValue::Float(*x),
+            (isf::InputType::Event, IsfInputValue::Event(x)) => Some(UniformValue::Bool(*x)),
+            (isf::InputType::Bool(_), IsfInputValue::Bool(x)) => Some(UniformValue::Bool(*x)),
+            (isf::InputType::Long(_), IsfInputValue::Long(x)) => Some(UniformValue::SignedInt(*x)),
+            (isf::InputType::Float(_), IsfInputValue::Float(x)) => Some(UniformValue::Float(*x)),
             (isf::InputType::Point2d(_), IsfInputValue::Point2d(x)) => {
-                UniformValue::Vec2([x[0], x[1]])
+                Some(UniformValue::Vec2([x[0], x[1]]))
             }
+
             (isf::InputType::Color(_), IsfInputValue::Color(x)) => {
-                UniformValue::Vec4([x[0], x[1], x[2], x[3]])
+                Some(UniformValue::Vec4([x[0], x[1], x[2], x[3]]))
             }
+            (isf::InputType::Image, IsfInputValue::None) => None,
 
             _ => panic!("Invalid uniform value for ISF input {ty:?}\n val {value:?}"),
         }
@@ -230,13 +236,30 @@ impl IsfInputParam {
 
 impl IsfState {
     fn new() -> Self {
-        let info = isf::parse(&ISF_SOURCE).unwrap();
-        let params = info
+        let info = isf::parse(ISF_SOURCE).unwrap();
+        let params: Vec<IsfInputParam> = info
             .inputs
             .iter()
             .cloned()
             .map(|input| IsfInputParam::new(input))
             .collect();
+
+        let mut name = [0; 16];
+        let name_from_env = env!("ISF_NAME").as_bytes();
+
+        name[0..name_from_env.len()].copy_from_slice(&name_from_env);
+
+        let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
+        let mut code = [0; 4];
+        rng.fill_bytes(&mut code);
+
+        let plugin_type = if params.iter().any(|x| x.ty == isf::InputType::Image) {
+            PluginType::Effect
+        } else {
+            PluginType::Source
+        };
+
+        let plugin_info = plugin_info(&code, &name, plugin_type);
 
         logln!("ISF INFO: {info:?}");
         logln!("ISF PARAMS: {params:?}");
@@ -244,6 +267,7 @@ impl IsfState {
         Self {
             info,
             inputs: params,
+            plugin_info,
         }
     }
 
@@ -318,8 +342,8 @@ impl ParamHandler for IsfFFGLInstance {
 }
 
 impl FFGLGliumHandler for IsfFFGLInstance {
-    fn info() -> &'static mut ffgl_glium::ffi::ffgl1::PluginInfoStruct {
-        unsafe { &mut ISF_INFO }
+    fn info() -> &'static ffgl_glium::ffi::ffgl1::PluginInfoStruct {
+        &INSTANCE.plugin_info
     }
 
     fn new(inst_data: &ffgl_glium::FFGLData, ctx: std::rc::Rc<glium::backend::Context>) -> Self {
@@ -335,13 +359,34 @@ impl FFGLGliumHandler for IsfFFGLInstance {
 
     fn render_frame(
         &mut self,
-        inst_data: &ffgl_glium::FFGLData,
         target: &mut impl glium::Surface,
-        textures: &[ffgl2::FFGLTextureStruct],
-    ) {
-        self.shader
-            .draw(target, &self.state)
-            .expect("Error drawing ISF frame")
+        textures: Vec<Texture2d>,
+        inst_data: &ffgl_glium::FFGLData,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let image_uniforms = self
+            .state
+            .inputs
+            .iter()
+            .filter_map(|i| {
+                if let isf::InputType::Image = i.ty {
+                    Some((
+                        i.name.as_str(),
+                        UniformValue::Texture2d(textures.first()?, None),
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let uniforms = MultiUniforms {
+            uniforms: image_uniforms,
+            next: &self.state,
+        };
+
+        self.shader.draw(target, &uniforms)?;
+
+        Ok(())
     }
 }
 

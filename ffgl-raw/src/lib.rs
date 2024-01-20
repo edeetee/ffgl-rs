@@ -16,6 +16,8 @@ use std::{ffi::c_void, fmt::Debug};
 pub use conversions::*;
 pub use log::{FFGLLogger, LOADING_LOGGER};
 
+pub use num_traits::ToPrimitive;
+
 pub struct Instance<T> {
     data: FFGLData,
     renderer: T,
@@ -57,13 +59,17 @@ const FFGL_VERSION: FFGLVersion = FFGLVersion::V2_1;
 // static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
 // static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct =
 
-pub const fn plugin_info(unique_id: &[u8; 4], name: &[u8; 16]) -> ffgl1::PluginInfoStruct {
+pub fn plugin_info(
+    unique_id: &[u8; 4],
+    name: &[u8; 16],
+    plugin_type: PluginType,
+) -> ffgl1::PluginInfoStruct {
     ffgl1::PluginInfoStruct {
         APIMajorVersion: FFGL_VERSION.major(),
         APIMinorVersion: FFGL_VERSION.minor(),
         PluginUniqueID: *unique_id,
         PluginName: *name,
-        PluginType: ffgl1::FF_SOURCE,
+        PluginType: plugin_type.to_u32().unwrap(),
     }
 }
 
@@ -93,9 +99,12 @@ pub trait ParamHandler {
     fn set_param(&mut self, index: usize, value: f32);
 }
 
+use once_cell::unsync::Lazy;
+
 pub trait FFGLHandler: Debug + ParamHandler {
-    unsafe fn info() -> &'static mut ffgl1::PluginInfoStruct {
-        static mut INFO: ffgl1::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
+    unsafe fn info() -> &'static ffgl1::PluginInfoStruct {
+        static mut INFO: Lazy<ffgl1::PluginInfoStruct> =
+            Lazy::new(|| plugin_info(b"TRP0", b"testrustplugin  ", PluginType::Source));
         &mut INFO
     }
 
@@ -157,7 +166,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             let result = match cap {
                 PluginCapacity::MinInputFrames => FFGLVal { num: 0 },
-                PluginCapacity::MaxInputFrames => FFGLVal { num: 0 },
+                PluginCapacity::MaxInputFrames => FFGLVal { num: 1 },
 
                 PluginCapacity::ProcessOpenGl => SupportVal::Supported.into(),
                 PluginCapacity::SetTime => SupportVal::Supported.into(),
@@ -292,13 +301,15 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         Op::ProcessOpenGL => {
             let gl_process_info: &ffgl1::ProcessOpenGLStruct = unsafe { input_value.as_ref() };
-            let Instance { data, renderer } = instance.unwrap();
 
-            unsafe {
-                // validate::validate_context_state();
-                renderer.draw(&data, gl_process_info.into());
-                // validate::validate_context_state();
-            }
+            // logln!("PROCESSGL info \n{gl_process_info:#?}");
+
+            let Instance { data, renderer } = instance.unwrap();
+            let gl_input = gl_process_info.into();
+
+            // logln!("PROCESSGL input \n{gl_input:?}");
+
+            unsafe { renderer.draw(&data, gl_input) };
 
             SuccessVal::Success.into()
         }

@@ -12,6 +12,7 @@ num = "0.4"
 num-derive = "0.4.0"
 num-traits = "0.2"
 gl.workspace = true
+once_cell = "1.19.0"
 
 [build-dependencies]
 bindgen = "0.63.0"
