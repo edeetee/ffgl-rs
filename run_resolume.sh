@@ -30,9 +30,9 @@ echo "copying $LIB_PATH as $BUNDLE_NAME into $OUT_BUNDLE_DIR"
 
 
 echo "Running resolume"
-open "/Applications/Resolume Arena/Arena.app"
+/Applications/Resolume\ Arena/Arena.app/Contents/MacOS/Arena
 
-sleep 1
+# sleep 1
 
-echo "Listening to resolume logs"
-tail -n 0 -F "$HOME/Library/Logs/Resolume Arena/Resolume Arena log.txt"
+# echo "Listening to resolume logs"
+# tail -n 0 -F "$HOME/Library/Logs/Resolume Arena/Resolume Arena log.txt"

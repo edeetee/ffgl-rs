@@ -8,8 +8,7 @@ pub use instance::FFGLData;
 pub mod validate;
 
 use ffi::*;
-pub use parameters::Param;
-use parameters::ParamValue;
+pub use parameters::ParamInfo;
 
 use core::slice;
 use std::{ffi::c_void, fmt::Debug};
@@ -83,13 +82,15 @@ pub const fn plugin_info_extended(
 }
 
 pub trait ParamHandler {
-    type Param: Param + 'static;
+    type Param: ParamInfo + 'static;
 
     fn num_params() -> usize {
         0
     }
-    fn param(index: usize) -> &'static Self::Param;
-    fn set_param(&mut self, index: usize, value: ParamValue);
+    fn param_info(index: usize) -> &'static Self::Param;
+
+    fn get_param(&self, index: usize) -> f32;
+    fn set_param(&mut self, index: usize, value: f32);
 }
 
 pub trait FFGLHandler: Debug + ParamHandler {
@@ -107,7 +108,7 @@ pub trait FFGLHandler: Debug + ParamHandler {
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
 
-    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffgl1::ProcessOpenGLStruct);
+    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput);
 }
 
 // fn params<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &'static [T::Param] {
@@ -119,7 +120,7 @@ pub trait FFGLHandler: Debug + ParamHandler {
 // }
 
 fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
-    &T::param(unsafe { index.num as usize })
+    &T::param_info(unsafe { index.num as usize })
 }
 
 // fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
@@ -195,7 +196,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let input: &ffgl2::GetStringStructTag = unsafe { input_value.as_ref() };
             let buffer = input.stringBuffer;
 
-            let group = T::param(input.parameterNumber as usize).group();
+            let group = T::param_info(input.parameterNumber as usize).group();
 
             let string_target: &mut [char] = unsafe {
                 slice::from_raw_parts_mut(buffer.address as *mut char, buffer.maxToWrite as usize)
@@ -206,14 +207,20 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             string_target[..copied_chars]
                 .copy_from_slice(&group[..copied_chars].chars().collect::<Vec<_>>());
 
-            log::logln!("GET PARAM GROUP {group:?} {string_target:#?}");
+            log::logln!("GET PARAM GROUP {group:?}");
 
             SuccessVal::Success.into()
         }
         Op::GetParameterDisplay => param(instance, input_value).display_name().into(),
         Op::GetParameterName => param(instance, input_value).name().into(),
-        Op::GetParameter => param(instance, input_value).get().into(),
         Op::GetParameterType => param(instance, input_value).param_type().into(),
+
+        Op::GetParameter => instance
+            .unwrap()
+            .renderer
+            .get_param(unsafe { input_value.num } as usize)
+            .into(),
+
         Op::SetParameter => {
             let input: &ffgl2::SetParameterStruct = unsafe { input_value.as_ref() };
             let index = input.ParameterNumber;
@@ -227,10 +234,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             // log::logln!("SET PARAM cb {index_usize:?}=>{new_value:#?}");
 
-            instance
-                .unwrap()
-                .renderer
-                .set_param(index_usize, ParamValue::Float(new_value));
+            instance.unwrap().renderer.set_param(index_usize, new_value);
 
             // set_param(instance, index as usize, ParamValue::Float(new_value));
 
@@ -245,7 +249,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let input: &mut ffgl2::GetRangeStruct = unsafe { (input_value).as_mut() };
 
             let index = input.parameterNumber;
-            let param = &T::param(index as usize);
+            let param = &T::param_info(index as usize);
 
             input.range = ffgl2::RangeStruct {
                 min: param.min(),
@@ -292,7 +296,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             unsafe {
                 // validate::validate_context_state();
-                renderer.draw(&data, &gl_process_info);
+                renderer.draw(&data, gl_process_info.into());
                 // validate::validate_context_state();
             }
 

@@ -6,7 +6,7 @@ use std::ffi::{c_void, CStr};
 use num_derive::{FromPrimitive, ToPrimitive};
 
 use crate::ffgl1::{
-    FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
+    self, FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
     FF_CAP_PROCESSFRAMECOPY, FF_CAP_PROCESSOPENGL, FF_CAP_SETTIME, FF_GETINFO,
 };
 use crate::ffgl2::*;
@@ -135,6 +135,14 @@ impl<T> From<&'static T> for FFGLVal {
     }
 }
 
+impl From<f32> for FFGLVal {
+    fn from(a: f32) -> Self {
+        Self {
+            num: unsafe { std::mem::transmute(a) },
+        }
+    }
+}
+
 impl<T> From<&'static mut T> for FFGLVal {
     fn from(a: &'static mut T) -> Self {
         Self::from_static(a)
@@ -171,5 +179,24 @@ impl Into<FFGLVal> for BoolVal {
 impl Into<FFGLVal> for SupportVal {
     fn into(self) -> FFGLVal {
         FFGLVal { num: self as u32 }
+    }
+}
+
+pub struct GLInput<'a> {
+    pub textures: &'a [FFGLTextureStruct],
+    pub host: u32,
+}
+
+impl<'a> Into<GLInput<'a>> for &'a ffgl1::ProcessOpenGLStruct {
+    fn into(self) -> GLInput<'a> {
+        GLInput {
+            textures: unsafe {
+                std::slice::from_raw_parts(
+                    *self.inputTextures as *const _,
+                    self.numInputTextures as usize,
+                )
+            },
+            host: self.HostFBO,
+        }
     }
 }

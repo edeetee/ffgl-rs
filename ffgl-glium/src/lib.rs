@@ -1,5 +1,6 @@
 use std::{fmt::Formatter, rc::Rc};
 
+use ffgl_raw::ffi::{ffgl1::FFGLTextureStruct, ffgl2};
 pub use ffgl_raw::*;
 // use egui_node_graph::graph;
 // mod ffgl;
@@ -31,7 +32,12 @@ impl<Handler: Debug> Debug for FFGLGlium<Handler> {
 pub trait FFGLGliumHandler: Sized + ParamHandler {
     fn info() -> &'static mut ffi::ffgl1::PluginInfoStruct;
     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
-    fn render_frame(&mut self, inst_data: &FFGLData, target: &mut impl Surface);
+    fn render_frame(
+        &mut self,
+        inst_data: &FFGLData,
+        target: &mut impl Surface,
+        textures: &[ffgl2::FFGLTextureStruct],
+    );
 }
 
 impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
@@ -41,12 +47,16 @@ impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
         Handler::num_params()
     }
 
-    fn param(index: usize) -> &'static Self::Param {
-        Handler::param(index)
+    fn param_info(index: usize) -> &'static Self::Param {
+        Handler::param_info(index)
     }
 
-    fn set_param(&mut self, index: usize, value: parameters::ParamValue) {
+    fn set_param(&mut self, index: usize, value: f32) {
         self.handler.set_param(index, value);
+    }
+
+    fn get_param(&self, index: usize) -> f32 {
+        self.handler.get_param(index)
     }
 }
 
@@ -76,7 +86,7 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
         }
     }
 
-    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: &ffi::ffgl1::ProcessOpenGLStruct) {
+    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput<'_>) {
         let res = inst_data.get_dimensions();
         self.ctx.rebuild(self.backend.clone()).unwrap();
 
@@ -92,7 +102,8 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
         let fb = &mut SimpleFrameBuffer::new(&self.ctx, &rb).unwrap();
         // fb.clear_color(0.0, 0.0, 1.0, 1.0);
 
-        self.handler.render_frame(inst_data, fb);
+        self.handler
+            .render_frame(inst_data, fb, frame_data.textures);
 
         // validate_viewport(&viewport);
 
@@ -100,7 +111,7 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
         fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
 
         // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
-        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.HostFBO);
+        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
         blit_fb(res, res);
 
         frame.finish().unwrap();
