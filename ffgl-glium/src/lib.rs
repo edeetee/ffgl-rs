@@ -45,8 +45,8 @@ impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
         Handler::param(index)
     }
 
-    fn set_param(&mut self, _: usize, value: parameters::ParamValue) {
-        self.handler.set_param(0, value);
+    fn set_param(&mut self, index: usize, value: parameters::ParamValue) {
+        self.handler.set_param(index, value);
     }
 }
 

@@ -11,4 +11,4 @@ echo "BUILDING"
 
 cargo build --release -p example-isf
 
-./run.sh example_isf "$ISF_NAME"
+./run_resolume.sh example_isf "$ISF_NAME"

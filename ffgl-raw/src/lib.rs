@@ -89,7 +89,7 @@ pub trait ParamHandler {
         0
     }
     fn param(index: usize) -> &'static Self::Param;
-    fn set_param(&mut self, _: usize, value: ParamValue);
+    fn set_param(&mut self, index: usize, value: ParamValue);
 }
 
 pub trait FFGLHandler: Debug + ParamHandler {
@@ -122,9 +122,10 @@ fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) ->
     &T::param(unsafe { index.num as usize })
 }
 
-fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
-    instance.unwrap().renderer.set_param(index, value)
-}
+// fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
+//     println!("SET PARAM fn {index} {value:?}");
+//     instance.unwrap().renderer.set_param(index, value)
+// }
 
 // const TEST_PARAMS: &'static [BasicParam] = &[];
 
@@ -138,8 +139,8 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         | Op::SetBeatInfo
         | Op::SetTime
         | Op::GetParameterEvents
-        | Op::SetParameter
-        | Op::GetParameterDisplay
+        // | Op::SetParameter
+        // | Op::GetParameterDisplay
         | Op::GetParameterType => true,
         _ => false,
     };
@@ -218,24 +219,26 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let index = input.ParameterNumber;
 
             // let param = param_mut(instance, index as usize);
-
-            // log::logln!(
-            //     "SET PARAM\n{param:#?}\n{old_value:?} =>{new_value:#?}",
-            //     param = param,
-            //     old_value = param.value,
-            //     new_value = input.NewParameterValue
-            // );
+            let index_usize = index as usize;
 
             //dunno why they store this in a u32, whatever..
             let new_value =
                 unsafe { std::mem::transmute::<u32, f32>(input.NewParameterValue.UIntValue) };
 
-            set_param(instance, index as usize, ParamValue::Float(new_value));
+            // log::logln!("SET PARAM cb {index_usize:?}=>{new_value:#?}");
+
+            instance
+                .unwrap()
+                .renderer
+                .set_param(index_usize, ParamValue::Float(new_value));
+
+            // set_param(instance, index as usize, ParamValue::Float(new_value));
 
             // log::logln!(
             //     "SET PARAM {param:?} {old_value:?} => {new_value:?}",
             //     param = param.display_name.to_str().unwrap(),
             // );
+
             SuccessVal::Success.into()
         }
         Op::GetParameterRange => {
