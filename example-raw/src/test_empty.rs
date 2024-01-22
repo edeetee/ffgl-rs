@@ -14,7 +14,7 @@ impl FFGLHandler for TestEmpty {
 
     unsafe fn draw(&mut self, _data: &FFGLData, _frame_data: &ffgl::ProcessOpenGLStruct) {}
 
-    unsafe fn info() -> PluginInfo {
+    unsafe fn init() -> PluginInfo {
         PluginInfo {
             unique_id: 0000,
             name: "Example Empty from ffgl-rs",

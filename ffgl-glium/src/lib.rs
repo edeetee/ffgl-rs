@@ -30,7 +30,7 @@ impl<Handler: Debug> Debug for FFGLGlium<Handler> {
 }
 
 pub trait FFGLGliumHandler: Sized + ParamHandler {
-    fn info() -> PluginInfo;
+    fn init() -> PluginInfo;
     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
     fn render_frame(
         &mut self,
@@ -61,8 +61,8 @@ impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
 }
 
 impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
-    unsafe fn info() -> PluginInfo {
-        Handler::info()
+    unsafe fn init() -> PluginInfo {
+        Handler::init()
     }
 
     unsafe fn new(inst_data: &FFGLData) -> Self {

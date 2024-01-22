@@ -348,7 +348,7 @@ impl ParamHandler for IsfFFGLInstance {
 }
 
 impl FFGLGliumHandler for IsfFFGLInstance {
-    fn info() -> PluginInfo {
+    fn init() -> PluginInfo {
         INSTANCE.plugin_info.clone()
     }
 

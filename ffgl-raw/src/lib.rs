@@ -52,7 +52,8 @@ pub trait ParamHandler {
 
 pub trait FFGLHandler: Debug + ParamHandler {
     ///Called by [Op::FF_GETINFO] to get the plugin info
-    unsafe fn info() -> PluginInfo;
+    ///Should only ever be called once
+    unsafe fn init() -> PluginInfo;
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
@@ -89,6 +90,8 @@ static mut ABOUT: Option<CString> = None;
 static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 
+use tracing::{debug, error, info, span, trace, warn, Level};
+
 pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     function: Op,
     mut input_value: FFGLVal,
@@ -106,15 +109,17 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     };
 
     if !noisy_op {
-        log::logln!("Op::{function:?}({})", unsafe { input_value.num });
+        info!("Op::{function:?}({})", unsafe { input_value.num });
+    } else {
+        trace!("Op::{function:?}({})", unsafe { input_value.num });
     }
 
     unsafe {
         if !INITIALIZED {
             INITIALIZED = true;
-            logln!("INITIALIZING");
+            info!("INITIALIZING");
 
-            let info = T::info();
+            let info = T::init();
 
             ABOUT = Some(CString::new(info.about).unwrap());
             DESCRIPTION = Some(CString::new(info.description).unwrap());
@@ -149,7 +154,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 _ => SupportVal::Unsupported.into(),
             };
 
-            log::logln!("{cap:?} => {}", unsafe { result.num });
+            debug!("{cap:?} => {}", unsafe { result.num });
 
             result
         }
@@ -163,7 +168,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
                 _ => SuccessVal::Fail.into(),
             };
 
-            log::logln!("{cap:?} => {}", unsafe { result.num });
+            debug!("{cap:?} => {}", unsafe { result.num });
 
             result
         }
@@ -189,7 +194,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             string_target[..copied_chars]
                 .copy_from_slice(&group[..copied_chars].chars().collect::<Vec<_>>());
 
-            log::logln!("GET PARAM GROUP {group:?}");
+            debug!("GET PARAM GROUP {group:?}");
 
             SuccessVal::Success.into()
         }
@@ -252,7 +257,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let renderer = unsafe { T::new(&data) };
             let instance = Instance { data, renderer };
 
-            log::logln!("INSTGL\n{instance:#?}");
+            debug!("INSTGL\n{instance:#?}");
 
             FFGLVal::from_static(Box::leak(Box::<Instance<T>>::new(instance)))
         }
@@ -264,7 +269,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         Op::DeinstantiateGL => {
             let inst = instance.unwrap();
 
-            log::logln!("DEINSTGL\n{inst:#?}");
+            debug!("DEINSTGL\n{inst:#?}");
             unsafe {
                 drop(Box::from_raw(inst as *mut Instance<T>));
             }
@@ -304,7 +309,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         Op::Resize => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
-            log::logln!("RESIZE\n{viewport:#?}");
+            debug!("RESIZE\n{viewport:#?}");
             // instance.unwrap().data.set_viewport(viewport);
             SuccessVal::Success.into()
         }
@@ -323,7 +328,9 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     };
 
     if !noisy_op {
-        log::logln!("=> {}", unsafe { resp.num });
+        info!("=> {}", unsafe { resp.num });
+    } else {
+        trace!("=> {}", unsafe { resp.num });
     }
 
     resp
