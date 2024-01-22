@@ -1,6 +1,6 @@
 mod test_empty;
 mod test_gl;
-use ffgl;
+use ffgl_raw;
 mod shader_helper;
 
-ffgl::ffgl_handler!(test_gl::TestGl);
+ffgl_raw::ffgl_handler!(test_gl::TestGl);

@@ -17,6 +17,12 @@ pub fn inner_log(str: &str) {
     }
 }
 
+// pub fn init_logger(logger: FFGLLogger) {
+//     let _ = tracing_subscriber::fmt()
+//         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+//         .try_init();
+// }
+
 #[macro_export]
 macro_rules! logln {
     () => {

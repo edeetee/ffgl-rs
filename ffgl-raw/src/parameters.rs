@@ -88,7 +88,7 @@ pub trait ParamInfo {
         ParameterTypes::Standard
     }
 
-    fn default(&self) -> f32 {
+    fn default_val(&self) -> f32 {
         self.param_type().default_value()
     }
 
@@ -159,7 +159,7 @@ impl ParamInfo for BasicParamInfo {
         self.max.unwrap_or(1.0)
     }
 
-    fn default(&self) -> f32 {
+    fn default_val(&self) -> f32 {
         self.default.unwrap_or(self.param_type.default_value())
     }
 

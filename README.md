@@ -2,19 +2,32 @@
 
 Here is the start a rust binding for FFGL. I reference both the old and resolume versions of FFGL with the aim to support both on all platforms.
 
+## Support
+
+- Currently Macos only
+  - Wouldn't require too much to get working on windows, just need to get the build script working
+- FFGL 2 (resolume)
+
 ## Functionality
 
-- Bindings for FFGL1.x + 2.x
 - Logging inside resolume
-- Conversions between FFI and Rust types
-- Basic logic, pointer casting and handling to successfully launch in resolume.
-- Custom Parameter types
+- Handy scripts to build and run inside resolume
+- Example ISF plugin
+  - Give an input ISF file and output an FFGL plugin
+  - Quicker than using Wire for basic ISF shaders
 
 ## Usage
 
-Currently only tested on macos. I just run ./run.sh and it builds the build cdylib to a macos bundle, runs resolume and listens to the log file.
+Currently only tested on macos.
 
-In order to do this yourself, you'll have to make a macos bundle in the same location (you can copy one from the resolume repo I think....) To do this automatically, we need a crate that can do this for all platforms.
+### Build
+
+``
+
+## Future work
+
+- Get working on Windows
+- Get working on FFGL1 (VDMX)
 
 ## Aims
 

@@ -1,3 +1,7 @@
 {
-  "dotnet.defaultSolution": "disable"
+  "dotnet.defaultSolution": "disable",
+  "files.associations": {
+    "*.isf": "glsl",
+    "string": "cpp"
+  }
 }

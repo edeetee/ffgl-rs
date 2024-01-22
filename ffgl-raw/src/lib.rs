@@ -12,7 +12,12 @@ use ffi::ffgl2::*;
 pub use parameters::ParamInfo;
 
 use core::slice;
-use std::{ffi::c_void, fmt::Debug};
+use std::{
+    cell::OnceCell,
+    ffi::{c_void, CStr, CString},
+    fmt::Debug,
+    sync::OnceLock,
+};
 
 pub use conversions::*;
 pub use log::{FFGLLogger, LOADING_LOGGER};
@@ -33,61 +38,6 @@ impl<T> Debug for Instance<T> {
     }
 }
 
-#[derive(PartialEq)]
-enum FFGLVersion {
-    // V1_5,
-    V2_1,
-}
-
-impl FFGLVersion {
-    const fn major(&self) -> u32 {
-        match self {
-            // FFGLVersion::V1_5 => 1,
-            FFGLVersion::V2_1 => 2,
-        }
-    }
-
-    const fn minor(&self) -> u32 {
-        match self {
-            // FFGLVersion::V1_5 => 5,
-            FFGLVersion::V2_1 => 1,
-        }
-    }
-}
-
-const FFGL_VERSION: FFGLVersion = FFGLVersion::V2_1;
-
-// static mut INFO: ffgl::PluginInfoStruct = plugin_info(b"TRP0", b"testrustplugin  ");
-// static mut INFO_EXTENDED: ffgl::PluginExtendedInfoStruct =
-
-pub fn plugin_info(
-    unique_id: &[u8; 4],
-    name: &[u8; 16],
-    plugin_type: PluginType,
-) -> PluginInfoStruct {
-    PluginInfoStruct {
-        APIMajorVersion: FFGL_VERSION.major(),
-        APIMinorVersion: FFGL_VERSION.minor(),
-        PluginUniqueID: *unsafe { std::mem::transmute::<_, &[i8; 4]>(unique_id) },
-        PluginName: *unsafe { std::mem::transmute::<_, &[i8; 16]>(name) },
-        PluginType: plugin_type.to_u32().unwrap(),
-    }
-}
-
-pub const fn plugin_info_extended(
-    about: &'static str,
-    description: &'static str,
-) -> PluginExtendedInfoStruct {
-    PluginExtendedInfoStruct {
-        PluginMajorVersion: 0,
-        PluginMinorVersion: 0,
-        Description: about.as_ptr().cast_mut().cast(),
-        About: description.as_ptr().cast_mut().cast(),
-        FreeFrameExtendedDataSize: 0,
-        FreeFrameExtendedDataBlock: std::ptr::null::<c_void>() as *mut c_void,
-    }
-}
-
 pub trait ParamHandler {
     type Param: ParamInfo + 'static;
 
@@ -100,45 +50,44 @@ pub trait ParamHandler {
     fn set_param(&mut self, index: usize, value: f32);
 }
 
-use once_cell::unsync::Lazy;
-
 pub trait FFGLHandler: Debug + ParamHandler {
-    unsafe fn info() -> &'static PluginInfoStruct {
-        static mut INFO: Lazy<PluginInfoStruct> =
-            Lazy::new(|| plugin_info(b"TRP0", b"testrustplugin  ", PluginType::Source));
-        &mut INFO
-    }
-
-    unsafe fn info_extended() -> &'static mut PluginExtendedInfoStruct {
-        static mut INFO_EXTENDED: PluginExtendedInfoStruct =
-            plugin_info_extended("Edward Taylor\0", "Built with Rust\0");
-        &mut INFO_EXTENDED
-    }
+    ///Called by [Op::FF_GETINFO] to get the plugin info
+    unsafe fn info() -> PluginInfo;
 
     ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
     unsafe fn new(inst_data: &FFGLData) -> Self;
 
+    ///Called by [Op::FF_PROCESSOPENGL] to draw the plugin
     unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput);
 }
 
-// fn params<T: FFGLHandler>(instance: Option<&mut Instance<T>>) -> &'static [T::Param] {
-//     T::params()
-// }
+pub trait NoParamsHandler {}
 
-// fn params<T: FFGLHandler<P>, P: Param>(instance: Option<&mut Instance<T>>) -> &[BasicParam] {
-//     &TEST_PARAMS
-// }
+impl<T: NoParamsHandler> ParamHandler for T {
+    type Param = parameters::BasicParamInfo;
+
+    fn param_info(_index: usize) -> &'static Self::Param {
+        unimplemented!("No params")
+    }
+
+    fn get_param(&self, _index: usize) -> f32 {
+        unimplemented!("No params")
+    }
+
+    fn set_param(&mut self, _index: usize, _value: f32) {
+        unimplemented!("No params")
+    }
+}
 
 fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
     &T::param_info(unsafe { index.num as usize })
 }
 
-// fn set_param<T: FFGLHandler>(instance: Option<&mut Instance<T>>, index: usize, value: ParamValue) {
-//     println!("SET PARAM fn {index} {value:?}");
-//     instance.unwrap().renderer.set_param(index, value)
-// }
-
-// const TEST_PARAMS: &'static [BasicParam] = &[];
+static mut INITIALIZED: bool = false;
+static mut INFO: Option<PluginInfoStruct> = None;
+static mut ABOUT: Option<CString> = None;
+static mut DESCRIPTION: Option<CString> = None;
+static mut INFO_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 
 pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
     function: Op,
@@ -150,14 +99,37 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         | Op::SetBeatInfo
         | Op::SetTime
         | Op::GetParameterEvents
-        // | Op::SetParameter
-        // | Op::GetParameterDisplay
+        | Op::SetParameter
+        | Op::GetParameterDisplay
         | Op::GetParameterType => true,
         _ => false,
     };
 
     if !noisy_op {
         log::logln!("Op::{function:?}({})", unsafe { input_value.num });
+    }
+
+    unsafe {
+        if !INITIALIZED {
+            INITIALIZED = true;
+            logln!("INITIALIZING");
+
+            let info = T::info();
+
+            ABOUT = Some(CString::new(info.about).unwrap());
+            DESCRIPTION = Some(CString::new(info.description).unwrap());
+
+            INFO = Some(plugin_info(
+                std::mem::transmute(&info.unique_id),
+                std::mem::transmute(&info.name),
+                info.ty,
+            ));
+
+            INFO_EXTENDED = Some(plugin_info_extended(
+                ABOUT.as_ref().unwrap(),
+                DESCRIPTION.as_ref().unwrap(),
+            ));
+        }
     }
 
     let resp = match function {
@@ -201,7 +173,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             num: T::num_params() as u32,
         },
 
-        Op::GetParameterDefault => param(instance, input_value).default().into(),
+        Op::GetParameterDefault => param(instance, input_value).default_val().into(),
         Op::GetParameterGroup => {
             let input: &GetStringStructTag = unsafe { input_value.as_ref() };
             let buffer = input.stringBuffer;
@@ -269,9 +241,9 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             SuccessVal::Success.into()
         }
         // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
-        Op::GetInfo => unsafe { T::info().into() },
+        Op::GetInfo => unsafe { INFO.as_ref().unwrap().into() },
 
-        Op::GetExtendedInfo => unsafe { T::info_extended().into() },
+        Op::GetExtendedInfo => unsafe { INFO_EXTENDED.as_ref().unwrap().into() },
 
         Op::InstantiateGL => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };

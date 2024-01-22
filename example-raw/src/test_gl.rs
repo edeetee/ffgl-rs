@@ -1,8 +1,8 @@
-use ffgl::{parameters::BasicParam};
+use ffgl::parameters::BasicParam;
 
 use crate::shader_helper::*;
 use std::{
-    ffi::{CString},
+    ffi::CString,
     ptr::{self},
 };
 

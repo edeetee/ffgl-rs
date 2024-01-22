@@ -15,7 +15,7 @@ use ffgl_glium::{
     ffi::{ffgl2, ffgl2::PluginInfoStruct},
     logln,
     parameters::BasicParamInfo,
-    plugin_info, FFGLGlium, FFGLGliumHandler, ParamHandler, ParamInfo, PluginType,
+    plugin_info, FFGLGlium, FFGLGliumHandler, ParamHandler, ParamInfo, PluginInfo, PluginType,
 };
 use glium::{
     backend::Facade,
@@ -33,7 +33,7 @@ use util::MultiUniforms;
 pub struct IsfState {
     pub info: Isf,
     pub inputs: Vec<IsfInputParam>,
-    pub plugin_info: PluginInfoStruct,
+    pub plugin_info: PluginInfo,
 }
 
 impl Uniforms for IsfState {
@@ -259,7 +259,13 @@ impl IsfState {
             PluginType::Source
         };
 
-        let plugin_info = plugin_info(&code, &name, plugin_type);
+        let plugin_info = PluginInfo {
+            unique_id: code,
+            name: name,
+            ty: plugin_type,
+            about: info.categories.join(", "),
+            description: info.description.clone().unwrap(),
+        };
 
         logln!("ISF INFO: {info:?}");
         logln!("ISF PARAMS: {params:?}");
@@ -342,8 +348,8 @@ impl ParamHandler for IsfFFGLInstance {
 }
 
 impl FFGLGliumHandler for IsfFFGLInstance {
-    fn info() -> &'static ffgl_glium::ffi::ffgl1::PluginInfoStruct {
-        &INSTANCE.plugin_info
+    fn info() -> PluginInfo {
+        INSTANCE.plugin_info.clone()
     }
 
     fn new(inst_data: &ffgl_glium::FFGLData, ctx: std::rc::Rc<glium::backend::Context>) -> Self {
