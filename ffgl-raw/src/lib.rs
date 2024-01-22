@@ -7,7 +7,8 @@ pub mod parameters;
 pub use instance::FFGLData;
 pub mod validate;
 
-use ffi::*;
+use ffi::ffgl2::*;
+
 pub use parameters::ParamInfo;
 
 use core::slice;
@@ -63,12 +64,12 @@ pub fn plugin_info(
     unique_id: &[u8; 4],
     name: &[u8; 16],
     plugin_type: PluginType,
-) -> ffgl1::PluginInfoStruct {
-    ffgl1::PluginInfoStruct {
+) -> PluginInfoStruct {
+    PluginInfoStruct {
         APIMajorVersion: FFGL_VERSION.major(),
         APIMinorVersion: FFGL_VERSION.minor(),
-        PluginUniqueID: *unique_id,
-        PluginName: *name,
+        PluginUniqueID: *unsafe { std::mem::transmute::<_, &[i8; 4]>(unique_id) },
+        PluginName: *unsafe { std::mem::transmute::<_, &[i8; 16]>(name) },
         PluginType: plugin_type.to_u32().unwrap(),
     }
 }
@@ -76,8 +77,8 @@ pub fn plugin_info(
 pub const fn plugin_info_extended(
     about: &'static str,
     description: &'static str,
-) -> ffgl1::PluginExtendedInfoStruct {
-    ffgl1::PluginExtendedInfoStruct {
+) -> PluginExtendedInfoStruct {
+    PluginExtendedInfoStruct {
         PluginMajorVersion: 0,
         PluginMinorVersion: 0,
         Description: about.as_ptr().cast_mut().cast(),
@@ -102,14 +103,14 @@ pub trait ParamHandler {
 use once_cell::unsync::Lazy;
 
 pub trait FFGLHandler: Debug + ParamHandler {
-    unsafe fn info() -> &'static ffgl1::PluginInfoStruct {
-        static mut INFO: Lazy<ffgl1::PluginInfoStruct> =
+    unsafe fn info() -> &'static PluginInfoStruct {
+        static mut INFO: Lazy<PluginInfoStruct> =
             Lazy::new(|| plugin_info(b"TRP0", b"testrustplugin  ", PluginType::Source));
         &mut INFO
     }
 
-    unsafe fn info_extended() -> &'static mut ffgl1::PluginExtendedInfoStruct {
-        static mut INFO_EXTENDED: ffgl1::PluginExtendedInfoStruct =
+    unsafe fn info_extended() -> &'static mut PluginExtendedInfoStruct {
+        static mut INFO_EXTENDED: PluginExtendedInfoStruct =
             plugin_info_extended("Edward Taylor\0", "Built with Rust\0");
         &mut INFO_EXTENDED
     }
@@ -202,7 +203,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         Op::GetParameterDefault => param(instance, input_value).default().into(),
         Op::GetParameterGroup => {
-            let input: &ffgl2::GetStringStructTag = unsafe { input_value.as_ref() };
+            let input: &GetStringStructTag = unsafe { input_value.as_ref() };
             let buffer = input.stringBuffer;
 
             let group = T::param_info(input.parameterNumber as usize).group();
@@ -231,7 +232,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             .into(),
 
         Op::SetParameter => {
-            let input: &ffgl2::SetParameterStruct = unsafe { input_value.as_ref() };
+            let input: &SetParameterStruct = unsafe { input_value.as_ref() };
             let index = input.ParameterNumber;
 
             // let param = param_mut(instance, index as usize);
@@ -255,12 +256,12 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             SuccessVal::Success.into()
         }
         Op::GetParameterRange => {
-            let input: &mut ffgl2::GetRangeStruct = unsafe { (input_value).as_mut() };
+            let input: &mut GetRangeStruct = unsafe { (input_value).as_mut() };
 
             let index = input.parameterNumber;
             let param = &T::param_info(index as usize);
 
-            input.range = ffgl2::RangeStruct {
+            input.range = RangeStruct {
                 min: param.min(),
                 max: param.max(),
             };
@@ -273,7 +274,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         Op::GetExtendedInfo => unsafe { T::info_extended().into() },
 
         Op::InstantiateGL => {
-            let viewport: &ffgl1::FFGLViewportStruct = unsafe { input_value.as_ref() };
+            let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
 
             let data = FFGLData::new(viewport);
             let renderer = unsafe { T::new(&data) };
@@ -300,7 +301,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         }
 
         Op::ProcessOpenGL => {
-            let gl_process_info: &ffgl1::ProcessOpenGLStruct = unsafe { input_value.as_ref() };
+            let gl_process_info: &ProcessOpenGLStruct = unsafe { input_value.as_ref() };
 
             // logln!("PROCESSGL info \n{gl_process_info:#?}");
 
@@ -322,7 +323,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         //This is called before GLInitialize
         Op::SetBeatInfo => {
-            let beat_info: &ffgl2::SetBeatinfoStruct = unsafe { input_value.as_ref() };
+            let beat_info: &SetBeatinfoStruct = unsafe { input_value.as_ref() };
             if let Some(instance) = instance {
                 instance.data.set_beat(*beat_info);
             }
@@ -330,7 +331,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
         }
 
         Op::Resize => {
-            let viewport: &ffgl1::FFGLViewportStruct = unsafe { input_value.as_ref() };
+            let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
             log::logln!("RESIZE\n{viewport:#?}");
             // instance.unwrap().data.set_viewport(viewport);
             SuccessVal::Success.into()

@@ -12,7 +12,7 @@ use once_cell::sync::Lazy;
 
 use ffgl_glium::{
     ffgl_handler,
-    ffi::{ffgl1::PluginInfoStruct, ffgl2},
+    ffi::{ffgl2, ffgl2::PluginInfoStruct},
     logln,
     parameters::BasicParamInfo,
     plugin_info, FFGLGlium, FFGLGliumHandler, ParamHandler, ParamInfo, PluginType,

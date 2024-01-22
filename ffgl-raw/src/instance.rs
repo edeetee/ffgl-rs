@@ -1,31 +1,31 @@
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use crate::ffgl2;
+use crate::ffi::ffgl2::*;
 
 ///Standard data that hosts provide to all programs
 #[derive(Debug)]
 pub struct FFGLData {
     pub created_at: Instant,
-    pub viewport: crate::ffgl1::FFGLViewportStruct,
+    pub viewport: FFGLViewportStruct,
     pub host_time: SystemTime,
-    pub host_beat: ffgl2::SetBeatinfoStruct,
+    pub host_beat: SetBeatinfoStruct,
     // pub ctx:
 }
 
 impl FFGLData {
-    pub fn new(viewport: &crate::ffgl1::FFGLViewportStruct) -> FFGLData {
+    pub fn new(viewport: &FFGLViewportStruct) -> FFGLData {
         Self {
             created_at: Instant::now(),
             viewport: viewport.clone(),
             host_time: SystemTime::now(),
-            host_beat: ffgl2::SetBeatinfoStruct {
+            host_beat: SetBeatinfoStruct {
                 bpm: 120.0,
                 barPhase: 0.0,
             },
         }
     }
 
-    pub fn set_beat(&mut self, beat: ffgl2::SetBeatinfoStruct) {
+    pub fn set_beat(&mut self, beat: SetBeatinfoStruct) {
         self.host_beat = beat;
     }
 

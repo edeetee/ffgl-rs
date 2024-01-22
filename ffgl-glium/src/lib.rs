@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::Formatter, rc::Rc};
 
-use ffgl_raw::ffi::{ffgl1::FFGLTextureStruct, ffgl2};
+use ffgl_raw::ffi::ffgl2::{self, FFGLTextureStruct};
 pub use ffgl_raw::*;
 // use egui_node_graph::graph;
 // mod ffgl;
@@ -30,7 +30,7 @@ impl<Handler: Debug> Debug for FFGLGlium<Handler> {
 }
 
 pub trait FFGLGliumHandler: Sized + ParamHandler {
-    fn info() -> &'static ffi::ffgl1::PluginInfoStruct;
+    fn info() -> &'static ffi::ffgl2::PluginInfoStruct;
     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
     fn render_frame(
         &mut self,
@@ -61,7 +61,7 @@ impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
 }
 
 impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
-    unsafe fn info() -> &'static ffi::ffgl1::PluginInfoStruct {
+    unsafe fn info() -> &'static ffi::ffgl2::PluginInfoStruct {
         Handler::info()
     }
 

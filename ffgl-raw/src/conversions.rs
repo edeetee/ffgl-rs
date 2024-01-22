@@ -5,16 +5,13 @@ use std::ffi::{c_void, CStr};
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::ffgl1::{
-    self, FF_CAP_16BITVIDEO, FF_CAP_24BITVIDEO, FF_CAP_32BITVIDEO, FF_CAP_MINIMUMINPUTFRAMES,
-    FF_CAP_PROCESSFRAMECOPY, FF_CAP_PROCESSOPENGL, FF_CAP_SETTIME, FF_GETINFO,
-};
-use crate::ffgl2::{self, *};
+use crate::ffi::ffgl1;
+use crate::ffi::ffgl2::*;
 
 #[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum Op {
-    GetInfo = FF_GETINFO,
+    GetInfo = FF_GET_INFO,
     Initialise,
     Deinitialise,
     ProcessFrame,
@@ -71,16 +68,16 @@ impl TryFrom<u32> for Op {
 #[derive(FromPrimitive, Debug)]
 pub enum PluginCapacity {
     ///old
-    Video16b = FF_CAP_16BITVIDEO,
-    Video24 = FF_CAP_24BITVIDEO,
-    Video32 = FF_CAP_32BITVIDEO,
-    ProcessFrameCopy = FF_CAP_PROCESSFRAMECOPY,
+    Video16b = ffgl1::FF_CAP_16BITVIDEO,
+    Video24 = ffgl1::FF_CAP_24BITVIDEO,
+    Video32 = ffgl1::FF_CAP_32BITVIDEO,
+    ProcessFrameCopy = ffgl1::FF_CAP_PROCESSFRAMECOPY,
 
-    ProcessOpenGl = FF_CAP_PROCESSOPENGL,
+    ProcessOpenGl = ffgl1::FF_CAP_PROCESSOPENGL,
 
-    SetTime = FF_CAP_SETTIME,
+    SetTime = FF_CAP_SET_TIME,
 
-    MinInputFrames = FF_CAP_MINIMUMINPUTFRAMES,
+    MinInputFrames = FF_CAP_MINIMUM_INPUT_FRAMES,
     MaxInputFrames = FF_CAP_MAXIMUM_INPUT_FRAMES,
 
     TopLeftTextureOrientation = FF_CAP_TOP_LEFT_TEXTURE_ORIENTATION,
@@ -188,7 +185,7 @@ pub struct GLInput<'a> {
     pub host: u32,
 }
 
-impl<'a> Into<GLInput<'a>> for &'a ffgl1::ProcessOpenGLStruct {
+impl<'a> Into<GLInput<'a>> for &'a ProcessOpenGLStruct {
     fn into(self) -> GLInput<'a> {
         GLInput {
             textures: unsafe {
@@ -205,7 +202,7 @@ impl<'a> Into<GLInput<'a>> for &'a ffgl1::ProcessOpenGLStruct {
 #[repr(u32)]
 #[derive(FromPrimitive, ToPrimitive, Debug)]
 pub enum PluginType {
-    Effect = ffgl1::FF_EFFECT,
-    Source = ffgl1::FF_SOURCE,
-    Mixer = ffgl2::FF_MIXER,
+    Effect = FF_EFFECT,
+    Source = FF_SOURCE,
+    Mixer = FF_MIXER,
 }

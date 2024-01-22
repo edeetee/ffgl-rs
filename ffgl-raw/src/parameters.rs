@@ -2,7 +2,7 @@
 
 use std::ffi::{CStr, CString};
 
-use crate::{ffgl2::*, FFGLVal};
+use crate::{ffi::ffgl2::*, FFGLVal};
 use num_derive::FromPrimitive;
 
 #[repr(u32)]
