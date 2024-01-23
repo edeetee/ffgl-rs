@@ -43,6 +43,12 @@ I have integrated [tracing](https://docs.rs/tracing/latest/tracing/index.html) i
 
 `RUST_LOG=trace ./run_resolume.sh`
 
+## Extending
+
+You can create your own plugin from scratch by either using the SimpleFFGLInstance trait, or implement both the FFGLHandler and FFGLInstance traits.
+
+You must call the ffgl_handler!() macro to associate your plugin with the correct entry points.
+
 ## Future work
 
 - Get working on Windows

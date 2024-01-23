@@ -1,5 +1,3 @@
-use std::cell::OnceCell;
-
 use parameters::BasicParamInfo;
 
 use parameters::ParamInfo;
@@ -10,10 +8,7 @@ use std::fmt::Debug;
 
 use instance::FFGLData;
 
-use crate::instance;
-use crate::parameters;
-use crate::GLInput;
-use crate::PluginInfo;
+use crate::{instance, parameters, GLInput, PluginInfo};
 
 pub struct Instance<T> {
     pub(crate) data: FFGLData,
@@ -56,10 +51,12 @@ pub trait FFGLHandler {
     fn new_instance(&'static self, inst_data: &FFGLData) -> Self::Instance;
 }
 
+///This is a handler that just delegates to a SimpleFFGLInstance
 pub struct SimpleFFGLHandler<T: SimpleFFGLInstance> {
     _marker: std::marker::PhantomData<T>,
 }
 
+///Implement this trait for a plugin without any static state
 pub trait SimpleFFGLInstance: FFGLInstance {
     fn new(inst_data: &FFGLData) -> Self;
 
