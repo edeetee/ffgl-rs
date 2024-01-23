@@ -9,10 +9,13 @@ pub mod validate;
 
 use ffi::ffgl2::*;
 
+use parameters::BasicParamInfo;
 pub use parameters::ParamInfo;
+use traits::{FFGLHandler, FFGLInstance};
 
 use core::slice;
 use std::{
+    any::Any,
     cell::OnceCell,
     ffi::{c_void, CStr, CString},
     fmt::Debug,
@@ -24,64 +27,22 @@ pub use log::{FFGLLogger, LOADING_LOGGER};
 
 pub use num_traits::ToPrimitive;
 
-pub struct Instance<T> {
-    data: FFGLData,
-    renderer: T,
-}
+pub mod traits;
 
-impl<T> Debug for Instance<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Instance")
-            .field("data", &self.data)
-            .field("renderer", &std::any::type_name::<T>())
-            .finish()
-    }
-}
+// pub trait NoParamsHandler {}
 
-pub trait ParamHandler {
-    type Param: ParamInfo + 'static;
+// impl<I: NoParamsHandler> ParamHandler for I {
+//     fn get_param(&self, _index: usize) -> f32 {
+//         unimplemented!("No params")
+//     }
 
-    fn num_params() -> usize {
-        0
-    }
-    fn param_info(index: usize) -> &'static Self::Param;
+//     fn set_param(&mut self, _index: usize, _value: f32) {
+//         unimplemented!("No params")
+//     }
+// }
 
-    fn get_param(&self, index: usize) -> f32;
-    fn set_param(&mut self, index: usize, value: f32);
-}
-
-pub trait FFGLHandler: Debug + ParamHandler {
-    ///Called by [Op::FF_GETINFO] to get the plugin info
-    ///Should only ever be called once
-    unsafe fn init() -> PluginInfo;
-
-    ///Called by [Op::FF_INSTANTIATEGL] to create a new instance of the plugin
-    unsafe fn new(inst_data: &FFGLData) -> Self;
-
-    ///Called by [Op::FF_PROCESSOPENGL] to draw the plugin
-    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput);
-}
-
-pub trait NoParamsHandler {}
-
-impl<T: NoParamsHandler> ParamHandler for T {
-    type Param = parameters::BasicParamInfo;
-
-    fn param_info(_index: usize) -> &'static Self::Param {
-        unimplemented!("No params")
-    }
-
-    fn get_param(&self, _index: usize) -> f32 {
-        unimplemented!("No params")
-    }
-
-    fn set_param(&mut self, _index: usize, _value: f32) {
-        unimplemented!("No params")
-    }
-}
-
-fn param<T: FFGLHandler>(_instance: Option<&mut Instance<T>>, index: FFGLVal) -> &'static T::Param {
-    &T::param_info(unsafe { index.num as usize })
+fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static H::Param {
+    handler.param_info(unsafe { index.num as usize })
 }
 
 static mut INITIALIZED: bool = false;
@@ -89,13 +50,14 @@ static mut INFO: Option<PluginInfoStruct> = None;
 static mut ABOUT: Option<CString> = None;
 static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_EXTENDED: Option<PluginExtendedInfoStruct> = None;
+static mut HANDLER: Option<Box<dyn Any>> = None;
 
 use tracing::{debug, error, info, span, trace, warn, Level};
 
-pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
+pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     function: Op,
     mut input_value: FFGLVal,
-    instance: Option<&mut Instance<T>>,
+    instance: Option<&mut traits::Instance<H::Instance>>,
 ) -> FFGLVal {
     let noisy_op = match function {
         Op::ProcessOpenGL
@@ -119,7 +81,11 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             INITIALIZED = true;
             info!("INITIALIZING");
 
-            let info = T::init();
+            HANDLER = Some(Box::new(H::init()));
+
+            let handler = &*HANDLER.as_ref().unwrap().downcast_ref::<H>().unwrap();
+
+            let info = handler.plugin_info();
 
             ABOUT = Some(CString::new(info.about).unwrap());
             DESCRIPTION = Some(CString::new(info.description).unwrap());
@@ -136,6 +102,14 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             ));
         }
     }
+
+    let handler = unsafe { &HANDLER }
+        .as_ref()
+        .expect("Handler not initialized")
+        .downcast_ref::<H>()
+        .expect("Handler type mismatch");
+
+    // let handler =
 
     let resp = match function {
         Op::GetPluginCaps => {
@@ -175,15 +149,15 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
         // Op::GetNumParameters => FFGLVal { num: 0 },
         Op::GetNumParameters => FFGLVal {
-            num: T::num_params() as u32,
+            num: handler.num_params() as u32,
         },
 
-        Op::GetParameterDefault => param(instance, input_value).default_val().into(),
+        Op::GetParameterDefault => param(handler, input_value).default_val().into(),
         Op::GetParameterGroup => {
             let input: &GetStringStructTag = unsafe { input_value.as_ref() };
             let buffer = input.stringBuffer;
 
-            let group = T::param_info(input.parameterNumber as usize).group();
+            let group = H::param_info(handler, input.parameterNumber as usize).group();
 
             let string_target: &mut [char] = unsafe {
                 slice::from_raw_parts_mut(buffer.address as *mut char, buffer.maxToWrite as usize)
@@ -198,9 +172,9 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             SuccessVal::Success.into()
         }
-        Op::GetParameterDisplay => param(instance, input_value).display_name().into(),
-        Op::GetParameterName => param(instance, input_value).name().into(),
-        Op::GetParameterType => param(instance, input_value).param_type().into(),
+        Op::GetParameterDisplay => param(handler, input_value).display_name().into(),
+        Op::GetParameterName => param(handler, input_value).name().into(),
+        Op::GetParameterType => param(handler, input_value).param_type().into(),
 
         Op::GetParameter => instance
             .unwrap()
@@ -236,7 +210,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let input: &mut GetRangeStruct = unsafe { (input_value).as_mut() };
 
             let index = input.parameterNumber;
-            let param = &T::param_info(index as usize);
+            let param = handler.param_info(index as usize);
 
             input.range = RangeStruct {
                 min: param.min(),
@@ -254,12 +228,14 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
 
             let data = FFGLData::new(viewport);
-            let renderer = unsafe { T::new(&data) };
-            let instance = Instance { data, renderer };
+            let renderer = unsafe { H::new_instance(handler, &data) };
+            let instance = traits::Instance { data, renderer };
 
             debug!("INSTGL\n{instance:#?}");
 
-            FFGLVal::from_static(Box::leak(Box::<Instance<T>>::new(instance)))
+            FFGLVal::from_static(Box::leak(Box::<traits::Instance<H::Instance>>::new(
+                instance,
+            )))
         }
 
         // Op::FF_RESIZE => {
@@ -271,7 +247,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             debug!("DEINSTGL\n{inst:#?}");
             unsafe {
-                drop(Box::from_raw(inst as *mut Instance<T>));
+                drop(Box::from_raw(inst as *mut traits::Instance<H::Instance>));
             }
 
             SuccessVal::Success.into()
@@ -282,7 +258,7 @@ pub fn default_ffgl_callback<T: FFGLHandler + 'static>(
 
             // logln!("PROCESSGL info \n{gl_process_info:#?}");
 
-            let Instance { data, renderer } = instance.unwrap();
+            let traits::Instance { data, renderer } = instance.unwrap();
             let gl_input = gl_process_info.into();
 
             // logln!("PROCESSGL input \n{gl_input:?}");

@@ -7,13 +7,15 @@ macro_rules! ffgl_handler {
         extern "C" fn plugMain(
             functionCode: u32,
             inputValue: $crate::conversions::FFGLVal,
-            instanceID: *mut $crate::Instance<$handler>,
+            instanceID: *mut $crate::traits::Instance<
+                <$handler as $crate::traits::FFGLHandler>::Instance,
+            >,
         ) -> $crate::conversions::FFGLVal {
             match $crate::conversions::Op::try_from(functionCode) {
                 Ok(function) => {
                     // $crate::logln!("Op::{function:?}");
                     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                        $crate::default_ffgl_callback(function, inputValue, unsafe {
+                        $crate::default_ffgl_callback::<$handler>(function, inputValue, unsafe {
                             instanceID.as_mut()
                         })
                     }));

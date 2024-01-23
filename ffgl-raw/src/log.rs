@@ -40,7 +40,7 @@ pub fn init_logger(logger: FFGLLogger) {
     }));
 
     let env_filter = tracing_subscriber::EnvFilter::builder()
-        .with_default_directive(LevelFilter::WARN.into())
+        .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
 
     //try set tracing logger

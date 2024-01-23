@@ -15,80 +15,79 @@ use std::fmt::Debug;
 mod gl_backend;
 mod validate_gl;
 
-pub struct FFGLGlium<Handler: Debug> {
-    ctx: Rc<Context>,
+pub struct FFGLGliumInstance {
+    pub ctx: Rc<Context>,
     backend: Rc<gl_backend::RawGlBackend>,
-    handler: Handler,
 }
 
-impl<Handler: Debug> Debug for FFGLGlium<Handler> {
+impl Debug for FFGLGliumInstance {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("FFGLGliumHandler")
-            .field("handler", &self.handler)
-            .finish()
+        f.debug_struct("FFGLGliumHandler").finish()
     }
 }
 
-pub trait FFGLGliumHandler: Sized + ParamHandler {
-    fn init() -> PluginInfo;
-    fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
-    fn render_frame(
-        &mut self,
-        target: &mut impl Surface,
-        input_textures: Vec<Texture2d>,
-        inst_data: &FFGLData,
-    ) -> Result<(), Box<dyn Error>>;
-}
+// pub trait FFGLGliumInstance: Sized + ParamHandler {
+//     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
+//     fn render_frame(
+//         &mut self,
+//         target: &mut impl Surface,
+//         input_textures: Vec<Texture2d>,
+//         inst_data: &FFGLData,
+//     ) -> Result<(), Box<dyn Error>>;
+// }
 
-impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGlium<Handler> {
-    type Param = Handler::Param;
+// impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGliumState<Handler> {
+//     // type Param = Handler::Param;
 
-    fn num_params() -> usize {
-        Handler::num_params()
-    }
+//     // fn num_params() -> usize {
+//     //     Handler::num_params()
+//     // }
 
-    fn param_info(index: usize) -> &'static Self::Param {
-        Handler::param_info(index)
-    }
+//     // fn param_info(index: usize) -> &'static Self::Param {
+//     //     Handler::param_info(index)
+//     // }
 
-    fn set_param(&mut self, index: usize, value: f32) {
-        self.handler.set_param(index, value);
-    }
+//     fn set_param(&mut self, index: usize, value: f32) {
+//         self.handler.set_param(index, value);
+//     }
 
-    fn get_param(&self, index: usize) -> f32 {
-        self.handler.get_param(index)
-    }
-}
+//     fn get_param(&self, index: usize) -> f32 {
+//         self.handler.get_param(index)
+//     }
+// }
 
-impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
-    unsafe fn init() -> PluginInfo {
-        Handler::init()
-    }
-
-    unsafe fn new(inst_data: &FFGLData) -> Self {
+impl FFGLGliumInstance {
+    pub fn new(inst_data: &FFGLData) -> Self {
         let backend = Rc::new(gl_backend::RawGlBackend::new(inst_data.get_dimensions()));
 
         logln!("BACKEND: {backend:?}");
 
-        let ctx = glium::backend::Context::new(
-            backend.clone(),
-            false,
-            glium::debug::DebugCallbackBehavior::Ignore,
-        )
-        .unwrap();
+        let ctx = unsafe {
+            glium::backend::Context::new(
+                backend.clone(),
+                false,
+                glium::debug::DebugCallbackBehavior::Ignore,
+            )
+            .unwrap()
+        };
 
         logln!("OPENGL_VERSION {}", ctx.get_opengl_version_string());
 
-        Self {
-            handler: Handler::new(inst_data, ctx.clone()),
-            ctx,
-            backend,
-        }
+        Self { ctx, backend }
     }
 
-    unsafe fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput<'_>) {
+    pub fn draw(
+        &self,
+        inst_data: &FFGLData,
+        frame_data: GLInput<'_>,
+        render_frame: &mut impl FnMut(
+            &mut SimpleFrameBuffer,
+            Vec<Texture2d>,
+        ) -> Result<(), Box<dyn Error>>,
+    ) {
         let res = inst_data.get_dimensions();
-        self.ctx.rebuild(self.backend.clone()).unwrap();
+
+        unsafe { self.ctx.rebuild(self.backend.clone()).unwrap() };
 
         let frame = Frame::new(self.ctx.clone(), (res.0, res.1));
         let rb = RenderBuffer::new(
@@ -120,7 +119,7 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
             })
             .collect();
 
-        if let Err(err) = self.handler.render_frame(fb, textures, inst_data) {
+        if let Err(err) = render_frame(fb, textures) {
             logln!("ERROR: {err}");
         }
 
@@ -130,8 +129,10 @@ impl<Handler: FFGLGliumHandler + Debug> FFGLHandler for FFGLGlium<Handler> {
         fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
 
         // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
-        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
-        blit_fb(res, res);
+        unsafe {
+            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
+            blit_fb(res, res);
+        }
 
         frame.finish().unwrap();
 

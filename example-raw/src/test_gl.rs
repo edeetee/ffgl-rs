@@ -1,12 +1,14 @@
-use ffgl::parameters::BasicParam;
-
 use crate::shader_helper::*;
 use std::{
     ffi::CString,
     ptr::{self},
 };
 
-use crate::{ffgl::FFGLData, ffgl::FFGLHandler};
+use ffgl_raw::{
+    ffi::ffgl2::ProcessOpenGLStruct,
+    traits::{FFGLHandler, FFGLInstance, SimpleFFGLInstance},
+    FFGLData, GLInput,
+};
 use gl::{self, types::*};
 
 #[derive(Debug)]
@@ -41,7 +43,7 @@ void main() {
     out_color = vec4(gl_FragCoord.xy/1000.0 - v_pos2, 0.0, 1.0);
 }";
 
-impl FFGLHandler for TestGl {
+impl TestGl {
     unsafe fn new(_data: &FFGLData) -> Self {
         gl_loader::init_gl();
         gl::load_with(|s| gl_loader::get_proc_address(s).cast());
@@ -97,32 +99,45 @@ impl FFGLHandler for TestGl {
             beat_uniform_id,
         }
     }
+}
 
-    unsafe fn draw(&mut self, data: &FFGLData, _frame_data: &ffgl::ffgl::ProcessOpenGLStruct) {
-        //most basic test here
-        gl::ClearColor(
-            data.host_beat.barPhase,
-            data.host_beat.barPhase * 3.123,
-            0.0,
-            1.0,
-        );
-        gl::Clear(gl::COLOR_BUFFER_BIT);
+impl SimpleFFGLInstance for TestGl {
+    fn draw(&mut self, data: &FFGLData, _frame_data: GLInput) {
+        unsafe {
+            //most basic test here
+            gl::ClearColor(
+                data.host_beat.barPhase,
+                data.host_beat.barPhase * 3.123,
+                0.0,
+                1.0,
+            );
+            gl::Clear(gl::COLOR_BUFFER_BIT);
 
-        gl::UseProgram(self.program_id);
+            gl::UseProgram(self.program_id);
 
-        gl::Uniform1f(self.beat_uniform_id, data.host_beat.barPhase);
+            gl::Uniform1f(self.beat_uniform_id, data.host_beat.barPhase);
 
-        gl::BindVertexArray(self.vertex_array_id);
+            gl::BindVertexArray(self.vertex_array_id);
 
-        gl::DrawArrays(gl::TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+            gl::DrawArrays(gl::TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 
-        gl::BindVertexArray(0);
-
-        // validate::validate_context_state();
-        // gl::UseProgram(0);
+            gl::BindVertexArray(0);
+        }
     }
 
-    type Param = BasicParam;
+    fn new(inst_data: &FFGLData) -> Self {
+        unsafe { Self::new(inst_data) }
+    }
+
+    fn plugin_info() -> ffgl_raw::PluginInfo {
+        ffgl_raw::PluginInfo {
+            unique_id: *b"0000",
+            name: *b"asdfasdfasdfasdf",
+            ty: ffgl_raw::PluginType::Source,
+            about: "".to_string(),
+            description: "".to_string(),
+        }
+    }
 }
 
 impl Drop for TestGl {
