@@ -30,22 +30,7 @@ static mut HANDLER: Option<Box<dyn Any>> = None;
 
 use tracing::{debug, error, info, span, trace, warn, Level};
 
-// trait Trace<T, E> {
-//     fn trace<C: Display + Send + Sync + 'static>(self, context: C) -> anyhow::Result<T, Error>;
-// }
-
-// impl<X: Context<T, E>, T, E> Trace<T, E> for X {
-//     fn trace<C: Display + Send + Sync + 'static>(self, context: C) -> anyhow::Result<T, Error> {
-//         self.context(format!(
-//             "{file}:{line}:{column}",
-//             file = file!(),
-//             line = line!(),
-//             column = column!(),
-//         ))
-//         .context(context)
-//     }
-// }
-
+///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
 macro_rules! e {
     ($($arg:tt)*) => {{
         format!("{orig}\nSOURCE {file}:{line}:{column}", orig=format!($($arg)*),
