@@ -6,7 +6,7 @@ pub use crate::parameters::ParamInfo;
 use crate::traits::{FFGLHandler, FFGLInstance};
 
 use core::slice;
-use std::fmt::Display;
+
 use std::{any::Any, ffi::CString};
 
 pub use crate::conversions::*;
@@ -28,7 +28,7 @@ static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
-use tracing::{debug, error, info, span, trace, warn, Level};
+use tracing::{debug, info};
 
 ///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
 macro_rules! e {

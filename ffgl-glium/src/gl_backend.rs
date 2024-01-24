@@ -42,5 +42,5 @@ unsafe impl glium::backend::Backend for RawGlBackend {
 
     unsafe fn make_current(&self) {}
 
-    fn resize(&self, new_size: (u32, u32)) {}
+    fn resize(&self, _new_size: (u32, u32)) {}
 }

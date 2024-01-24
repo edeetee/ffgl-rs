@@ -5,8 +5,7 @@ use std::{
 };
 
 use ffgl_core::{
-    ffi::ffgl2::ProcessOpenGLStruct,
-    traits::{FFGLHandler, FFGLInstance, SimpleFFGLInstance},
+    traits::{SimpleFFGLInstance},
     FFGLData, GLInput,
 };
 use gl::{self, types::*};

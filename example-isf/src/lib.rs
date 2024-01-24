@@ -1,7 +1,5 @@
 use std::{
-    ffi::CString,
     fmt::{Debug, Formatter},
-    mem::transmute,
 };
 mod fullscreen_shader;
 mod meta;
@@ -11,24 +9,19 @@ mod util;
 
 use ffgl_glium::{
     ffgl_handler,
-    ffi::{ffgl2, ffgl2::PluginInfoStruct},
     log::init_default_subscriber,
     parameters::BasicParamInfo,
-    plugin_info,
     traits::{FFGLHandler, FFGLInstance},
     FFGLGliumInstance, ParamInfo, PluginInfo, PluginType,
 };
 use glium::{
-    backend::Facade,
-    program::Uniform,
-    uniforms::{AsUniformValue, EmptyUniforms, UniformValue, Uniforms},
-    Texture2d,
+    uniforms::{UniformValue, Uniforms},
 };
 use isf::Isf;
 use param::AsUniformOptional;
-use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
+use rand::{rngs::StdRng, RngCore};
 use rand_seeder::Seeder;
-use serde::de::Error;
+
 use util::MultiUniforms;
 
 mod param;

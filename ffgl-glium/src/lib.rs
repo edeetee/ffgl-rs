@@ -1,12 +1,12 @@
 use std::{error::Error, fmt::Formatter, rc::Rc};
 
-use ffgl_core::ffi::ffgl2::{self, FFGLTextureStruct};
+
 pub use ffgl_core::*;
 // use egui_node_graph::graph;
 // mod ffgl;
 // use ::ffgl::{ffgl_handler, FFGLHandler};
 use glium::{
-    backend::{Context, Facade},
+    backend::{Context},
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
     BlitTarget, Frame, Surface, Texture2d,
 };

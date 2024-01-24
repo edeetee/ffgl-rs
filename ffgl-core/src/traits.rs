@@ -63,16 +63,16 @@ pub trait SimpleFFGLInstance: FFGLInstance {
     fn num_params() -> usize {
         0
     }
-    fn param_info(index: usize) -> &'static BasicParamInfo {
+    fn param_info(_index: usize) -> &'static BasicParamInfo {
         panic!("No params")
     }
 
     fn plugin_info() -> PluginInfo;
 
-    fn get_param(&self, index: usize) -> f32 {
+    fn get_param(&self, _index: usize) -> f32 {
         panic!("No params")
     }
-    fn set_param(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, _index: usize, _value: f32) {
         panic!("No params")
     }
 

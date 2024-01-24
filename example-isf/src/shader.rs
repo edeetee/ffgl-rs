@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, str::FromStr, time::Instant};
+use std::{io::Read, str::FromStr, time::Instant};
 
 use glium::{
     backend::Facade,
@@ -9,7 +9,6 @@ use isf::{Isf, Pass};
 
 use crate::{
     fullscreen_shader::FullscreenFrag,
-    meta::IsfInfo,
     texture::{new_texture_2d, DEFAULT_RES},
     util::GlProgramCreationError,
 };
