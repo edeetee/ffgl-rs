@@ -1,5 +1,6 @@
-use std::{io::Read, str::FromStr, time::Instant};
+use std::{str::FromStr, time::Instant};
 
+use ffgl_glium::texture::{new_texture_2d, DEFAULT_RES};
 use glium::{
     backend::Facade,
     uniforms::{AsUniformValue, UniformValue, Uniforms},
@@ -7,11 +8,7 @@ use glium::{
 };
 use isf::{Isf, Pass};
 
-use crate::{
-    fullscreen_shader::FullscreenFrag,
-    texture::{new_texture_2d, DEFAULT_RES},
-    util::GlProgramCreationError,
-};
+use crate::{fullscreen_shader::FullscreenFrag, util::GlProgramCreationError};
 use thiserror::Error;
 
 pub struct IsfShader {
@@ -71,11 +68,11 @@ impl PassTexture {
         })
     }
 
-    pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
-        //allow unwrap here as you cannot make a valid PassTexture with an unparsable pass size
-        let size = calculate_pass_size(&self.pass, size).unwrap();
-        self.texture = new_texture_2d(facade, size).unwrap()
-    }
+    // pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
+    //     //allow unwrap here as you cannot make a valid PassTexture with an unparsable pass size
+    //     let size = calculate_pass_size(&self.pass, size).unwrap();
+    //     self.texture = new_texture_2d(facade, size).unwrap()
+    // }
 }
 
 impl IsfShader {

@@ -1,19 +1,19 @@
 use std::{error::Error, fmt::Formatter, rc::Rc};
 
-
 pub use ffgl_core::*;
 // use egui_node_graph::graph;
 // mod ffgl;
 // use ::ffgl::{ffgl_handler, FFGLHandler};
 use glium::{
-    backend::{Context},
+    backend::Context,
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
     BlitTarget, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
 
 mod gl_backend;
-mod validate_gl;
+pub mod texture;
+pub mod validate_gl;
 
 pub struct FFGLGliumInstance {
     pub ctx: Rc<Context>,

@@ -9,7 +9,7 @@ use isf;
 use std::{ffi::CString, mem::transmute};
 
 #[derive(Debug, Clone)]
-pub(crate) enum IsfInputValue {
+pub enum IsfInputValue {
     Event(bool),
     Bool(bool),
     Long(i32),
@@ -46,11 +46,11 @@ impl IsfInputValue {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct IsfInputParam {
-    pub(crate) ty: isf::InputType,
-    pub(crate) name: String,
-    pub(crate) params: Vec<BasicParamInfo>,
-    pub(crate) value: IsfInputValue,
+pub struct IsfInputParam {
+    pub ty: isf::InputType,
+    pub name: String,
+    pub params: Vec<BasicParamInfo>,
+    pub value: IsfInputValue,
 }
 
 pub(crate) fn slice_from_vec(input: &Vec<f32>) -> [f32; 4] {

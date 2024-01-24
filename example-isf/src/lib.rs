@@ -1,10 +1,6 @@
-use std::{
-    fmt::{Debug, Formatter},
-};
+use std::fmt::{Debug, Formatter};
 mod fullscreen_shader;
-mod meta;
 mod shader;
-mod texture;
 mod util;
 
 use ffgl_glium::{
@@ -12,11 +8,9 @@ use ffgl_glium::{
     log::init_default_subscriber,
     parameters::BasicParamInfo,
     traits::{FFGLHandler, FFGLInstance},
-    FFGLGliumInstance, ParamInfo, PluginInfo, PluginType,
+    FFGLGliumInstance, PluginInfo, PluginType,
 };
-use glium::{
-    uniforms::{UniformValue, Uniforms},
-};
+use glium::uniforms::{UniformValue, Uniforms};
 use isf::Isf;
 use param::AsUniformOptional;
 use rand::{rngs::StdRng, RngCore};

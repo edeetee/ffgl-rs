@@ -1,9 +1,9 @@
-pub(crate) struct TextureType {
-    pub(crate) target: u32,
-    pub(crate) binding: u32,
+pub struct TextureType {
+    pub target: u32,
+    pub binding: u32,
 }
 
-pub(crate) const TEXTURE_TYPES: [TextureType; 2] = [
+pub const TEXTURE_TYPES: [TextureType; 2] = [
     TextureType {
         target: gl::TEXTURE_1D,
         binding: gl::TEXTURE_BINDING_1D,
@@ -15,7 +15,7 @@ pub(crate) const TEXTURE_TYPES: [TextureType; 2] = [
     // Add other texture types here...
 ];
 
-pub(crate) unsafe fn gl_reset(frame_data: &ffgl_core::ffi::ffgl2::ProcessOpenGLStructTag) {
+pub unsafe fn gl_reset(frame_data: &ffgl_core::ffi::ffgl2::ProcessOpenGLStructTag) {
     let mut gl_int = 0;
     gl::UseProgram(0);
 
@@ -47,7 +47,7 @@ pub(crate) unsafe fn gl_reset(frame_data: &ffgl_core::ffi::ffgl2::ProcessOpenGLS
     gl::BindFramebuffer(gl::FRAMEBUFFER, frame_data.HostFBO);
 }
 
-pub(crate) unsafe fn validate_viewport(viewport: &[i32; 4]) {
+pub unsafe fn validate_viewport(viewport: &[i32; 4]) {
     let scissor_enabled = gl::IsEnabled(gl::SCISSOR_TEST);
     assert_eq!(scissor_enabled, gl::FALSE, "SCISSOR_TEST is enabled");
 
