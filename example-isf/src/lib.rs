@@ -8,12 +8,11 @@ mod meta;
 mod shader;
 mod texture;
 mod util;
-use once_cell::sync::Lazy;
 
 use ffgl_glium::{
     ffgl_handler,
     ffi::{ffgl2, ffgl2::PluginInfoStruct},
-    logln,
+    log::init_default_subscriber,
     parameters::BasicParamInfo,
     plugin_info,
     traits::{FFGLHandler, FFGLInstance},
@@ -58,6 +57,8 @@ impl FFGLHandler for IsfState {
     type Param = BasicParamInfo;
 
     fn init() -> Self {
+        init_default_subscriber();
+
         let info = isf::parse(ISF_SOURCE).unwrap();
         let params: Vec<param::IsfInputParam> = info
             .inputs
@@ -86,11 +87,11 @@ impl FFGLHandler for IsfState {
             name: name,
             ty: plugin_type,
             about: info.categories.join(", "),
-            description: info.description.clone().unwrap(),
+            description: info.description.clone().unwrap_or_default(),
         };
 
-        logln!("ISF INFO: {info:?}");
-        logln!("ISF PARAMS: {params:?}");
+        tracing::debug!("ISF INFO: {info:#?}");
+        tracing::debug!("ISF PARAMS: {params:#?}");
 
         Self {
             info,
@@ -197,7 +198,7 @@ impl FFGLInstance for IsfFFGLInstance {
 
 impl IsfFFGLInstance {
     fn new(state: &IsfState, inst_data: &ffgl_glium::FFGLData) -> Self {
-        ffgl_glium::logln!("CREATED SHADER");
+        tracing::debug!("CREATED INSTANCE");
 
         let glium = FFGLGliumInstance::new(inst_data);
 

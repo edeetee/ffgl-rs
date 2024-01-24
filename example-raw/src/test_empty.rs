@@ -1,9 +1,9 @@
 use core::panic;
 
-use ffgl_raw::parameters::BasicParamInfo;
+use ffgl_core::parameters::BasicParamInfo;
 
-use ffgl_raw::traits::{FFGLHandler, FFGLInstance, SimpleFFGLInstance};
-use ffgl_raw::{FFGLData, PluginInfo};
+use ffgl_core::traits::{FFGLHandler, FFGLInstance, SimpleFFGLInstance};
+use ffgl_core::{FFGLData, PluginInfo};
 
 #[derive(Debug)]
 pub struct EmptyFFGLHandler;
@@ -17,7 +17,7 @@ impl SimpleFFGLInstance for EmptyFFGLHandler {
         PluginInfo {
             unique_id: [0, 0, 0, 0],
             name: *b"EmptyFFGLPlugin ",
-            ty: ffgl_raw::PluginType::Source,
+            ty: ffgl_core::PluginType::Source,
             about: "".to_string(),
             description: "".to_string(),
         }
@@ -30,5 +30,5 @@ impl SimpleFFGLInstance for EmptyFFGLHandler {
         panic!("No params")
     }
 
-    fn draw(&mut self, inst_data: &FFGLData, frame_data: ffgl_raw::GLInput) {}
+    fn draw(&mut self, inst_data: &FFGLData, frame_data: ffgl_core::GLInput) {}
 }

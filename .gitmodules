@@ -1,6 +1,6 @@
 [submodule "ffgl-resolume"]
-	path = ffgl-raw/ffgl-resolume
+	path = ffgl-core/ffgl-resolume
 	url = https://github.com/resolume/ffgl.git
 [submodule "FFGLSDK"]
-	path = ffgl-raw/FFGLSDK
+	path = ffgl-core/FFGLSDK
 	url = https://github.com/robksawyer/FFGLSDK.git

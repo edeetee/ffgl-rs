@@ -13,24 +13,35 @@ macro_rules! ffgl_handler {
         ) -> $crate::conversions::FFGLVal {
             match $crate::conversions::Op::try_from(functionCode) {
                 Ok(function) => {
-                    // $crate::logln!("Op::{function:?}");
+                    $crate::tracing::trace!("Op::{function:?}");
                     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                        $crate::default_ffgl_callback::<$handler>(function, inputValue, unsafe {
-                            instanceID.as_mut()
-                        })
+                        $crate::callback::default_ffgl_callback::<$handler>(
+                            function,
+                            inputValue,
+                            unsafe { instanceID.as_mut() },
+                        )
                     }));
 
                     match result {
-                        Ok(result) => result,
+                        Ok(result) => match result {
+                            Ok(result) => result,
+                            Err(err) => {
+                                $crate::tracing::error!(
+                                    target: "ffgl_handler",
+                                    "ERROR IN FFGL: {:?}",
+                                    err,
+                                );
+                                $crate::SuccessVal::Fail.into()
+                            }
+                        },
                         Err(err) => {
-                            $crate::logln!("PANIC AT FFGL C BOUNDARY: {:#?}", err);
+                            $crate::tracing::error!(target: "ffgl_handler", "PANIC AT FFGL C BOUNDARY: {:?}", err);
                             $crate::SuccessVal::Fail.into()
                         }
                     }
                 }
                 Err(err) => {
-                    let err_text = format!("Received fnCode {functionCode:?}");
-                    $crate::logln!("ERR: UNKNOWN OPCODE {functionCode}");
+                    $crate::tracing::error!(target: "ffgl_handler", "ERR: UNKNOWN OPCODE {functionCode}");
                     $crate::SuccessVal::Fail.into()
                 }
             }
@@ -43,5 +54,3 @@ macro_rules! ffgl_handler {
         }
     };
 }
-
-// pub use ffgl_extern;

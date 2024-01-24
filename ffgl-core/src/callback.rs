@@ -1,64 +1,65 @@
-pub mod conversions;
-mod ffgl_derive;
-pub mod ffi;
-mod instance;
-pub mod log;
-pub mod parameters;
-pub use instance::FFGLData;
-pub mod validate;
+pub use crate::instance::FFGLData;
 
-use ffi::ffgl2::*;
+use crate::ffi::ffgl2::*;
 
-use parameters::BasicParamInfo;
-pub use parameters::ParamInfo;
-use traits::{FFGLHandler, FFGLInstance};
+pub use crate::parameters::ParamInfo;
+use crate::traits::{FFGLHandler, FFGLInstance};
 
 use core::slice;
-use std::{
-    any::Any,
-    cell::OnceCell,
-    ffi::{c_void, CStr, CString},
-    fmt::Debug,
-    sync::OnceLock,
-};
+use std::fmt::Display;
+use std::{any::Any, ffi::CString};
 
-pub use conversions::*;
-pub use log::{FFGLLogger, LOADING_LOGGER};
+pub use crate::conversions::*;
+pub use crate::log::{FFGLLogger, LOADING_LOGGER};
 
+pub use crate::traits;
+use anyhow::{Context, Error};
 pub use num_traits::ToPrimitive;
-
-pub mod traits;
-
-// pub trait NoParamsHandler {}
-
-// impl<I: NoParamsHandler> ParamHandler for I {
-//     fn get_param(&self, _index: usize) -> f32 {
-//         unimplemented!("No params")
-//     }
-
-//     fn set_param(&mut self, _index: usize, _value: f32) {
-//         unimplemented!("No params")
-//     }
-// }
 
 fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static H::Param {
     handler.param_info(unsafe { index.num as usize })
 }
 
 static mut INITIALIZED: bool = false;
-static mut INFO: Option<PluginInfoStruct> = None;
+static mut INFO: Option<PluginInfo> = None;
+static mut INFO_STRUCT: Option<PluginInfoStruct> = None;
 static mut ABOUT: Option<CString> = None;
 static mut DESCRIPTION: Option<CString> = None;
-static mut INFO_EXTENDED: Option<PluginExtendedInfoStruct> = None;
+static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
 use tracing::{debug, error, info, span, trace, warn, Level};
+
+// trait Trace<T, E> {
+//     fn trace<C: Display + Send + Sync + 'static>(self, context: C) -> anyhow::Result<T, Error>;
+// }
+
+// impl<X: Context<T, E>, T, E> Trace<T, E> for X {
+//     fn trace<C: Display + Send + Sync + 'static>(self, context: C) -> anyhow::Result<T, Error> {
+//         self.context(format!(
+//             "{file}:{line}:{column}",
+//             file = file!(),
+//             line = line!(),
+//             column = column!(),
+//         ))
+//         .context(context)
+//     }
+// }
+
+macro_rules! e {
+    ($($arg:tt)*) => {{
+        format!("{orig}\nSOURCE {file}:{line}:{column}", orig=format!($($arg)*),
+        file = file!(),
+        line = line!(),
+        column = column!(),)
+    }}
+}
 
 pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     function: Op,
     mut input_value: FFGLVal,
     instance: Option<&mut traits::Instance<H::Instance>>,
-) -> FFGLVal {
+) -> Result<FFGLVal, Error> {
     let noisy_op = match function {
         Op::ProcessOpenGL
         | Op::SetBeatInfo
@@ -71,43 +72,56 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     };
 
     if !noisy_op {
-        info!("Op::{function:?}({})", unsafe { input_value.num });
+        debug!("Op::{function:?}({})", unsafe { input_value.num });
     } else {
-        trace!("Op::{function:?}({})", unsafe { input_value.num });
+        e!("Op::{function:?}({})", unsafe { input_value.num });
     }
 
     unsafe {
         if !INITIALIZED {
             INITIALIZED = true;
-            info!("INITIALIZING");
 
             HANDLER = Some(Box::new(H::init()));
 
-            let handler = &*HANDLER.as_ref().unwrap().downcast_ref::<H>().unwrap();
+            let handler = &*HANDLER
+                .as_ref()
+                .context(e!("No handler"))?
+                .downcast_ref::<H>()
+                .context(e!("Handler incorrect type"))?;
 
-            let info = handler.plugin_info();
+            INFO = Some(handler.plugin_info());
+            let info = INFO.as_ref().context(e!("No info"))?;
+            ABOUT = Some(CString::new(info.about.clone())?);
+            DESCRIPTION = Some(CString::new(info.description.clone())?);
 
-            ABOUT = Some(CString::new(info.about).unwrap());
-            DESCRIPTION = Some(CString::new(info.description).unwrap());
-
-            INFO = Some(plugin_info(
+            INFO_STRUCT = Some(plugin_info(
                 std::mem::transmute(&info.unique_id),
                 std::mem::transmute(&info.name),
                 info.ty,
             ));
 
-            INFO_EXTENDED = Some(plugin_info_extended(
-                ABOUT.as_ref().unwrap(),
-                DESCRIPTION.as_ref().unwrap(),
+            INFO_STRUCT_EXTENDED = Some(plugin_info_extended(
+                ABOUT.as_ref().context(e!("ABOUT not initialized"))?,
+                DESCRIPTION
+                    .as_ref()
+                    .context(e!("DESCRIPTION not initialized"))?,
             ));
+
+            info!(
+                "INITIALIZED PLUGIN '{id:?}' '{name}'",
+                name = std::str::from_utf8(&info.name)?,
+                id = info.unique_id
+            );
         }
     }
 
+    let info = unsafe { INFO.as_ref().context(e!("No info"))? };
+
     let handler = unsafe { &HANDLER }
         .as_ref()
-        .expect("Handler not initialized")
+        .context(e!("Handler not initialized"))?
         .downcast_ref::<H>()
-        .expect("Handler type mismatch");
+        .context(e!("Handler type mismatch"))?;
 
     // let handler =
 
@@ -177,7 +191,7 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
         Op::GetParameterType => param(handler, input_value).param_type().into(),
 
         Op::GetParameter => instance
-            .unwrap()
+            .context(e!("No instance"))?
             .renderer
             .get_param(unsafe { input_value.num } as usize)
             .into(),
@@ -195,7 +209,10 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
 
             // log::logln!("SET PARAM cb {index_usize:?}=>{new_value:#?}");
 
-            instance.unwrap().renderer.set_param(index_usize, new_value);
+            instance
+                .context(e!("No instance"))?
+                .renderer
+                .set_param(index_usize, new_value);
 
             // set_param(instance, index as usize, ParamValue::Float(new_value));
 
@@ -220,30 +237,35 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
             SuccessVal::Success.into()
         }
         // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
-        Op::GetInfo => unsafe { INFO.as_ref().unwrap().into() },
+        Op::GetInfo => unsafe { INFO_STRUCT.as_ref().context(e!("No info"))?.into() },
 
-        Op::GetExtendedInfo => unsafe { INFO_EXTENDED.as_ref().unwrap().into() },
+        Op::GetExtendedInfo => unsafe {
+            INFO_STRUCT_EXTENDED
+                .as_ref()
+                .context(e!("No extended info"))?
+                .into()
+        },
 
         Op::InstantiateGL => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
 
             let data = FFGLData::new(viewport);
-            let renderer = unsafe { H::new_instance(handler, &data) };
+            let renderer = H::new_instance(handler, &data);
             let instance = traits::Instance { data, renderer };
 
-            debug!("INSTGL\n{instance:#?}");
+            info!(
+                "Created INSTANCE \n{instance:#?} of ({id:?}, '{name:?}')",
+                id = info.unique_id,
+                name = String::from_utf8_lossy(&info.name),
+            );
 
             FFGLVal::from_static(Box::leak(Box::<traits::Instance<H::Instance>>::new(
                 instance,
             )))
         }
 
-        // Op::FF_RESIZE => {
-        //     let inst = instance.unwrap();
-        //     inst.data.viewport = unsafe { inputValue.as_ref() };
-        // }
         Op::DeinstantiateGL => {
-            let inst = instance.unwrap();
+            let inst = instance.context(e!("No instance"))?;
 
             debug!("DEINSTGL\n{inst:#?}");
             unsafe {
@@ -258,35 +280,37 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
 
             // logln!("PROCESSGL info \n{gl_process_info:#?}");
 
-            let traits::Instance { data, renderer } = instance.unwrap();
+            let traits::Instance { data, renderer } = instance.context(e!("No instance"))?;
             let gl_input = gl_process_info.into();
 
             // logln!("PROCESSGL input \n{gl_input:?}");
 
-            unsafe { renderer.draw(&data, gl_input) };
+            renderer.draw(&data, gl_input);
 
             SuccessVal::Success.into()
         }
 
         Op::SetTime => {
             let seconds: f64 = *unsafe { input_value.as_ref() };
-            instance.unwrap().data.set_time(seconds);
+            instance.context(e!("No instance"))?.data.set_time(seconds);
             SuccessVal::Success.into()
         }
 
-        //This is called before GLInitialize
+        //This is called before GLInitialize. If that is so,
         Op::SetBeatInfo => {
             let beat_info: &SetBeatinfoStruct = unsafe { input_value.as_ref() };
-            if let Some(instance) = instance {
-                instance.data.set_beat(*beat_info);
+            if let Some(inst) = instance {
+                inst.data.set_beat(*beat_info);
+                SuccessVal::Success.into()
+            } else {
+                SuccessVal::Fail.into()
             }
-            SuccessVal::Success.into()
         }
 
         Op::Resize => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
             debug!("RESIZE\n{viewport:#?}");
-            // instance.unwrap().data.set_viewport(viewport);
+            // instance?.data.set_viewport(viewport);
             SuccessVal::Success.into()
         }
 
@@ -304,10 +328,10 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     };
 
     if !noisy_op {
-        info!("=> {}", unsafe { resp.num });
+        debug!("=> {}", unsafe { resp.num });
     } else {
-        trace!("=> {}", unsafe { resp.num });
+        e!("=> {}", unsafe { resp.num });
     }
 
-    resp
+    Ok(resp)
 }

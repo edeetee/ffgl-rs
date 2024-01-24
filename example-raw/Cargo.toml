@@ -10,7 +10,7 @@ panic = "abort"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ffgl-raw = { path = "../ffgl-raw" }
+ffgl-core = { path = "../ffgl-core" }
 gl = { version = "0.14.0" }
 gl_loader = "0.1.0"
 

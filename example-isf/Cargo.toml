@@ -15,10 +15,10 @@ genmesh = "0.6.2"
 isf = "0.1.0"
 thiserror = "1.0.50"
 serde = { version = "1.0.130", features = ["derive"] }
-once_cell = "1.18.0"
 rng = "0.1.0"
 rand = "0.8.5"
 rand_seeder = "0.2.3"
+tracing.workspace = true
 
 [build-dependencies]
 

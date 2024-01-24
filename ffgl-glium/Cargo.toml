@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 gl.workspace = true
-ffgl-raw = { path = "../ffgl-raw" }
+ffgl-core = { path = "../ffgl-core" }
 gl_loader = "0.1.2"
 glium.workspace = true
+tracing.workspace = true

@@ -4,7 +4,7 @@ use std::{
     ptr::{self},
 };
 
-use ffgl_raw::{
+use ffgl_core::{
     ffi::ffgl2::ProcessOpenGLStruct,
     traits::{FFGLHandler, FFGLInstance, SimpleFFGLInstance},
     FFGLData, GLInput,
@@ -129,11 +129,11 @@ impl SimpleFFGLInstance for TestGl {
         unsafe { Self::new(inst_data) }
     }
 
-    fn plugin_info() -> ffgl_raw::PluginInfo {
-        ffgl_raw::PluginInfo {
+    fn plugin_info() -> ffgl_core::PluginInfo {
+        ffgl_core::PluginInfo {
             unique_id: *b"0000",
             name: *b"asdfasdfasdfasdf",
-            ty: ffgl_raw::PluginType::Source,
+            ty: ffgl_core::PluginType::Source,
             about: "".to_string(),
             description: "".to_string(),
         }

@@ -58,6 +58,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
 
 [[package]]
+name = "anyhow"
+version = "1.0.79"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "080e9890a082662b09c1ad45f567faeeb47f22b5fb23895fbe1e651e718e25ca"
+
+[[package]]
 name = "approx"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -329,12 +335,12 @@ dependencies = [
  "glium",
  "glsl",
  "isf",
- "once_cell",
  "rand 0.8.5",
  "rand_seeder",
  "rng",
  "serde",
  "thiserror",
+ "tracing",
  "uneval",
 ]
 
@@ -348,19 +354,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ffgl-glium"
-version = "0.1.0"
-dependencies = [
- "ffgl-raw",
- "gl",
- "gl_loader",
- "glium",
-]
-
-[[package]]
-name = "ffgl-raw"
+name = "ffgl-core"
 version = "0.1.2"
 dependencies = [
+ "anyhow",
  "bindgen",
  "cfg-if",
  "gl",
@@ -373,10 +370,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ffgl-glium"
+version = "0.1.0"
+dependencies = [
+ "ffgl-core",
+ "gl",
+ "gl_loader",
+ "glium",
+ "tracing",
+]
+
+[[package]]
 name = "ffgl_example"
 version = "0.1.0"
 dependencies = [
- "ffgl-raw",
+ "ffgl-core",
  "gl",
  "gl_generator",
  "gl_loader",

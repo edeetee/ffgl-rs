@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, CString},
+    ffi::{c_char, CStr, CString},
     io,
     sync::RwLock,
 };
@@ -11,8 +11,15 @@ struct FFGLWriter;
 
 impl io::Write for FFGLWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let str = std::str::from_utf8(buf).unwrap();
-        inner_log(str);
+        let str = String::from_utf8_lossy(buf);
+
+        if let Some(logger) = unsafe { *LOADING_LOGGER.read().unwrap() } {
+            let str = CString::new(str.as_bytes()).expect("Failed to convert to CString");
+            unsafe { logger(str.as_ptr()) };
+        } else {
+            eprintln!("{}", str);
+        }
+
         Ok(buf.len())
     }
 
@@ -21,24 +28,7 @@ impl io::Write for FFGLWriter {
     }
 }
 
-pub fn inner_log(str: &str) {
-    unsafe {
-        if let Some(logger) = *LOADING_LOGGER.read().unwrap() {
-            let str = &CString::new(str).unwrap();
-            logger(str.as_ptr());
-        } else {
-            eprintln!("{}", str);
-        }
-    }
-}
-
-pub fn init_logger(logger: FFGLLogger) {
-    unsafe { *LOADING_LOGGER.write().unwrap() = Some(logger) };
-
-    std::panic::set_hook(Box::new(|cause| {
-        tracing::error!("{}", cause);
-    }));
-
+pub fn init_default_subscriber() {
     let env_filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -57,14 +47,12 @@ pub fn init_logger(logger: FFGLLogger) {
     }
 }
 
-#[macro_export]
-macro_rules! logln {
-    () => {
-       log!("/n");
-    };
-    ($($arg:tt)*) => {{
-        $crate::log::inner_log(&format!($($arg)*));
-    }};
+pub fn init_logger(logger: FFGLLogger) {
+    unsafe { *LOADING_LOGGER.write().unwrap() = Some(logger) };
+
+    std::panic::set_hook(Box::new(|cause| {
+        tracing::error!("{}", cause);
+    }));
 }
 
 // pub use logln;

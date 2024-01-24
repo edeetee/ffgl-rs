@@ -25,7 +25,7 @@ impl<I> Debug for Instance<I> {
 }
 
 ///This type is created once per instance of a plugin
-pub trait FFGLInstance: Debug {
+pub trait FFGLInstance {
     fn get_param(&self, index: usize) -> f32;
     fn set_param(&mut self, index: usize, value: f32);
 

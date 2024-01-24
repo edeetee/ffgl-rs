@@ -9,8 +9,9 @@ license = "	GPL-3.0-or-later"
 
 [workspace]
 resolver = "2"
-members = ["example-raw", "ffgl-glium", "ffgl-raw", "example-isf"]
-# default-members = ["ffgl-raw", "ffgl-glium", "example-isf"]
+members = ["example-raw", "ffgl-glium", "ffgl-core", "example-isf"]
+default-members = ["ffgl-core"]
+
 
 # [lib]
 # crate-type = ["lib"]
@@ -22,7 +23,9 @@ members = ["example-raw", "ffgl-glium", "ffgl-raw", "example-isf"]
 gl = "0.14.0"
 itertools = "0.12.0"
 glium = "0.33.0"
-
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing = { version = "0.1.40", features = ["log"] }
+anyhow = "1.0.79"
 
 [profile.release]
 panic = 'abort'

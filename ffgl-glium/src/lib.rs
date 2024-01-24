@@ -1,7 +1,7 @@
 use std::{error::Error, fmt::Formatter, rc::Rc};
 
-use ffgl_raw::ffi::ffgl2::{self, FFGLTextureStruct};
-pub use ffgl_raw::*;
+use ffgl_core::ffi::ffgl2::{self, FFGLTextureStruct};
+pub use ffgl_core::*;
 // use egui_node_graph::graph;
 // mod ffgl;
 // use ::ffgl::{ffgl_handler, FFGLHandler};
@@ -60,7 +60,7 @@ impl FFGLGliumInstance {
     pub fn new(inst_data: &FFGLData) -> Self {
         let backend = Rc::new(gl_backend::RawGlBackend::new(inst_data.get_dimensions()));
 
-        logln!("BACKEND: {backend:?}");
+        tracing::debug!("BACKEND: {backend:?}");
 
         let ctx = unsafe {
             glium::backend::Context::new(
@@ -71,7 +71,7 @@ impl FFGLGliumInstance {
             .unwrap()
         };
 
-        logln!("OPENGL_VERSION {}", ctx.get_opengl_version_string());
+        tracing::debug!("OPENGL_VERSION {}", ctx.get_opengl_version_string());
 
         Self { ctx, backend }
     }
@@ -120,7 +120,7 @@ impl FFGLGliumInstance {
             .collect();
 
         if let Err(err) = render_frame(fb, textures) {
-            logln!("ERROR: {err}");
+            tracing::error!("ERROR: {err}");
         }
 
         // validate_viewport(&viewport);
