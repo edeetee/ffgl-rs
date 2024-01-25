@@ -47,10 +47,17 @@ impl ToGlCreationError for ProgramCreationError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error)]
 pub struct GlProgramCreationError {
     shader_source: String,
     pub inner: ProgramCreationError,
+}
+
+impl std::fmt::Debug for GlProgramCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        <Self as std::fmt::Display>::fmt(self, f)?;
+        write!(f, "\n\nShader source:\n{}", self.shader_source)
+    }
 }
 
 impl std::fmt::Display for GlProgramCreationError {

@@ -50,20 +50,6 @@ Any dead cell with exactly three live neighbours becomes a live cell, as if by r
 */
 
 
-
-
-varying vec2 left_coord;
-varying vec2 right_coord;
-varying vec2 above_coord;
-varying vec2 below_coord;
-
-varying vec2 lefta_coord;
-varying vec2 righta_coord;
-varying vec2 leftb_coord;
-varying vec2 rightb_coord;
-
-
-
 float gray(vec4 n)
 {
 	return (n.r + n.g + n.b)/3.0;
@@ -77,6 +63,18 @@ float rand(vec2 co){
 void main()	{
 	vec4		inputPixelColor = vec4(0.0);
 	vec2		loc = gl_FragCoord.xy;
+
+	vec2 texc = isf_FragNormCoord.xy * RENDERSIZE;
+
+	vec2 left_coord = vec2(texc.xy + vec2(-1.0 , 0));
+	vec2 right_coord = vec2(texc.xy + vec2(1.0 , 0));
+	vec2 above_coord = vec2(texc.xy + vec2(0,1.0));
+	vec2 below_coord = vec2(texc.xy + vec2(0,-1.0));
+	
+	vec2 lefta_coord = vec2(texc.xy + vec2(-1.0 , 1.0));
+	vec2 righta_coord = vec2(texc.xy + vec2(1.0 , 1.0));
+	vec2 leftb_coord = vec2(texc.xy + vec2(-1.0 , -1.0));
+	vec2 rightb_coord = vec2(texc.xy + vec2(1.0 , -1.0));
 	
 	if ((TIME < 0.5)||(restartNow))	{
 		//	randomize the start conditions
@@ -84,8 +82,7 @@ void main()	{
 		if (alive > 1.0 - startThresh)	{
 			inputPixelColor = vec4(1.0);
 		}
-	}
-	else	{
+	} else	{
 		vec4	color = IMG_PIXEL(lastData, loc);
 		vec4	colorL = IMG_PIXEL(lastData, left_coord);
 		vec4	colorR = IMG_PIXEL(lastData, right_coord);

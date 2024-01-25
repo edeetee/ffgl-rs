@@ -82,8 +82,6 @@ impl IsfShader {
     ) -> Result<Self, IsfShaderLoadError> {
         let prefix = generate_isf_prefix(isf);
 
-        // source = prefix + &source;
-
         let source = (format!("{prefix}\n{original_source}"))
             .replace("gl_FragColor", "isf_FragColor")
             .replace("varying", "out");
@@ -195,7 +193,7 @@ fn generate_isf_prefix(def: &Isf) -> String {
             isf::InputType::Color(_) => "vec4",
             isf::InputType::Audio(_) => "sampler2D",
             isf::InputType::AudioFft(_) => "sampler2D",
-            isf::InputType::Event => "sampler2D",
+            isf::InputType::Event => "bool",
             isf::InputType::Bool(_) => "bool",
             isf::InputType::Long(_) => "int",
         };

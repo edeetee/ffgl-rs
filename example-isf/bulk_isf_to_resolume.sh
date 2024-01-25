@@ -13,9 +13,9 @@ ISF_EXTRA_FILES=(
     "life"
     )
 
-for ISF_FILE in "${ISF_FILES[@]}" "${ISF_EXTRA_FILES[@]}"
-do
-    export ISF_SOURCE="/Library/Graphics/ISF/$ISF_FILE.fs"
+# build function
+function build_isf {
+    export ISF_SOURCE=$1
     FILENAME=$(basename "$ISF_SOURCE" .fs)
     export ISF_NAME=$(echo "$FILENAME" | cut -c1-16)
 
@@ -26,6 +26,16 @@ do
     cargo build --release -p example-isf
 
     ./deploy_bundle_to_resolume.sh example_isf "$ISF_NAME"
+}
+
+for ISF_FILE in "${ISF_EXTRA_FILES[@]}"
+do
+    build_isf "$(pwd $0)/example-isf/isf-extras/$ISF_FILE.fs"
+done
+
+for ISF_FILE in "${ISF_LIB_FILES[@]}"
+do
+    build_isf "/Library/Graphics/ISF/$ISF_FILE.fs"
 done
 
 ./run_resolume.sh
