@@ -14,7 +14,6 @@ use thiserror::Error;
 pub struct IsfShader {
     frag: FullscreenFrag,
     passes: Vec<PassTexture>,
-    // res: (u32, u32),
     start_inst: Instant,
     prev_frame_inst: Instant,
     frame_count: u32,

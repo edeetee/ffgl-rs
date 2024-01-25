@@ -63,9 +63,12 @@ impl FFGLHandler for IsfFFGLState {
             .collect();
 
         let mut name = [0; 16];
-        let name_from_env = env!("ISF_NAME").as_bytes();
+        let name_str = format!("*{}", env!("ISF_NAME"));
+        let name_b = name_str.as_bytes();
 
-        name[0..name_from_env.len()].copy_from_slice(&name_from_env);
+        let name_len = name_b.len().min(name.len());
+
+        name[0..name_len].copy_from_slice(&name_b[0..name_len]);
 
         let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
         let mut code = [0; 4];

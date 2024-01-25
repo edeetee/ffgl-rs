@@ -2,6 +2,8 @@
 
 Here is the start a rust binding for FFGL. I reference both the old and resolume versions of FFGL with the aim to support both on all platforms.
 
+![Screenshot](docs/screenshot.png)
+
 ## Support
 
 - Currently Macos only
@@ -55,6 +57,8 @@ You must call the ffgl_handler!() macro to associate your plugin with the correc
 - Get working on FFGL1 (VDMX)
 - Embed any linked photos into the dylib along with the ISf source
 - Handle multiple passes
+- Label inputs
+- String inputs
 
 ## Aims
 
