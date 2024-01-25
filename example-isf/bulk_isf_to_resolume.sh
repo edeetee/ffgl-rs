@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-ISF_FILES=(
+ISF_LIB_FILES=(
     "Channel Slide"
     "Dither-Bayer"
     "Radial Gradient"
@@ -9,7 +9,11 @@ ISF_FILES=(
     "v002-CRT-Mask"
 )
 
-for ISF_FILE in "${ISF_FILES[@]}"
+ISF_EXTRA_FILES=(
+    "life"
+    )
+
+for ISF_FILE in "${ISF_FILES[@]}" "${ISF_EXTRA_FILES[@]}"
 do
     export ISF_SOURCE="/Library/Graphics/ISF/$ISF_FILE.fs"
     FILENAME=$(basename "$ISF_SOURCE" .fs)

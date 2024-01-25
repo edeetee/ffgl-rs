@@ -40,7 +40,7 @@ macro_rules! e {
     }}
 }
 
-pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
+pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     function: Op,
     mut input_value: FFGLVal,
     instance: Option<&mut traits::Instance<H::Instance>>,

@@ -1,5 +1,5 @@
-pub mod callback;
 pub mod conversions;
+pub mod entry;
 pub mod ffi;
 mod handler_macro;
 mod instance;

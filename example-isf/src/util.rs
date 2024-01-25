@@ -57,7 +57,11 @@ impl std::fmt::Display for GlProgramCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.inner {
             glium::ProgramCreationError::CompilationError(source, shader_type) => {
-                write!(f, "CompilationError for {shader_type:?} (\n{source})")
+                write!(
+                    f,
+                    "CompilationError for {shader_type:?} (\n{source})",
+                    source = source.replace("\\n", "\n")
+                )
             }
             glium::ProgramCreationError::LinkingError(source) => {
                 write!(f, "LinkingError (\n{source})")

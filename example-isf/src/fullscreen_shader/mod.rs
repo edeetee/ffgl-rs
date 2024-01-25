@@ -33,10 +33,10 @@ impl FullscreenFrag {
     ) -> Result<Self, GlProgramCreationError> {
         let vert_buffer = new_fullscreen_buffer(facade).unwrap();
 
+        // tracing::info!("{}", frag.replace("\\n", "\n"));
+
         let program = Program::from_source(facade, FULLSCREEN_VERT_SHADER, frag, None)
             .map_err(|e| e.to_gl_creation_error(frag.to_string()))?;
-
-        // program.get_shader_storage_blocks()t
 
         Ok(Self {
             params,

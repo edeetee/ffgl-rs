@@ -15,7 +15,7 @@ macro_rules! ffgl_handler {
                 Ok(function) => {
                     $crate::tracing::trace!("Op::{function:?}");
                     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                        $crate::callback::default_ffgl_callback::<$handler>(
+                        $crate::entry::default_ffgl_entry::<$handler>(
                             function,
                             inputValue,
                             unsafe { instanceID.as_mut() },
@@ -28,7 +28,7 @@ macro_rules! ffgl_handler {
                             Err(err) => {
                                 $crate::tracing::error!(
                                     target: "ffgl_handler",
-                                    "ERROR IN FFGL: {:?}",
+                                    "ERROR IN FFGL: {}",
                                     err,
                                 );
                                 $crate::SuccessVal::Fail.into()
