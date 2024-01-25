@@ -26,36 +26,6 @@ impl Debug for FFGLGliumInstance {
     }
 }
 
-// pub trait FFGLGliumInstance: Sized + ParamHandler {
-//     fn new(inst_data: &FFGLData, ctx: Rc<Context>) -> Self;
-//     fn render_frame(
-//         &mut self,
-//         target: &mut impl Surface,
-//         input_textures: Vec<Texture2d>,
-//         inst_data: &FFGLData,
-//     ) -> Result<(), Box<dyn Error>>;
-// }
-
-// impl<Handler: ParamHandler + Debug> ParamHandler for FFGLGliumState<Handler> {
-//     // type Param = Handler::Param;
-
-//     // fn num_params() -> usize {
-//     //     Handler::num_params()
-//     // }
-
-//     // fn param_info(index: usize) -> &'static Self::Param {
-//     //     Handler::param_info(index)
-//     // }
-
-//     fn set_param(&mut self, index: usize, value: f32) {
-//         self.handler.set_param(index, value);
-//     }
-
-//     fn get_param(&self, index: usize) -> f32 {
-//         self.handler.get_param(index)
-//     }
-// }
-
 impl FFGLGliumInstance {
     pub fn new(inst_data: &FFGLData) -> Self {
         let backend = Rc::new(gl_backend::RawGlBackend::new(inst_data.get_dimensions()));
