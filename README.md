@@ -26,14 +26,14 @@ Currently only tested on macos.
 
 The following command will take an ISF file and output an FFGL plugin. The plugin will be copied to the resolume plugin folder.
 
-`isf_to_resolume.sh <isf_file>`
+`example_isf/isf_to_resolume.sh <isf_file>`
 
 ### Commands
 
 #### Deploy
 
 The following script will turn the dylib into a macos bundle and copy it to the resolume plugin folder.
-`./deploy_bundle_to_resolume.sh`
+`example_isf/deploy_bundle_to_resolume.sh`
 
 #### Run
 
