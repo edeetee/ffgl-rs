@@ -28,7 +28,7 @@ static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 
 ///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
 macro_rules! e {
@@ -59,7 +59,7 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     if !noisy_op {
         debug!("Op::{function:?}({})", unsafe { input_value.num });
     } else {
-        e!("Op::{function:?}({})", unsafe { input_value.num });
+        trace!("Op::{function:?}({})", unsafe { input_value.num });
     }
 
     unsafe {
@@ -108,8 +108,6 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
         .downcast_ref::<H>()
         .context(e!("Handler type mismatch"))?;
 
-    // let handler =
-
     let resp = match function {
         Op::GetPluginCaps => {
             let cap_num = unsafe { input_value.num };
@@ -146,7 +144,6 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
             result
         }
 
-        // Op::GetNumParameters => FFGLVal { num: 0 },
         Op::GetNumParameters => FFGLVal {
             num: handler.num_params() as u32,
         },
@@ -192,19 +189,10 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
             let new_value =
                 unsafe { std::mem::transmute::<u32, f32>(input.NewParameterValue.UIntValue) };
 
-            // log::logln!("SET PARAM cb {index_usize:?}=>{new_value:#?}");
-
             instance
                 .context(e!("No instance"))?
                 .renderer
                 .set_param(index_usize, new_value);
-
-            // set_param(instance, index as usize, ParamValue::Float(new_value));
-
-            // log::logln!(
-            //     "SET PARAM {param:?} {old_value:?} => {new_value:?}",
-            //     param = param.display_name.to_str().unwrap(),
-            // );
 
             SuccessVal::Success.into()
         }
@@ -263,12 +251,8 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
         Op::ProcessOpenGL => {
             let gl_process_info: &ProcessOpenGLStruct = unsafe { input_value.as_ref() };
 
-            // logln!("PROCESSGL info \n{gl_process_info:#?}");
-
             let traits::Instance { data, renderer } = instance.context(e!("No instance"))?;
             let gl_input = gl_process_info.into();
-
-            // logln!("PROCESSGL input \n{gl_input:?}");
 
             renderer.draw(&data, gl_input);
 
@@ -281,7 +265,7 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
             SuccessVal::Success.into()
         }
 
-        //This is called before GLInitialize. If that is so,
+        //This is can be called before GLInitialize.
         Op::SetBeatInfo => {
             let beat_info: &SetBeatinfoStruct = unsafe { input_value.as_ref() };
             if let Some(inst) = instance {
@@ -295,7 +279,6 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
         Op::Resize => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
             debug!("RESIZE\n{viewport:#?}");
-            // instance?.data.set_viewport(viewport);
             SuccessVal::Success.into()
         }
 
@@ -315,7 +298,7 @@ pub fn default_ffgl_callback<H: FFGLHandler + 'static>(
     if !noisy_op {
         debug!("=> {}", unsafe { resp.num });
     } else {
-        e!("=> {}", unsafe { resp.num });
+        trace!("=> {}", unsafe { resp.num });
     }
 
     Ok(resp)
