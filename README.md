@@ -1,6 +1,6 @@
 # FFGL in Rust
 
-Here is the start a rust binding for FFGL. I reference both the old and resolume versions of FFGL with the aim to support both on all platforms.
+FFGL Binding for rust. Resolume + macos + glium + rust
 
 ![Screenshot](docs/screenshot.png)
 
