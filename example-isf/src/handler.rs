@@ -1,3 +1,6 @@
+use std::cell::OnceCell;
+use std::ffi::CString;
+
 use ffgl_glium;
 
 use ffgl_glium::PluginType;
@@ -31,16 +34,18 @@ const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
 pub struct IsfFFGLState {
     pub source: String,
     pub info: Isf,
-    pub inputs: Vec<param::IsfInputParam>,
+    pub inputs: Vec<param::IsfFFGLParam>,
     pub plugin_info: PluginInfo,
 }
 
 impl Uniforms for IsfFFGLState {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut output: F) {
         for input in &self.inputs {
-            let uniform = input.as_uniform_optional();
-            if let Some(uniform) = uniform {
-                output(&input.name, uniform);
+            if let param::IsfFFGLParam::Isf(param) = input {
+                let uniform = param.as_uniform_optional();
+                if let Some(uniform) = uniform {
+                    output(&param.name, uniform);
+                }
             }
         }
     }
@@ -55,11 +60,37 @@ impl FFGLHandler for IsfFFGLState {
         init_default_subscriber();
 
         let info = isf::parse(ISF_SOURCE).unwrap();
-        let params: Vec<param::IsfInputParam> = info
+        let shader_params: Vec<param::IsfShaderParam> = info
             .inputs
             .iter()
             .cloned()
-            .map(|input| param::IsfInputParam::new(input))
+            .map(|input| param::IsfShaderParam::new(input))
+            .collect();
+
+        let plugin_type = if shader_params.iter().any(|x| x.ty == isf::InputType::Image) {
+            PluginType::Effect
+        } else {
+            PluginType::Source
+        };
+
+        let basic_params = vec![param::IsfFFGLParam::Overlay(
+            param::OverlayParams::Scale,
+            BasicParamInfo {
+                name: CString::new("Resize").unwrap(),
+                default: Some(1.0),
+                group: Some("opts".to_string()),
+                ..Default::default()
+            },
+            1.0,
+        )];
+
+        let params: Vec<param::IsfFFGLParam> = basic_params
+            .into_iter()
+            .chain(
+                shader_params
+                    .into_iter()
+                    .map(|p| param::IsfFFGLParam::Isf(p)),
+            )
             .collect();
 
         let mut name = [0; 16];
@@ -73,12 +104,6 @@ impl FFGLHandler for IsfFFGLState {
         let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
         let mut code = [0; 4];
         rng.fill_bytes(&mut code);
-
-        let plugin_type = if params.iter().any(|x| x.ty == isf::InputType::Image) {
-            PluginType::Effect
-        } else {
-            PluginType::Source
-        };
 
         let plugin_info = PluginInfo {
             unique_id: code,
@@ -99,17 +124,21 @@ impl FFGLHandler for IsfFFGLState {
         }
     }
 
-    fn param_info(&'static self, mut index: usize) -> &'static Self::Param {
+    fn param_info(&self, mut index: usize) -> &Self::Param {
         let mut input_index = 0;
-        while self.inputs[input_index].params.len() <= index {
-            index -= self.inputs[input_index].params.len();
+        while self.inputs[input_index].num_params() <= index {
+            index -= self.inputs[input_index].num_params();
             input_index += 1;
         }
 
         let input = &self.inputs[input_index];
-        let param = &input.params[index];
+        let param = &input.param_info(index);
 
         param
+    }
+
+    fn num_params(&'static self) -> usize {
+        self.inputs.iter().map(|x| x.num_params()).sum()
     }
 
     fn plugin_info(&'static self) -> PluginInfo {
@@ -118,9 +147,5 @@ impl FFGLHandler for IsfFFGLState {
 
     fn new_instance(&'static self, inst_data: &ffgl_glium::FFGLData) -> Self::Instance {
         instance::IsfFFGLInstance::new(self, inst_data)
-    }
-
-    fn num_params(&'static self) -> usize {
-        self.inputs.iter().map(|x| x.params.len()).sum()
     }
 }

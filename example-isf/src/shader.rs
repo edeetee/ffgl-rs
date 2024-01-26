@@ -36,21 +36,18 @@ impl Uniforms for PassTexture {
 #[error("Could not parse pass size {0}")]
 pub struct PassParseError(String);
 
-fn default_or_parse<T: FromStr>(default: T, text: &Option<String>) -> Result<T, PassParseError> {
-    match text {
-        Some(text) => text.parse().map_err(|_| PassParseError(text.clone())),
-        None => Ok(default),
-    }
+fn parse_or_default<T: FromStr>(text: &Option<String>, default: T) -> T {
+    text.as_ref()
+        .map(|t| t.parse().ok())
+        .flatten()
+        .unwrap_or(default)
 }
 
-fn calculate_pass_size(
-    pass: &Pass,
-    (width, height): (u32, u32),
-) -> Result<(u32, u32), PassParseError> {
-    Ok((
-        default_or_parse(width, &pass.width)?,
-        default_or_parse(height, &pass.height)?,
-    ))
+fn calculate_pass_size(pass: &Pass, (width, height): (u32, u32)) -> (u32, u32) {
+    (
+        parse_or_default(&pass.width, width),
+        parse_or_default(&pass.height, height),
+    )
 }
 
 impl PassTexture {
@@ -59,7 +56,7 @@ impl PassTexture {
         pass: Pass,
         res: (u32, u32),
     ) -> Result<PassTexture, PassParseError> {
-        let size = calculate_pass_size(&pass, res)?;
+        let size = calculate_pass_size(&pass, res);
 
         Ok(Self {
             pass,
@@ -67,17 +64,17 @@ impl PassTexture {
         })
     }
 
-    // pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
-    //     //allow unwrap here as you cannot make a valid PassTexture with an unparsable pass size
-    //     let size = calculate_pass_size(&self.pass, size).unwrap();
-    //     self.texture = new_texture_2d(facade, size).unwrap()
-    // }
+    pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
+        let size = calculate_pass_size(&self.pass, size);
+        self.texture = new_texture_2d(facade, size).unwrap()
+    }
 }
 
 impl IsfShader {
     pub fn new(
         facade: &impl Facade,
         isf: &Isf,
+        dimensions: (u32, u32),
         original_source: &str,
     ) -> Result<Self, IsfShaderLoadError> {
         let prefix = generate_isf_prefix(isf);
@@ -86,12 +83,10 @@ impl IsfShader {
             .replace("gl_FragColor", "isf_FragColor")
             .replace("varying", "out");
 
-        let res = DEFAULT_RES;
-
         let passes = isf
             .passes
             .iter()
-            .map(|pass| PassTexture::new(facade, pass.clone(), res))
+            .map(|pass| PassTexture::new(facade, pass.clone(), dimensions))
             .collect::<Result<_, _>>()?;
 
         let now = Instant::now();
@@ -106,8 +101,15 @@ impl IsfShader {
         })
     }
 
+    pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
+        for pass in &mut self.passes {
+            pass.update_size(facade, size)
+        }
+    }
+
     pub fn draw(
         &mut self,
+        facade: &impl Facade,
         surface: &mut impl Surface,
         uniforms: &impl Uniforms,
     ) -> Result<(), DrawError> {
@@ -127,15 +129,6 @@ impl IsfShader {
         if self.passes.is_empty() {
             self.frag.draw(surface, &uniforms)?;
         } else {
-            //TODO: Update dimensions of surfaces
-            // let dimens = surface.get_dimensions();
-            // if dimens != self.res {
-            //     self.res = dimens;
-            //     for pass in &self.passes {
-            //         // pass.update_size(surface, dimens)
-            //     }
-            // }
-
             let filter = glium::uniforms::MagnifySamplerFilter::Nearest;
 
             for pass_tex in &self.passes {

@@ -108,7 +108,7 @@ impl<T: SimpleFFGLInstance> FFGLHandler for SimpleFFGLHandler<T> {
         T::num_params()
     }
 
-    fn param_info(&self, index: usize) -> &'static Self::Param {
+    fn param_info(&'static self, index: usize) -> &'static Self::Param {
         T::param_info(index)
     }
 

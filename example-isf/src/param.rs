@@ -46,7 +46,62 @@ impl IsfInputValue {
 }
 
 #[derive(Debug, Clone)]
-pub struct IsfInputParam {
+pub enum IsfFFGLParam {
+    Isf(IsfShaderParam),
+    Overlay(OverlayParams, BasicParamInfo, f32),
+}
+
+impl IsfFFGLParam {
+    pub fn param_info(&self, index: usize) -> &BasicParamInfo {
+        match self {
+            Self::Isf(x) => &x.params[0],
+            Self::Overlay(_, x, _) => x,
+        }
+    }
+
+    pub fn num_params(&self) -> usize {
+        match self {
+            Self::Isf(x) => x.params.len(),
+            Self::Overlay(_, _, _) => 1,
+        }
+    }
+
+    pub fn set(&mut self, index: usize, value: f32) {
+        match self {
+            Self::Isf(x) => x.value.set(index, value),
+            Self::Overlay(_, _, x) => *x = value,
+        }
+    }
+
+    pub fn get(&self, index: usize) -> f32 {
+        match self {
+            Self::Isf(x) => x.value.get(index),
+            Self::Overlay(_, _, x) => *x,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub enum OverlayParams {
+    Scale,
+}
+
+impl Into<BasicParamInfo> for OverlayParams {
+    fn into(self) -> BasicParamInfo {
+        match self {
+            OverlayParams::Scale => BasicParamInfo {
+                name: CString::new("Resize").unwrap(),
+                default: Some(1.0),
+                group: Some("opts".to_string()),
+                ..Default::default()
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IsfShaderParam {
     pub ty: isf::InputType,
     pub name: String,
     pub params: Vec<BasicParamInfo>,
@@ -65,7 +120,7 @@ pub trait AsUniformOptional {
     fn as_uniform_optional(&self) -> Option<UniformValue<'_>>;
 }
 
-impl AsUniformOptional for IsfInputParam {
+impl AsUniformOptional for IsfShaderParam {
     fn as_uniform_optional(&self) -> Option<UniformValue<'_>> {
         let ty = &self.ty;
         let value = &self.value;
@@ -89,7 +144,7 @@ impl AsUniformOptional for IsfInputParam {
     }
 }
 
-impl IsfInputParam {
+impl IsfShaderParam {
     pub(crate) fn new(Input { ty, name }: isf::Input) -> Self {
         let value = match &ty {
             isf::InputType::Event => IsfInputValue::Event(false),

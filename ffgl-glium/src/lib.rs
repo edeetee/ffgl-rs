@@ -48,15 +48,13 @@ impl FFGLGliumInstance {
 
     pub fn draw(
         &self,
-        inst_data: &FFGLData,
+        res: (u32, u32),
         frame_data: GLInput<'_>,
         render_frame: &mut impl FnMut(
             &mut SimpleFrameBuffer,
             Vec<Texture2d>,
         ) -> Result<(), Box<dyn Error>>,
     ) {
-        let res = inst_data.get_dimensions();
-
         unsafe { self.ctx.rebuild(self.backend.clone()).unwrap() };
 
         let frame = Frame::new(self.ctx.clone(), (res.0, res.1));
