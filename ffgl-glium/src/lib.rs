@@ -48,7 +48,8 @@ impl FFGLGliumInstance {
 
     pub fn draw(
         &self,
-        res: (u32, u32),
+        output_res: (u32, u32),
+        render_res: (u32, u32),
         frame_data: GLInput<'_>,
         render_frame: &mut impl FnMut(
             &mut SimpleFrameBuffer,
@@ -57,17 +58,16 @@ impl FFGLGliumInstance {
     ) {
         unsafe { self.ctx.rebuild(self.backend.clone()).unwrap() };
 
-        let frame = Frame::new(self.ctx.clone(), (res.0, res.1));
+        let frame = Frame::new(self.ctx.clone(), (render_res.0, render_res.1));
         let rb = RenderBuffer::new(
             &self.ctx,
             glium::texture::UncompressedFloatFormat::U8U8U8U8,
-            res.0,
-            res.1,
+            render_res.0,
+            render_res.1,
         )
         .unwrap();
 
         let fb = &mut SimpleFrameBuffer::new(&self.ctx, &rb).unwrap();
-        // fb.clear_color(0.0, 0.0, 1.0, 1.0);
 
         let textures: Vec<_> = frame_data
             .textures
@@ -99,7 +99,7 @@ impl FFGLGliumInstance {
         // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
         unsafe {
             gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
-            blit_fb(res, res);
+            blit_fb(render_res, output_res);
         }
 
         frame.finish().unwrap();

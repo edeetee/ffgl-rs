@@ -47,16 +47,26 @@ I have integrated [tracing](https://docs.rs/tracing/latest/tracing/index.html) i
 
 ## Extending
 
+### ffgl-core
+
 You can create your own plugin from scratch by either using the SimpleFFGLInstance trait, or implement both the FFGLHandler and FFGLInstance traits.
 
 You must call the ffgl_handler!() macro to associate your plugin with the correct entry points.
+
+### ffgl-glium
+
+Use this to create a glium instance while inside an ffgl plugin
+
+### ffgl-isf
+
+Use this to create an isf plugin. Needs more work to be modular.
 
 ## Future work
 
 - Get working on Windows
 - Get working on FFGL1 (VDMX)
 - Embed any linked photos into the dylib along with the ISf source
-- Handle multiple passes
+- Handle multiple passes ✔️
 - Label inputs
 - String inputs
 

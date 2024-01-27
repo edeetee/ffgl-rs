@@ -11,6 +11,8 @@ use ffgl_glium;
 
 use ffgl_glium::traits::FFGLInstance;
 
+use std::cmp::max;
+use std::cmp::min;
 use std::fmt::Formatter;
 
 use std::fmt::Debug;
@@ -56,18 +58,18 @@ impl FFGLInstance for IsfFFGLInstance {
 
     fn draw(&mut self, inst_data: &ffgl_glium::FFGLData, frame_data: ffgl_glium::GLInput) {
         let scale = match &self.state.inputs[0] {
-            crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, _, val) => *val,
+            crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, _, val) => (*val).powf(2.0),
             _ => 1.0,
         };
 
-        let new_res = inst_data.get_dimensions();
-        let new_res = (
-            (new_res.0 as f32 * scale) as u32,
-            (new_res.1 as f32 * scale) as u32,
+        let dest_res = inst_data.get_dimensions();
+        let render_res = (
+            max((dest_res.0 as f32 * scale) as u32, 1),
+            max((dest_res.1 as f32 * scale) as u32, 1),
         );
 
         self.glium
-            .draw(new_res, frame_data, &mut |target, textures| {
+            .draw(dest_res, render_res, frame_data, &mut |target, textures| {
                 let image_uniforms = self
                     .state
                     .inputs
@@ -90,7 +92,9 @@ impl FFGLInstance for IsfFFGLInstance {
                     next: &self.state,
                 };
 
-                self.shader.draw(&self.glium.ctx, target, &uniforms)?;
+                self.shader.try_update_size(&self.glium.ctx, render_res);
+
+                self.shader.draw(target, &uniforms)?;
 
                 Ok(())
             });

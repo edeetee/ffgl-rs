@@ -66,7 +66,13 @@ impl PassTexture {
 
     pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
         let size = calculate_pass_size(&self.pass, size);
-        self.texture = new_texture_2d(facade, size).unwrap()
+        let new_texture = new_texture_2d(facade, size).unwrap();
+        self.texture.as_surface().fill(
+            &new_texture.as_surface(),
+            glium::uniforms::MagnifySamplerFilter::Nearest,
+        );
+
+        self.texture = new_texture;
     }
 }
 
@@ -101,15 +107,16 @@ impl IsfShader {
         })
     }
 
-    pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
+    pub fn try_update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
         for pass in &mut self.passes {
-            pass.update_size(facade, size)
+            if pass.texture.dimensions() != size {
+                pass.update_size(facade, size)
+            }
         }
     }
 
     pub fn draw(
         &mut self,
-        facade: &impl Facade,
         surface: &mut impl Surface,
         uniforms: &impl Uniforms,
     ) -> Result<(), DrawError> {
