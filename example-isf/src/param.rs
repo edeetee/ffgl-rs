@@ -1,45 +1,148 @@
-use isf::Input;
+use isf::{Input, InputValues};
 
 use glium::uniforms::UniformValue;
 
-use ffgl_glium::parameters::BasicParamInfo;
+use ffgl_glium::{
+    parameters::{BasicParamInfo, ParameterTypes},
+    Op,
+};
 
 use isf;
 
 use std::{ffi::CString, mem::transmute};
 
+fn map_input_values<T, R>(in_values: InputValues<T>, map: &impl Fn(&T) -> R) -> InputValues<R> {
+    InputValues {
+        default: in_values.default.as_ref().map(map),
+        min: in_values.default.as_ref().map(map),
+        max: in_values.default.as_ref().map(map),
+        identity: in_values.default.as_ref().map(map),
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IsfValueAndInfo<T> {
+    pub value: T,
+    pub info: InputValues<T>,
+}
+
+impl<T: Default + Clone> IsfValueAndInfo<T> {
+    pub fn new(info: InputValues<T>) -> Self {
+        let value = info
+            .default
+            .clone()
+            .unwrap_or(info.identity.clone().unwrap_or_default());
+
+        Self { value, info }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum IsfInputValue {
     Event(bool),
     Bool(bool),
-    Long(i32),
-    Float(f32),
-    Point2d([f32; 2]),
-    Color([f32; 4]),
+    Long(IsfValueAndInfo<i32>),
+    Float(IsfValueAndInfo<f32>),
+    Point2d(IsfValueAndInfo<[f32; 2]>),
+    Color(IsfValueAndInfo<[f32; 4]>),
     None,
 }
 
 impl IsfInputValue {
-    pub(crate) fn set(&mut self, index: usize, value: f32) {
+    pub fn new(ty: isf::InputType) -> Self {
+        match ty {
+            isf::InputType::Event => Self::Event(false),
+            isf::InputType::Bool(x) => Self::Bool(x.default.unwrap_or_default()),
+            isf::InputType::Long(x) => Self::Long(IsfValueAndInfo::new(x.input_values)),
+            isf::InputType::Float(x) => Self::Float(IsfValueAndInfo::new(x)),
+            isf::InputType::Point2d(x) => Self::Point2d(IsfValueAndInfo::new(x)),
+            isf::InputType::Color(x) => {
+                Self::Color(IsfValueAndInfo::new(map_input_values(x, &|v| {
+                    slice_from_vec(&v)
+                })))
+            }
+            isf::InputType::Image => Self::None,
+            _ => unimplemented!("Unsupported ISF input type {ty:?}"),
+        }
+    }
+
+    pub fn build_param_info(
+        &self,
+        index: usize,
+        name: CString,
+        param_type: ParameterTypes,
+        group: Option<String>,
+    ) -> BasicParamInfo {
+        let default = self.default(index);
+        let min = self.min(index);
+        let max = self.max(index);
+
+        BasicParamInfo {
+            name,
+            param_type,
+            default,
+            min,
+            max,
+            group,
+        }
+    }
+
+    pub fn default(&self, index: usize) -> Option<f32> {
+        match self {
+            Self::Event(x) => Some(*x as u32 as f32),
+            Self::Bool(x) => Some(*x as u32 as f32),
+            Self::Long(x) => Some(unsafe { transmute(x.info.default.unwrap_or_default()) }),
+            Self::Float(x) => x.info.default,
+            Self::Point2d(x) => x.info.default.map(|arr| arr[index]),
+            Self::Color(x) => x.info.default.map(|arr| arr[index]),
+            Self::None => None,
+        }
+    }
+
+    pub fn min(&self, index: usize) -> Option<f32> {
+        match self {
+            Self::Event(x) => Some(*x as u32 as f32),
+            Self::Bool(x) => Some(*x as u32 as f32),
+            Self::Long(x) => Some(unsafe { transmute(x.info.min.unwrap_or_default()) }),
+            Self::Float(x) => x.info.min,
+            Self::Point2d(x) => x.info.min.map(|arr| arr[index]),
+            Self::Color(x) => x.info.min.map(|arr| arr[index]),
+            Self::None => None,
+        }
+    }
+
+    pub fn max(&self, index: usize) -> Option<f32> {
+        match self {
+            Self::Event(x) => Some(*x as u32 as f32),
+            Self::Bool(x) => Some(*x as u32 as f32),
+            Self::Long(x) => Some(unsafe { transmute(x.info.max.unwrap_or_default()) }),
+            Self::Float(x) => x.info.max,
+            Self::Point2d(x) => x.info.max.map(|arr| arr[index]),
+            Self::Color(x) => x.info.max.map(|arr| arr[index]),
+            Self::None => None,
+        }
+    }
+
+    pub fn set(&mut self, index: usize, value: f32) {
         match self {
             Self::Event(x) => *x = value == 1.0,
             Self::Bool(x) => *x = value == 1.0,
-            Self::Long(x) => *x = unsafe { transmute(value) },
-            Self::Float(x) => *x = value,
-            Self::Point2d(x) => x[index] = value,
-            Self::Color(x) => x[index] = value,
+            Self::Long(x) => x.value = unsafe { transmute(value) },
+            Self::Float(x) => x.value = value,
+            Self::Point2d(x) => x.value[index] = value,
+            Self::Color(x) => x.value[index] = value,
             Self::None => {}
         }
     }
 
-    pub(crate) fn get(&self, index: usize) -> f32 {
+    pub fn get(&self, index: usize) -> f32 {
         match self {
             Self::Event(x) => *x as u32 as f32,
             Self::Bool(x) => *x as u32 as f32,
-            Self::Long(x) => unsafe { transmute(*x) },
-            Self::Float(x) => *x,
-            Self::Point2d(x) => x[index],
-            Self::Color(x) => x[index],
+            Self::Long(x) => unsafe { transmute(x.value) },
+            Self::Float(x) => x.value,
+            Self::Point2d(x) => x.value[index],
+            Self::Color(x) => x.value[index],
             Self::None => 0.0,
         }
     }
@@ -108,7 +211,7 @@ pub struct IsfShaderParam {
     pub value: IsfInputValue,
 }
 
-pub(crate) fn slice_from_vec(input: &Vec<f32>) -> [f32; 4] {
+pub fn slice_from_vec(input: &Vec<f32>) -> [f32; 4] {
     let mut slice = [0.0; 4];
     for (i, v) in input.iter().enumerate() {
         slice[i] = *v;
@@ -122,114 +225,88 @@ pub trait AsUniformOptional {
 
 impl AsUniformOptional for IsfShaderParam {
     fn as_uniform_optional(&self) -> Option<UniformValue<'_>> {
-        let ty = &self.ty;
         let value = &self.value;
 
-        match (ty, value) {
-            (isf::InputType::Event, IsfInputValue::Event(x)) => Some(UniformValue::Bool(*x)),
-            (isf::InputType::Bool(_), IsfInputValue::Bool(x)) => Some(UniformValue::Bool(*x)),
-            (isf::InputType::Long(_), IsfInputValue::Long(x)) => Some(UniformValue::SignedInt(*x)),
-            (isf::InputType::Float(_), IsfInputValue::Float(x)) => Some(UniformValue::Float(*x)),
-            (isf::InputType::Point2d(_), IsfInputValue::Point2d(x)) => {
-                Some(UniformValue::Vec2([x[0], x[1]]))
-            }
-
-            (isf::InputType::Color(_), IsfInputValue::Color(x)) => {
-                Some(UniformValue::Vec4([x[0], x[1], x[2], x[3]]))
-            }
-            (isf::InputType::Image, IsfInputValue::None) => None,
-
-            _ => panic!("Invalid uniform value for ISF input {ty:?}\n val {value:?}"),
+        match value {
+            IsfInputValue::Event(x) => Some(UniformValue::Bool(*x)),
+            IsfInputValue::Bool(x) => Some(UniformValue::Bool(*x)),
+            IsfInputValue::Long(x) => Some(UniformValue::SignedInt(x.value)),
+            IsfInputValue::Float(x) => Some(UniformValue::Float(x.value)),
+            IsfInputValue::Point2d(x) => Some(UniformValue::Vec2(x.value)),
+            IsfInputValue::Color(x) => Some(UniformValue::Vec4(x.value)),
+            IsfInputValue::None => None,
         }
     }
 }
 
 impl IsfShaderParam {
-    pub(crate) fn new(Input { ty, name }: isf::Input) -> Self {
-        let value = match &ty {
-            isf::InputType::Event => IsfInputValue::Event(false),
-            isf::InputType::Bool(x) => IsfInputValue::Bool(x.default.unwrap_or_default()),
-            isf::InputType::Long(x) => IsfInputValue::Long(x.default.unwrap_or_default()),
-            isf::InputType::Float(x) => IsfInputValue::Float(x.default.unwrap_or_default()),
-            isf::InputType::Point2d(x) => IsfInputValue::Point2d(x.default.unwrap_or_default()),
-            isf::InputType::Color(x) => {
-                IsfInputValue::Color(x.default.as_ref().map(slice_from_vec).unwrap_or_default())
-            }
-            isf::InputType::Image => IsfInputValue::None,
-
-            _ => unimplemented!("Unsupported ISF input type {ty:?}"),
-        };
+    pub fn new(Input { ty, name }: isf::Input) -> Self {
+        let value = IsfInputValue::new(ty.clone());
 
         let params = match &ty {
-            isf::InputType::Event => vec![BasicParamInfo {
-                name: CString::new(name.clone()).unwrap(),
-                param_type: ffgl_glium::parameters::ParameterTypes::Event,
-                default: Some(value.get(0)),
-                ..Default::default()
-            }],
-            isf::InputType::Bool(..) => vec![BasicParamInfo {
-                name: CString::new(name.clone()).unwrap(),
-                param_type: ffgl_glium::parameters::ParameterTypes::Boolean,
-                default: Some(value.get(0)),
-                ..Default::default()
-            }],
-            isf::InputType::Long(..) => vec![BasicParamInfo {
-                name: CString::new(name.clone()).unwrap(),
-                param_type: ffgl_glium::parameters::ParameterTypes::Integer,
-                default: Some(value.get(0)),
-                ..Default::default()
-            }],
-            isf::InputType::Float(..) => vec![BasicParamInfo {
-                name: CString::new(name.clone()).unwrap(),
-                param_type: ffgl_glium::parameters::ParameterTypes::Standard,
-                default: Some(value.get(0)),
-                ..Default::default()
-            }],
+            isf::InputType::Event => vec![value.build_param_info(
+                0,
+                CString::new(name.clone()).unwrap(),
+                ffgl_glium::parameters::ParameterTypes::Event,
+                None,
+            )],
+            isf::InputType::Bool(..) => vec![value.build_param_info(
+                0,
+                CString::new(name.clone()).unwrap(),
+                ffgl_glium::parameters::ParameterTypes::Boolean,
+                None,
+            )],
+            isf::InputType::Long(..) => vec![value.build_param_info(
+                0,
+                CString::new(name.clone()).unwrap(),
+                ffgl_glium::parameters::ParameterTypes::Integer,
+                None,
+            )],
+            isf::InputType::Float(..) => vec![value.build_param_info(
+                0,
+                CString::new(name.clone()).unwrap(),
+                ffgl_glium::parameters::ParameterTypes::Standard,
+                None,
+            )],
             isf::InputType::Point2d(..) => vec![
-                BasicParamInfo {
-                    name: CString::new(format!("{name} x")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::X,
-                    group: Some(name.clone()),
-                    default: Some(value.get(0)),
-                    ..Default::default()
-                },
-                BasicParamInfo {
-                    name: CString::new(format!("{name} y")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::Y,
-                    group: Some(name.clone()),
-                    default: Some(value.get(1)),
-                    ..Default::default()
-                },
+                value.build_param_info(
+                    0,
+                    CString::new(format!("{name} x")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::X,
+                    Some(name.clone()),
+                ),
+                value.build_param_info(
+                    1,
+                    CString::new(format!("{name} y")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::Y,
+                    Some(name.clone()),
+                ),
             ],
             isf::InputType::Color(..) => vec![
-                BasicParamInfo {
-                    name: CString::new(format!("{name} r")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::Red,
-                    group: Some(name.clone()),
-                    default: Some(value.get(0)),
-                    ..Default::default()
-                },
-                BasicParamInfo {
-                    name: CString::new(format!("{name} g")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::Green,
-                    group: Some(name.clone()),
-                    default: Some(value.get(1)),
-                    ..Default::default()
-                },
-                BasicParamInfo {
-                    name: CString::new(format!("{name} b")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::Blue,
-                    group: Some(name.clone()),
-                    default: Some(value.get(2)),
-                    ..Default::default()
-                },
-                BasicParamInfo {
-                    name: CString::new(format!("{name} a")).unwrap(),
-                    param_type: ffgl_glium::parameters::ParameterTypes::Alpha,
-                    group: Some(name.clone()),
-                    default: Some(value.get(3)),
-                    ..Default::default()
-                },
+                value.build_param_info(
+                    0,
+                    CString::new(format!("{name} r")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::Red,
+                    Some(name.clone()),
+                ),
+                value.build_param_info(
+                    1,
+                    CString::new(format!("{name} g")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::Green,
+                    Some(name.clone()),
+                ),
+                value.build_param_info(
+                    2,
+                    CString::new(format!("{name} b")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::Blue,
+                    Some(name.clone()),
+                ),
+                value.build_param_info(
+                    3,
+                    CString::new(format!("{name} a")).unwrap(),
+                    ffgl_glium::parameters::ParameterTypes::Alpha,
+                    Some(name.clone()),
+                ),
             ],
 
             isf::InputType::Image => vec![],
