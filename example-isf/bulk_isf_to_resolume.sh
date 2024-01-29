@@ -13,9 +13,15 @@ ISF_EXTRA_FILES=(
     "life"
     )
 
+abspath() {                                               
+    cd "$(dirname "$1")"
+    printf "%s/%s\n" "$(pwd)" "$(basename "$1")"
+}
+
 # build function
 function build_isf {
-    export ISF_SOURCE=$1
+
+    export ISF_SOURCE=$(abspath $1)
     FILENAME=$(basename "$ISF_SOURCE" .fs)
     export ISF_NAME=$(echo "$FILENAME" | cut -c1-16)
 

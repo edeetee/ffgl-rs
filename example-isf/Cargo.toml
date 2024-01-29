@@ -10,20 +10,18 @@ authors.workspace = true
 [dependencies]
 glium.workspace = true
 ffgl-glium = { path = "../ffgl-glium" }
-glsl = "6.0.1"
-genmesh = "0.6.2"
 isf = "0.1.0"
+genmesh = "0.6.2"
 thiserror = "1.0.50"
 serde = { version = "1.0.130", features = ["derive"] }
 rng = "0.1.0"
 rand = "0.8.5"
 rand_seeder = "0.2.3"
 tracing.workspace = true
+build-common = { path = "../build-common" }
 
 [build-dependencies]
-
-isf = "0.1.0"
-uneval = "0.2.4"
+build-common = { path = "../build-common" }
 
 [lib]
 crate-type = ["cdylib"]

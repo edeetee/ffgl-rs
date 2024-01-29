@@ -156,6 +156,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-common"
+version = "0.1.0"
+dependencies = [
+ "glsl",
+ "isf",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -330,10 +338,10 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 name = "example-isf"
 version = "0.1.0"
 dependencies = [
+ "build-common",
  "ffgl-glium",
  "genmesh",
  "glium",
- "glsl",
  "isf",
  "rand 0.8.5",
  "rand_seeder",
@@ -341,7 +349,6 @@ dependencies = [
  "serde",
  "thiserror",
  "tracing",
- "uneval",
 ]
 
 [[package]]
@@ -1568,16 +1575,6 @@ name = "ttf-parser"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17f77d76d837a7830fe1d4f12b7b4ba4192c1888001c7164257e4bc6d21d96b4"
-
-[[package]]
-name = "uneval"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63cc5d2fd8648d7e2be86098f60c9ece7045cc710b3c1e226910e2f37d11dc73"
-dependencies = [
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "unicode-ident"

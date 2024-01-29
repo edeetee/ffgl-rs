@@ -11,6 +11,8 @@ use isf::{Isf, Pass};
 use crate::{fullscreen_shader::FullscreenFrag, util::GlProgramCreationError};
 use thiserror::Error;
 
+use build_common::isf_glsl_preprocess::convert_source_to_glsl;
+
 pub struct IsfShader {
     frag: FullscreenFrag,
     passes: Vec<PassTexture>,
@@ -83,11 +85,7 @@ impl IsfShader {
         dimensions: (u32, u32),
         original_source: &str,
     ) -> Result<Self, IsfShaderLoadError> {
-        let prefix = generate_isf_prefix(isf);
-
-        let source = (format!("{prefix}\n{original_source}"))
-            .replace("gl_FragColor", "isf_FragColor")
-            .replace("varying", "out");
+        let source = convert_source_to_glsl(&isf, &original_source);
 
         let passes = isf
             .passes
@@ -176,43 +174,6 @@ impl<U: Uniforms> Uniforms for IsfUniforms<'_, U> {
         }
         self.inner.visit_values(f);
     }
-}
-
-const STANDARD_PREFIX: &'static str = include_str!("prefix.glsl");
-
-fn generate_isf_prefix(def: &Isf) -> String {
-    let mut prefix = String::new();
-
-    prefix.push_str(STANDARD_PREFIX);
-
-    let inputs = def.inputs.iter().map(|input| {
-        let gl_ty = match input.ty {
-            isf::InputType::Image => "sampler2D",
-            isf::InputType::Float(_) => "float",
-            isf::InputType::Point2d(_) => "vec2",
-            isf::InputType::Color(_) => "vec4",
-            isf::InputType::Audio(_) => "sampler2D",
-            isf::InputType::AudioFft(_) => "sampler2D",
-            isf::InputType::Event => "bool",
-            isf::InputType::Bool(_) => "bool",
-            isf::InputType::Long(_) => "int",
-        };
-        let name = &input.name;
-        (name, gl_ty)
-    });
-
-    let passes = def
-        .passes
-        .iter()
-        .filter_map(|pass| pass.target.as_ref().map(|name| (name, "sampler2D")));
-
-    for (name, gl_ty) in inputs.chain(passes) {
-        prefix.push_str(&format!("uniform {gl_ty} {name};\n"));
-    }
-
-    prefix.push('\n');
-
-    prefix
 }
 
 #[derive(Error, Debug)]

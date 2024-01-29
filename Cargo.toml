@@ -9,7 +9,7 @@ license = "	GPL-3.0-or-later"
 
 [workspace]
 resolver = "2"
-members = ["example-raw", "ffgl-glium", "ffgl-core", "example-isf"]
+members = ["example-raw", "ffgl-glium", "ffgl-core", "example-isf", "build-common"]
 default-members = ["ffgl-core"]
 
 
