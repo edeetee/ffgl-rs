@@ -17,6 +17,7 @@ FFGL Binding for rust. Resolume + macos + glium + rust
 - Example ISF plugin
   - Give an input ISF file and output an FFGL plugin
   - Quicker than using Wire for basic ISF shaders
+- Buildtime error for invalid ISF code
 
 ## Usage
 
