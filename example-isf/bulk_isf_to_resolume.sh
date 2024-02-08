@@ -44,4 +44,4 @@ do
     build_isf "/Library/Graphics/ISF/$ISF_FILE.fs"
 done
 
-./run_resolume.sh
+./resolume.sh
