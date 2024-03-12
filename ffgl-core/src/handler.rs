@@ -66,7 +66,7 @@ pub mod simplified {
 
     use super::FFGLHandler;
 
-    use crate::parameters::BasicParamInfo;
+    use crate::parameters::SimpleParamInfo;
 
     use crate::{FFGLData, GLInput};
 
@@ -84,7 +84,7 @@ pub mod simplified {
         fn num_params() -> usize {
             0
         }
-        fn param_info(_index: usize) -> &'static BasicParamInfo {
+        fn param_info(_index: usize) -> &'static SimpleParamInfo {
             panic!("No params")
         }
 
@@ -117,7 +117,7 @@ pub mod simplified {
 
     impl<T: SimpleFFGLInstance> FFGLHandler for SimpleFFGLHandler<T> {
         type Instance = T;
-        type Param = BasicParamInfo;
+        type Param = SimpleParamInfo;
         type NewInstanceError = std::convert::Infallible;
 
         fn init() -> Self {

@@ -6,6 +6,7 @@ use crate::shader;
 use crate::shader::IsfShaderLoadError;
 use crate::util::MultiUniforms;
 
+use ffgl_core::param_handler::ParamHandler;
 use glium::uniforms::UniformValue;
 
 use ffgl_core;
@@ -33,28 +34,12 @@ impl Debug for IsfFFGLInstance {
 }
 
 impl FFGLInstance for IsfFFGLInstance {
-    fn get_param(&self, mut index: usize) -> f32 {
-        let mut input_index = 0;
-        while self.state.inputs[input_index].num_params() <= index {
-            index -= self.state.inputs[input_index].num_params();
-            input_index += 1;
-        }
-
-        let input = &self.state.inputs[input_index];
-
-        input.get(index)
+    fn get_param(&self, index: usize) -> f32 {
+        self.state.inputs.get_param(index)
     }
 
-    fn set_param(&mut self, mut index: usize, value: f32) {
-        let mut input_index = 0;
-        while self.state.inputs[input_index].num_params() <= index {
-            index -= self.state.inputs[input_index].num_params();
-            input_index += 1;
-        }
-
-        let input = &mut self.state.inputs[input_index];
-
-        input.set(index, value);
+    fn set_param(&mut self, index: usize, value: f32) {
+        self.state.inputs.set_param(index, value)
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {

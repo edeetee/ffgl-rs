@@ -116,7 +116,7 @@ impl ParamValue for f32 {
 }
 
 #[derive(Default, Debug, Clone)]
-pub struct BasicParamInfo {
+pub struct SimpleParamInfo {
     pub name: CString,
     pub param_type: ParameterTypes,
     pub default: Option<f32>,
@@ -125,11 +125,11 @@ pub struct BasicParamInfo {
     pub group: Option<String>,
 }
 
-impl BasicParamInfo {
+impl SimpleParamInfo {
     pub fn from_name(name: &str) -> Self {
         let name = unsafe { CStr::from_bytes_with_nul_unchecked(name.as_bytes()) };
 
-        BasicParamInfo {
+        SimpleParamInfo {
             name: name.into(),
             param_type: ParameterTypes::Standard,
             ..Default::default()
@@ -137,7 +137,7 @@ impl BasicParamInfo {
     }
 }
 
-impl ParamInfo for BasicParamInfo {
+impl ParamInfo for SimpleParamInfo {
     fn name(&self) -> &CStr {
         &self.name
     }

@@ -2,7 +2,10 @@ use isf::{Input, InputValues};
 
 use glium::uniforms::UniformValue;
 
-use ffgl_core::parameters::{BasicParamInfo, ParameterTypes};
+use ffgl_core::{
+    param_handler::ParamHandler,
+    parameters::{ParameterTypes, SimpleParamInfo},
+};
 
 use isf;
 
@@ -17,6 +20,7 @@ fn map_input_values<T, R>(in_values: InputValues<T>, map: &impl Fn(&T) -> R) -> 
     }
 }
 
+///Holds ISF info along with the current value
 #[derive(Debug, Clone)]
 pub struct IsfValueAndInfo<T> {
     pub value: T,
@@ -69,12 +73,12 @@ impl IsfInputValue {
         name: CString,
         param_type: ParameterTypes,
         group: Option<String>,
-    ) -> BasicParamInfo {
+    ) -> SimpleParamInfo {
         let default = self.default(index);
         let min = self.min(index);
         let max = self.max(index);
 
-        BasicParamInfo {
+        SimpleParamInfo {
             name,
             param_type,
             default,
@@ -148,32 +152,32 @@ impl IsfInputValue {
 #[derive(Debug, Clone)]
 pub enum IsfFFGLParam {
     Isf(IsfShaderParam),
-    Overlay(OverlayParams, BasicParamInfo, f32),
+    Overlay(OverlayParams, SimpleParamInfo, f32),
 }
 
-impl IsfFFGLParam {
-    pub fn param_info(&self, index: usize) -> &BasicParamInfo {
+impl ParamHandler<SimpleParamInfo> for IsfFFGLParam {
+    fn param_info(&self, index: usize) -> &SimpleParamInfo {
         match self {
             Self::Isf(x) => &x.params[0],
             Self::Overlay(_, x, _) => x,
         }
     }
 
-    pub fn num_params(&self) -> usize {
+    fn num_params(&self) -> usize {
         match self {
             Self::Isf(x) => x.params.len(),
             Self::Overlay(_, _, _) => 1,
         }
     }
 
-    pub fn set(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, index: usize, value: f32) {
         match self {
             Self::Isf(x) => x.value.set(index, value),
             Self::Overlay(_, _, x) => *x = value,
         }
     }
 
-    pub fn get(&self, index: usize) -> f32 {
+    fn get_param(&self, index: usize) -> f32 {
         match self {
             Self::Isf(x) => x.value.get(index),
             Self::Overlay(_, _, x) => *x,
@@ -187,10 +191,10 @@ pub enum OverlayParams {
     Scale,
 }
 
-impl Into<BasicParamInfo> for OverlayParams {
-    fn into(self) -> BasicParamInfo {
+impl Into<SimpleParamInfo> for OverlayParams {
+    fn into(self) -> SimpleParamInfo {
         match self {
-            OverlayParams::Scale => BasicParamInfo {
+            OverlayParams::Scale => SimpleParamInfo {
                 name: CString::new("Resize").unwrap(),
                 default: Some(1.0),
                 group: Some("opts".to_string()),
@@ -204,7 +208,7 @@ impl Into<BasicParamInfo> for OverlayParams {
 pub struct IsfShaderParam {
     pub ty: isf::InputType,
     pub name: String,
-    pub params: Vec<BasicParamInfo>,
+    pub params: Vec<SimpleParamInfo>,
     pub value: IsfInputValue,
 }
 

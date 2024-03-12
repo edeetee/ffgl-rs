@@ -11,9 +11,10 @@ use num_traits::ToPrimitive;
 use crate::ffi::ffgl2::*;
 
 #[repr(u32)]
-#[derive(FromPrimitive, ToPrimitive, Debug, Clone, Copy, PartialEq)]
+#[derive(FromPrimitive, ToPrimitive, Debug, Clone, Copy, PartialEq, Default)]
 pub enum PluginType {
     Effect = FF_EFFECT,
+    #[default]
     Source = FF_SOURCE,
     Mixer = FF_MIXER,
 }
@@ -42,7 +43,7 @@ impl FFGLVersion {
 
 pub(crate) const FFGL_VERSION_RESOLUME: FFGLVersion = FFGLVersion::V2_1;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PluginInfo {
     pub unique_id: [u8; 4],
     pub name: [u8; 16],

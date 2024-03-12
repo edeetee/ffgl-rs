@@ -359,6 +359,8 @@ version = "0.1.0"
 dependencies = [
  "ffgl-core",
  "ffgl-glium",
+ "glium",
+ "sdfer",
 ]
 
 [[package]]
@@ -1325,6 +1327,12 @@ dependencies = [
  "smithay-client-toolkit",
  "tiny-skia",
 ]
+
+[[package]]
+name = "sdfer"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27fd75ebc7c721a70d202c7cdd2beb108bbe5dfaaea68e06aff4de2f4cc240ed"
 
 [[package]]
 name = "serde"

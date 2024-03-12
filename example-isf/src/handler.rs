@@ -6,6 +6,7 @@ use ffgl_core;
 use ffgl_core::info;
 use ffgl_core::info::PluginType;
 
+use ffgl_core::param_handler::ParamHandler;
 use rand::rngs::StdRng;
 
 use rand::RngCore;
@@ -18,7 +19,7 @@ use crate::shader::IsfShaderLoadError;
 
 use ffgl_core::log::init_default_subscriber;
 
-use ffgl_core::parameters::BasicParamInfo;
+use ffgl_core::parameters::SimpleParamInfo;
 
 use ffgl_core::handler::FFGLHandler;
 
@@ -57,7 +58,7 @@ impl FFGLHandler for IsfFFGLState {
     type Instance = instance::IsfFFGLInstance;
     type NewInstanceError = IsfShaderLoadError;
 
-    type Param = BasicParamInfo;
+    type Param = SimpleParamInfo;
 
     fn init() -> Self {
         init_default_subscriber();
@@ -78,7 +79,7 @@ impl FFGLHandler for IsfFFGLState {
 
         let basic_params = vec![param::IsfFFGLParam::Overlay(
             param::OverlayParams::Scale,
-            BasicParamInfo {
+            SimpleParamInfo {
                 name: CString::new("Resize").unwrap(),
                 default: Some(1.0),
                 group: Some("opts".to_string()),
@@ -128,20 +129,11 @@ impl FFGLHandler for IsfFFGLState {
     }
 
     fn param_info(&self, mut index: usize) -> &Self::Param {
-        let mut input_index = 0;
-        while self.inputs[input_index].num_params() <= index {
-            index -= self.inputs[input_index].num_params();
-            input_index += 1;
-        }
-
-        let input = &self.inputs[input_index];
-        let param = &input.param_info(index);
-
-        param
+        self.inputs.param_info(index)
     }
 
     fn num_params(&'static self) -> usize {
-        self.inputs.iter().map(|x| x.num_params()).sum()
+        self.inputs.num_params()
     }
 
     fn plugin_info(&'static self) -> info::PluginInfo {
