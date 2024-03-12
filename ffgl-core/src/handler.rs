@@ -66,8 +66,6 @@ pub mod simplified {
 
     use super::FFGLHandler;
 
-    use crate::info::PluginInfo;
-
     use crate::parameters::BasicParamInfo;
 
     use crate::{FFGLData, GLInput};
