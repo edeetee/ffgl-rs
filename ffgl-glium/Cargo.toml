@@ -1,9 +1,12 @@
 [package]
+license.workspace = true
+authors.workspace = true
+readme.workspace = true
+repository.workspace = true
+homepage.workspace = true
 name = "ffgl-glium"
 version = "0.1.0"
 edition = "2021"
-license.workspace = true
-authors.workspace = true
 description = "FFGL plugin utilities for using glium"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

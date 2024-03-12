@@ -1,10 +1,14 @@
 [package]
-name = "ffgl-core"
-version = "0.2.1"
-edition = "2021"
 license.workspace = true
 authors.workspace = true
+readme.workspace = true
+repository.workspace = true
+homepage.workspace = true
+name = "ffgl-core"
+version = "0.2.2"
+edition = "2021"
 description = "FFGL plugin framework"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
