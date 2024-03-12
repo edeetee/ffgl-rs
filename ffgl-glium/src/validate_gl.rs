@@ -1,3 +1,5 @@
+//! Validate the state of the OpenGL context.
+
 pub struct TextureType {
     pub target: u32,
     pub binding: u32,

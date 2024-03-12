@@ -4,4 +4,4 @@ use ffgl_core::{self, handler::simplified::SimpleFFGLHandler};
 mod shader_helper;
 mod validate;
 
-ffgl_core::ffgl_handler!(SimpleFFGLHandler<test_gl::TestGl>);
+ffgl_core::plugin_main!(SimpleFFGLHandler<test_gl::TestGl>);

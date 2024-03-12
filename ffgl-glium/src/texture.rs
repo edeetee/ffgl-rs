@@ -1,3 +1,5 @@
+//! My utilities to create basic textures
+
 use glium::{
     backend::Facade,
     texture::{DepthTexture2d, SrgbTexture2d},

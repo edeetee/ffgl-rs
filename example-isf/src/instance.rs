@@ -8,9 +8,9 @@ use crate::util::MultiUniforms;
 
 use glium::uniforms::UniformValue;
 
-use ffgl_glium;
+use ffgl_core;
 
-use ffgl_glium::handler::FFGLInstance;
+use ffgl_core::handler::FFGLInstance;
 
 use std::cmp::max;
 use std::cmp::min;
@@ -18,12 +18,12 @@ use std::fmt::Formatter;
 
 use std::fmt::Debug;
 
-use ffgl_glium::FFGLGliumInstance;
+use ffgl_glium::FFGLGlium;
 
 pub struct IsfFFGLInstance {
     pub shader: shader::IsfShader,
     pub state: IsfFFGLState,
-    pub glium: FFGLGliumInstance,
+    pub glium: FFGLGlium,
 }
 
 impl Debug for IsfFFGLInstance {
@@ -57,7 +57,7 @@ impl FFGLInstance for IsfFFGLInstance {
         input.set(index, value);
     }
 
-    fn draw(&mut self, inst_data: &ffgl_glium::FFGLData, frame_data: ffgl_glium::GLInput) {
+    fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
         let scale = match &self.state.inputs[0] {
             crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, _, val) => (*val).powf(2.0),
             _ => 1.0,
@@ -105,11 +105,11 @@ impl FFGLInstance for IsfFFGLInstance {
 impl IsfFFGLInstance {
     pub(crate) fn new(
         state: &IsfFFGLState,
-        inst_data: &ffgl_glium::FFGLData,
+        inst_data: &ffgl_core::FFGLData,
     ) -> Result<Self, IsfShaderLoadError> {
         tracing::debug!("CREATED INSTANCE");
 
-        let glium = FFGLGliumInstance::new(inst_data);
+        let glium = FFGLGlium::new(inst_data);
 
         let shader = shader::IsfShader::new(
             &glium.ctx,

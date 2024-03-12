@@ -1,10 +1,10 @@
 use std::cell::OnceCell;
 use std::ffi::CString;
 
-use ffgl_glium;
+use ffgl_core;
 
-use ffgl_glium::info;
-use ffgl_glium::info::PluginType;
+use ffgl_core::info;
+use ffgl_core::info::PluginType;
 
 use rand::rngs::StdRng;
 
@@ -16,17 +16,17 @@ use crate::param;
 use crate::param::AsUniformOptional;
 use crate::shader::IsfShaderLoadError;
 
-use ffgl_glium::log::init_default_subscriber;
+use ffgl_core::log::init_default_subscriber;
 
-use ffgl_glium::parameters::BasicParamInfo;
+use ffgl_core::parameters::BasicParamInfo;
 
-use ffgl_glium::handler::FFGLHandler;
+use ffgl_core::handler::FFGLHandler;
 
 use glium::uniforms::UniformValue;
 
 use glium::uniforms::Uniforms;
 
-use ffgl_glium::info::PluginInfo;
+use ffgl_core::info::PluginInfo;
 
 use isf::Isf;
 
@@ -150,7 +150,7 @@ impl FFGLHandler for IsfFFGLState {
 
     fn new_instance(
         &'static self,
-        inst_data: &ffgl_glium::FFGLData,
+        inst_data: &ffgl_core::FFGLData,
     ) -> Result<Self::Instance, Self::NewInstanceError> {
         instance::IsfFFGLInstance::new(self, inst_data)
     }

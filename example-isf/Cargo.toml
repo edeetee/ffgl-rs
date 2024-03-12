@@ -10,7 +10,10 @@ authors.workspace = true
 [dependencies]
 glium.workspace = true
 anyhow.workspace = true
+
 ffgl-glium = { path = "../ffgl-glium" }
+ffgl-core = { path = "../ffgl-core" }
+
 isf = "0.1.0"
 genmesh = "0.6.2"
 thiserror = "1.0.50"

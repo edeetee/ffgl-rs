@@ -1,4 +1,4 @@
-//! FFGL plugin
+//! # FFGL plugin
 //!
 //! This crate provides a set of tools to create FFGL plugins in Rust.
 //!
@@ -10,6 +10,8 @@
 //! Then, call ```ffgl_handler!(SimpleFFGLHandler<YourSimpleFFGLInstanceStruct>)``` to generate the plugMain function.
 //!
 //! If you want to control the details of plugin instantiation, see [handler].
+//!
+//! ## Support
 //!
 //! If you have any questions, feel free to send me an email at [dev@edt.nz](mailto:dev@edt.nz)
 //!

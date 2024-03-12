@@ -1,9 +1,18 @@
+//! Utilities for creating FFGL plugins using the glium library.
+//!
+//! Use [FFGLGlium] in your plugin to render frames with a glium context.
+//!
+//! Just call [FFGLGlium::draw] inside your [ffgl_core::handler::FFGLInstance::draw] method.
+//!
+//! See example-isf for a good example
+//!
+//!### !WARNING!
+//!
+//! I make assumptions about the OpenGL context inside the host. Bugs and crashes may occur. Testing infrastructure is required.
+//!
 use std::{error::Error, fmt::Formatter, rc::Rc};
 
-pub use ffgl_core::*;
-// use egui_node_graph::graph;
-// mod ffgl;
-// use ::ffgl::{ffgl_handler, FFGLHandler};
+use ffgl_core::*;
 use glium::{
     backend::Context,
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
@@ -15,18 +24,19 @@ mod gl_backend;
 pub mod texture;
 pub mod validate_gl;
 
-pub struct FFGLGliumInstance {
+///Use this struct to render frames with a glium context, making assumptions about the OpenGL context inside an FFGL host.
+pub struct FFGLGlium {
     pub ctx: Rc<Context>,
     backend: Rc<gl_backend::RawGlBackend>,
 }
 
-impl Debug for FFGLGliumInstance {
+impl Debug for FFGLGlium {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FFGLGliumHandler").finish()
     }
 }
 
-impl FFGLGliumInstance {
+impl FFGLGlium {
     pub fn new(inst_data: &FFGLData) -> Self {
         let backend = Rc::new(gl_backend::RawGlBackend::new(inst_data.get_dimensions()));
 

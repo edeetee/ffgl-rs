@@ -9,3 +9,4 @@ license.workspace = true
 
 [dependencies]
 ffgl-glium = { path = "../ffgl-glium" }
+ffgl-core = { path = "../ffgl-core" }

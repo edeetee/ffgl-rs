@@ -1,17 +1,17 @@
-use ffgl_glium::{ffgl_handler, handler::simplified::*};
+use ffgl_core::{handler::simplified::*, plugin_main};
 
 struct Instance;
 
 impl SimpleFFGLInstance for Instance {
-    fn new(inst_data: &ffgl_glium::FFGLData) -> Self {
+    fn new(inst_data: &ffgl_core::FFGLData) -> Self {
         todo!()
     }
 
-    fn plugin_info() -> ffgl_glium::info::PluginInfo {
+    fn plugin_info() -> ffgl_core::info::PluginInfo {
         todo!()
     }
 
-    fn draw(&mut self, inst_data: &ffgl_glium::FFGLData, frame_data: ffgl_glium::GLInput) {
+    fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
         todo!()
     }
 
@@ -19,7 +19,7 @@ impl SimpleFFGLInstance for Instance {
         1
     }
 
-    fn param_info(_index: usize) -> &'static ffgl_glium::parameters::BasicParamInfo {
+    fn param_info(_index: usize) -> &'static ffgl_core::parameters::BasicParamInfo {
         panic!("No params")
     }
 
@@ -32,4 +32,4 @@ impl SimpleFFGLInstance for Instance {
     }
 }
 
-ffgl_handler!(SimpleFFGLHandler<Instance>);
+plugin_main!(SimpleFFGLHandler<Instance>);

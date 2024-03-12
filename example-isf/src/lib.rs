@@ -6,4 +6,4 @@ mod util;
 pub mod handler;
 pub mod instance;
 
-ffgl_glium::ffgl_handler!(handler::IsfFFGLState);
+ffgl_core::plugin_main!(handler::IsfFFGLState);

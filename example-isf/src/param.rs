@@ -2,7 +2,7 @@ use isf::{Input, InputValues};
 
 use glium::uniforms::UniformValue;
 
-use ffgl_glium::parameters::{BasicParamInfo, ParameterTypes};
+use ffgl_core::parameters::{BasicParamInfo, ParameterTypes};
 
 use isf;
 
@@ -244,38 +244,38 @@ impl IsfShaderParam {
             isf::InputType::Event => vec![value.build_param_info(
                 0,
                 CString::new(name.clone()).unwrap(),
-                ffgl_glium::parameters::ParameterTypes::Event,
+                ffgl_core::parameters::ParameterTypes::Event,
                 None,
             )],
             isf::InputType::Bool(..) => vec![value.build_param_info(
                 0,
                 CString::new(name.clone()).unwrap(),
-                ffgl_glium::parameters::ParameterTypes::Boolean,
+                ffgl_core::parameters::ParameterTypes::Boolean,
                 None,
             )],
             isf::InputType::Long(..) => vec![value.build_param_info(
                 0,
                 CString::new(name.clone()).unwrap(),
-                ffgl_glium::parameters::ParameterTypes::Integer,
+                ffgl_core::parameters::ParameterTypes::Integer,
                 None,
             )],
             isf::InputType::Float(..) => vec![value.build_param_info(
                 0,
                 CString::new(name.clone()).unwrap(),
-                ffgl_glium::parameters::ParameterTypes::Standard,
+                ffgl_core::parameters::ParameterTypes::Standard,
                 None,
             )],
             isf::InputType::Point2d(..) => vec![
                 value.build_param_info(
                     0,
                     CString::new(format!("{name} x")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::X,
+                    ffgl_core::parameters::ParameterTypes::X,
                     Some(name.clone()),
                 ),
                 value.build_param_info(
                     1,
                     CString::new(format!("{name} y")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::Y,
+                    ffgl_core::parameters::ParameterTypes::Y,
                     Some(name.clone()),
                 ),
             ],
@@ -283,25 +283,25 @@ impl IsfShaderParam {
                 value.build_param_info(
                     0,
                     CString::new(format!("{name} r")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::Red,
+                    ffgl_core::parameters::ParameterTypes::Red,
                     Some(name.clone()),
                 ),
                 value.build_param_info(
                     1,
                     CString::new(format!("{name} g")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::Green,
+                    ffgl_core::parameters::ParameterTypes::Green,
                     Some(name.clone()),
                 ),
                 value.build_param_info(
                     2,
                     CString::new(format!("{name} b")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::Blue,
+                    ffgl_core::parameters::ParameterTypes::Blue,
                     Some(name.clone()),
                 ),
                 value.build_param_info(
                     3,
                     CString::new(format!("{name} a")).unwrap(),
-                    ffgl_glium::parameters::ParameterTypes::Alpha,
+                    ffgl_core::parameters::ParameterTypes::Alpha,
                     Some(name.clone()),
                 ),
             ],

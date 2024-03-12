@@ -1,5 +1,6 @@
+///Generate the ```extern "C" fn plugMain(op, input, instance)``` entry point
 #[macro_export]
-macro_rules! ffgl_handler {
+macro_rules! plugin_main {
     ($handler:ty) => {
         #[no_mangle]
         #[allow(non_snake_case)]
