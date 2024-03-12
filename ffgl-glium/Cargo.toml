@@ -5,7 +5,7 @@ readme.workspace = true
 repository.workspace = true
 homepage.workspace = true
 name = "ffgl-glium"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "FFGL plugin utilities for using glium"
 
@@ -13,7 +13,7 @@ description = "FFGL plugin utilities for using glium"
 
 [dependencies]
 gl.workspace = true
-ffgl-core = { path = "../ffgl-core", version = "0.2.2" }
+ffgl-core = { path = "../ffgl-core", version = "0.2.5" }
 gl_loader = "0.1.2"
 glium.workspace = true
 tracing.workspace = true
