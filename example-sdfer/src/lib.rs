@@ -1,5 +1,6 @@
 use ffgl_core::{handler::simplified::*, plugin_main};
 
+//https://github.com/LykenSol/sdfer/tree/main/src
 struct Instance;
 
 impl SimpleFFGLInstance for Instance {
