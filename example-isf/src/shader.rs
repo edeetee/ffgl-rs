@@ -11,7 +11,7 @@ use isf::{Isf, Pass};
 use crate::{fullscreen_shader::FullscreenFrag, util::GlProgramCreationError};
 use thiserror::Error;
 
-use build_common::isf_glsl_preprocess::convert_source_to_glsl;
+use build_common::isf_glsl_preprocess::convert_fragment_source_to_glsl_120;
 
 pub struct IsfShader {
     frag: FullscreenFrag,
@@ -85,7 +85,7 @@ impl IsfShader {
         dimensions: (u32, u32),
         original_source: &str,
     ) -> Result<Self, IsfShaderLoadError> {
-        let source = convert_source_to_glsl(&isf, &original_source);
+        let source = convert_fragment_source_to_glsl_120(&isf, &original_source);
 
         let passes = isf
             .passes
@@ -170,6 +170,13 @@ impl<U: Uniforms> Uniforms for IsfUniforms<'_, U> {
         for PassTexture { pass, texture } in self.passes {
             if let Some(name) = pass.target.as_ref() {
                 f(name, texture.as_uniform_value());
+                f(
+                    &format!("{name}_size"),
+                    UniformValue::Vec2([
+                        texture.dimensions().0 as f32,
+                        texture.dimensions().1 as f32,
+                    ]),
+                )
             }
         }
         self.inner.visit_values(f);

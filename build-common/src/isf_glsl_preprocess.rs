@@ -1,29 +1,72 @@
 use std::error::Error;
 
 use glsl::parser::Parse;
-use glsl::syntax::{Expr, ShaderStage};
+use glsl::syntax::{Expr, FunIdentifier, Identifier, ShaderStage};
+use glsl::visitor::{Host, HostMut, VisitorMut};
 use isf;
 
 const STANDARD_PREFIX: &'static str = include_str!("prefix.glsl");
 
 use isf::Isf;
 
+use crate::{glsl_120, translation_unit_to_string};
+
+struct UniformTextureSizeMutator;
+
+impl VisitorMut for UniformTextureSizeMutator {
+    fn visit_expr(&mut self, e: &mut glsl::syntax::Expr) -> glsl::visitor::Visit {
+        match e {
+            Expr::FunCall(FunIdentifier::Identifier(Identifier(ident)), exprs) => {
+                if ident == "IMG_PIXEL" {
+                    // panic!("IMG_PIXEL");
+                    *ident = "texture".to_string();
+
+                    let sampler_name = match exprs.first().expect("No name in IMG_PIXEL") {
+                        Expr::Variable(v) => v.0.clone(),
+                        _ => unreachable!("First argument to IMG_PIXEL is not a variable"),
+                    };
+
+                    let last = exprs.last_mut().expect("No last expr");
+
+                    match last {
+                        Expr::Variable(Identifier(coord_ident)) => {
+                            *last =
+                                Expr::parse(format!("{coord_ident}/{sampler_name}_size")).unwrap();
+                        }
+                        _ => panic!("Last expr is not a variable"),
+                    }
+
+                    // panic!("EXPR: {:?}", e);
+                }
+            }
+            _ => {}
+        }
+
+        glsl::visitor::Visit::Children
+    }
+}
+
 pub fn validate_isf_source(original_source: &str) -> Result<(), Box<dyn Error>> {
     let isf = isf::parse(original_source)?;
 
-    let source = convert_source_to_glsl(&isf, original_source);
+    let source = convert_fragment_source_to_glsl_120(&isf, original_source);
 
     ShaderStage::parse(source)?;
 
     Ok(())
 }
 
-pub fn convert_source_to_glsl(def: &Isf, source: &str) -> String {
+pub fn convert_fragment_source_to_glsl_120(def: &Isf, source: &str) -> String {
     let prefix = generate_isf_prefix(def);
 
-    (format!("{prefix}\n{source}"))
-        .replace("gl_FragColor", "isf_FragColor")
-        .replace("varying", "out")
+    let source = format!("{prefix}\n{source}");
+
+    let mut shader = ShaderStage::parse(source).expect("Failed to parse source");
+
+    shader.visit_mut(&mut UniformTextureSizeMutator);
+    shader.visit_mut(&mut glsl_120::Glsl120Mutator { is_fragment: true });
+
+    translation_unit_to_string(&shader)
 }
 
 pub fn generate_isf_prefix(def: &Isf) -> String {
@@ -54,6 +97,10 @@ pub fn generate_isf_prefix(def: &Isf) -> String {
 
     for (name, gl_ty) in inputs.chain(passes) {
         prefix.push_str(&format!("uniform {gl_ty} {name};\n"));
+
+        if gl_ty == "sampler2D" {
+            prefix.push_str(&format!("uniform vec2 {name}_size;\n"));
+        }
     }
 
     prefix.push('\n');

@@ -223,7 +223,10 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
 
             let data = FFGLData::new(viewport);
-            let renderer = H::new_instance(handler, &data);
+            let renderer = H::new_instance(handler, &data)
+                .context("Failed to instantiate renderer")
+                .context(format!("For {}", std::str::from_utf8(&info.name).unwrap()))?;
+
             let instance = traits::Instance { data, renderer };
 
             info!(

@@ -13,6 +13,7 @@ use rand_seeder::Seeder;
 use crate::instance;
 use crate::param;
 use crate::param::AsUniformOptional;
+use crate::shader::IsfShaderLoadError;
 
 use ffgl_glium::log::init_default_subscriber;
 
@@ -53,6 +54,7 @@ impl Uniforms for IsfFFGLState {
 
 impl FFGLHandler for IsfFFGLState {
     type Instance = instance::IsfFFGLInstance;
+    type NewInstanceError = IsfShaderLoadError;
 
     type Param = BasicParamInfo;
 
@@ -113,8 +115,8 @@ impl FFGLHandler for IsfFFGLState {
             description: info.description.clone().unwrap_or_default(),
         };
 
-        tracing::debug!("ISF INFO: {info:#?}");
-        tracing::debug!("ISF PARAMS: {params:#?}");
+        tracing::trace!("ISF INFO: {info:#?}");
+        tracing::trace!("ISF PARAMS: {params:#?}");
 
         Self {
             source: ISF_SOURCE.to_string(),
@@ -145,7 +147,10 @@ impl FFGLHandler for IsfFFGLState {
         self.plugin_info.clone()
     }
 
-    fn new_instance(&'static self, inst_data: &ffgl_glium::FFGLData) -> Self::Instance {
+    fn new_instance(
+        &'static self,
+        inst_data: &ffgl_glium::FFGLData,
+    ) -> Result<Self::Instance, Self::NewInstanceError> {
         instance::IsfFFGLInstance::new(self, inst_data)
     }
 }

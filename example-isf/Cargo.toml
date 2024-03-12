@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 glium.workspace = true
+anyhow.workspace = true
 ffgl-glium = { path = "../ffgl-glium" }
 isf = "0.1.0"
 genmesh = "0.6.2"
