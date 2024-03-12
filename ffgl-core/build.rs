@@ -26,9 +26,10 @@ fn main() {
         if #[cfg(target_os = "macos")] {
             let macos_framework_path = macos_get_framework_sdk_path();
             extra_clang_args = vec!["-F", &macos_framework_path, "-framework", "OpenGL"];
-        } else if #[cfg(target_os = "windows")] {
-            extra_clang_args = vec!["-lg", "-lGLEW"];
+        } else {
+            extra_clang_args = vec![];
         }
+
     }
 
     clang_args_ffgl.extend(&extra_clang_args);

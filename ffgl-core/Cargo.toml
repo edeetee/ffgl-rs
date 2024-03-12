@@ -5,7 +5,7 @@ readme.workspace = true
 repository.workspace = true
 homepage.workspace = true
 name = "ffgl-core"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 description = "FFGL plugin framework"
 
