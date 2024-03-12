@@ -13,7 +13,7 @@ description = "FFGL plugin utilities for using glium"
 
 [dependencies]
 gl.workspace = true
-ffgl-core = { path = "../ffgl-core" }
+ffgl-core = { path = "../ffgl-core", version = "0.2.2" }
 gl_loader = "0.1.2"
 glium.workspace = true
 tracing.workspace = true
