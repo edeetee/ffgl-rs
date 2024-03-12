@@ -10,7 +10,7 @@ use glium::uniforms::UniformValue;
 
 use ffgl_glium;
 
-use ffgl_glium::traits::FFGLInstance;
+use ffgl_glium::handler::FFGLInstance;
 
 use std::cmp::max;
 use std::cmp::min;

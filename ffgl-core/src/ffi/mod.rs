@@ -1,3 +1,5 @@
+//! Auto generated bindings to ffgl.
+
 // pub mod ffgl1;
 pub mod ffgl2;
 

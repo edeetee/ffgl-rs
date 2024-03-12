@@ -3,7 +3,8 @@ use std::ffi::CString;
 
 use ffgl_glium;
 
-use ffgl_glium::PluginType;
+use ffgl_glium::info;
+use ffgl_glium::info::PluginType;
 
 use rand::rngs::StdRng;
 
@@ -19,13 +20,13 @@ use ffgl_glium::log::init_default_subscriber;
 
 use ffgl_glium::parameters::BasicParamInfo;
 
-use ffgl_glium::traits::FFGLHandler;
+use ffgl_glium::handler::FFGLHandler;
 
 use glium::uniforms::UniformValue;
 
 use glium::uniforms::Uniforms;
 
-use ffgl_glium::PluginInfo;
+use ffgl_glium::info::PluginInfo;
 
 use isf::Isf;
 
@@ -36,7 +37,7 @@ pub struct IsfFFGLState {
     pub source: String,
     pub info: Isf,
     pub inputs: Vec<param::IsfFFGLParam>,
-    pub plugin_info: PluginInfo,
+    pub plugin_info: info::PluginInfo,
 }
 
 impl Uniforms for IsfFFGLState {
@@ -70,9 +71,9 @@ impl FFGLHandler for IsfFFGLState {
             .collect();
 
         let plugin_type = if shader_params.iter().any(|x| x.ty == isf::InputType::Image) {
-            PluginType::Effect
+            info::PluginType::Effect
         } else {
-            PluginType::Source
+            info::PluginType::Source
         };
 
         let basic_params = vec![param::IsfFFGLParam::Overlay(
@@ -107,7 +108,7 @@ impl FFGLHandler for IsfFFGLState {
         let mut code = [0; 4];
         rng.fill_bytes(&mut code);
 
-        let plugin_info = PluginInfo {
+        let plugin_info = info::PluginInfo {
             unique_id: code,
             name: name,
             ty: plugin_type,
@@ -143,7 +144,7 @@ impl FFGLHandler for IsfFFGLState {
         self.inputs.iter().map(|x| x.num_params()).sum()
     }
 
-    fn plugin_info(&'static self) -> PluginInfo {
+    fn plugin_info(&'static self) -> info::PluginInfo {
         self.plugin_info.clone()
     }
 

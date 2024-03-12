@@ -1,6 +1,7 @@
 mod test_empty;
 mod test_gl;
-use ffgl_core::{self, traits::SimpleFFGLHandler};
+use ffgl_core::{self, handler::simplified::SimpleFFGLHandler};
 mod shader_helper;
+mod validate;
 
 ffgl_core::ffgl_handler!(SimpleFFGLHandler<test_gl::TestGl>);

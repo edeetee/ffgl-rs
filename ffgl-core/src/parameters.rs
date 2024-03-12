@@ -1,5 +1,8 @@
-#![allow(non_camel_case_types)]
+//!Structs and enums for FFGL parameters
+//! Use [BasicParamInfo] for most simple instances
+//! Implement [ParamInfo] yourself for more complex cases (see [example-isf/src/param.rs])
 
+#![allow(non_camel_case_types)]
 use std::ffi::{CStr, CString};
 
 use crate::{ffi::ffgl2::*, FFGLVal};

@@ -1,27 +1,30 @@
-pub use crate::instance::FFGLData;
+//! Primary entry point of the FFGL plugin. This is the function that is called by the host.
+//! You can use [crate::ffgl_handler] to automate calling this entry function from the FFGL ABI
+//!
+use crate::info;
+use crate::instance::FFGLData;
 
 use crate::ffi::ffgl2::*;
 
-pub use crate::parameters::ParamInfo;
-use crate::traits::{FFGLHandler, FFGLInstance};
+use crate::handler::{FFGLHandler, FFGLInstance};
+use crate::log::try_init_default_subscriber;
+use crate::parameters::ParamInfo;
 
 use core::slice;
 
 use std::{any::Any, ffi::CString};
 
-pub use crate::conversions::*;
-pub use crate::log::{FFGLLogger, LOADING_LOGGER};
+use crate::conversions::*;
 
-pub use crate::traits;
+use crate::handler;
 use anyhow::{Context, Error};
-pub use num_traits::ToPrimitive;
 
 fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static H::Param {
     handler.param_info(unsafe { index.num as usize })
 }
 
 static mut INITIALIZED: bool = false;
-static mut INFO: Option<PluginInfo> = None;
+static mut INFO: Option<info::PluginInfo> = None;
 static mut INFO_STRUCT: Option<PluginInfoStruct> = None;
 static mut ABOUT: Option<CString> = None;
 static mut DESCRIPTION: Option<CString> = None;
@@ -43,7 +46,7 @@ macro_rules! e {
 pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     function: Op,
     mut input_value: FFGLVal,
-    instance: Option<&mut traits::Instance<H::Instance>>,
+    instance: Option<&mut handler::Instance<H::Instance>>,
 ) -> Result<FFGLVal, Error> {
     let noisy_op = match function {
         Op::ProcessOpenGL
@@ -68,6 +71,8 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
             HANDLER = Some(Box::new(H::init()));
 
+            let _ = try_init_default_subscriber();
+
             let handler = &*HANDLER
                 .as_ref()
                 .context(e!("No handler"))?
@@ -79,13 +84,13 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             ABOUT = Some(CString::new(info.about.clone())?);
             DESCRIPTION = Some(CString::new(info.description.clone())?);
 
-            INFO_STRUCT = Some(plugin_info(
+            INFO_STRUCT = Some(info::plugin_info(
                 std::mem::transmute(&info.unique_id),
                 std::mem::transmute(&info.name),
                 info.ty,
             ));
 
-            INFO_STRUCT_EXTENDED = Some(plugin_info_extended(
+            INFO_STRUCT_EXTENDED = Some(info::plugin_info_extended(
                 ABOUT.as_ref().context(e!("ABOUT not initialized"))?,
                 DESCRIPTION
                     .as_ref()
@@ -227,7 +232,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 .context("Failed to instantiate renderer")
                 .context(format!("For {}", std::str::from_utf8(&info.name).unwrap()))?;
 
-            let instance = traits::Instance { data, renderer };
+            let instance = handler::Instance { data, renderer };
 
             info!(
                 "Created INSTANCE \n{instance:#?} of ({id:?}, '{name:?}')",
@@ -235,7 +240,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 name = String::from_utf8_lossy(&info.name),
             );
 
-            FFGLVal::from_static(Box::leak(Box::<traits::Instance<H::Instance>>::new(
+            FFGLVal::from_static(Box::leak(Box::<handler::Instance<H::Instance>>::new(
                 instance,
             )))
         }
@@ -245,7 +250,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
             debug!("DEINSTGL\n{inst:#?}");
             unsafe {
-                drop(Box::from_raw(inst as *mut traits::Instance<H::Instance>));
+                drop(Box::from_raw(inst as *mut handler::Instance<H::Instance>));
             }
 
             SuccessVal::Success.into()
@@ -254,7 +259,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
         Op::ProcessOpenGL => {
             let gl_process_info: &ProcessOpenGLStruct = unsafe { input_value.as_ref() };
 
-            let traits::Instance { data, renderer } = instance.context(e!("No instance"))?;
+            let handler::Instance { data, renderer } = instance.context(e!("No instance"))?;
             let gl_input = gl_process_info.into();
 
             renderer.draw(&data, gl_input);

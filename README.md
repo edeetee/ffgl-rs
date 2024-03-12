@@ -1,14 +1,17 @@
 # FFGL in Rust
 
-FFGL Binding for rust. Resolume + macos + glium + rust
+FFGL (Resolume & VDMX plugin) framework for rust.
 
 ![Screenshot](docs/screenshot.png)
 
 ## Support
 
-- Currently Macos only
-  - Wouldn't require too much to get working on windows, just need to get the build script working
+- ! Currently Macos only
+  - Wouldn't require too much to get working on windows, someone just needs to test and create the build script
 - FFGL 2 (resolume)
+- VDMX 5
+
+Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any questions!
 
 ## Functionality
 
@@ -18,33 +21,37 @@ FFGL Binding for rust. Resolume + macos + glium + rust
   - Give an input ISF file and output an FFGL plugin
   - Quicker than using Wire for basic ISF shaders
 - Buildtime error for invalid ISF code
+- GLSL translation
 
 ## Usage
 
-Currently only tested on macos.
-
 ### ISF Example
 
-The following command will take an ISF file and output an FFGL plugin. The plugin will be copied to the resolume plugin folder.
+The following command will take an ISF file, compile it to a plugin and deploy it to the system plugin folder. It is a good example of the steps required to make a plugin work.
 
-`example_isf/isf_to_resolume.sh <isf_file>`
+`example_isf/deploy_isf.sh <isf_file>`
+
+There also a bulk version of the script that will deploy all the ISF files in the example_isf folder and some from the system ISF directory.
+`example_isf/bulk_deploy_isf.sh`
 
 ### Commands
 
 #### Deploy
 
-The following script will turn the dylib into a macos bundle and copy it to the resolume plugin folder.
-`example_isf/deploy_bundle_to_resolume.sh`
+Once a plugin has been built, it needs to be deployed to the system FFGL directory. On macos, it needs to be packaged as a 'Bundle' (A fancy folder).
+`deploy_bundle.sh <output_lib_name>`
 
 #### Run
 
-`./run_resolume.sh`
+`./resolume.sh`
+or
+`./vdmx.sh`
 
 #### Change log level
 
 I have integrated [tracing](https://docs.rs/tracing/latest/tracing/index.html) into the plugin. To change the log level you can set the `RUST_LOG` environment variable. For example to set the log level to trace you can run
 
-`RUST_LOG=trace ./run_resolume.sh`
+`RUST_LOG=trace ./resolume.sh`
 
 ## Extending
 
@@ -65,7 +72,6 @@ Use this to create an isf plugin. Needs more work to be modular.
 ## Future work
 
 - Get working on Windows
-- Get working on FFGL1 (VDMX)
 - Embed any linked photos into the dylib along with the ISf source
 - Handle multiple passes ✔️
 - Label inputs
@@ -73,4 +79,4 @@ Use this to create an isf plugin. Needs more work to be modular.
 
 ## Aims
 
-I want a simple wrapper to make plugings for VJ programs such as resolume and present the user a basic GL context that can be used however you want for fun &advanced FX/Sources. This could be a good starting point for other connections (Connect to a touchdesigner instance that can automatically pause and swap between COMPs)
+I want a simple wrapper to make plugins for VJ programs such as resolume and present the user a basic GL context that can be used however you want for fun &advanced FX/Sources. This could be a good starting point for other connections (Connect to a touchdesigner instance that can automatically pause and swap between COMPs)

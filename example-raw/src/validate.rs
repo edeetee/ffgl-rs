@@ -1,5 +1,6 @@
 use gl;
 
+///Used to validate the glsl state for debugging purposes
 pub unsafe fn validate_context_state() {
     let mut gl_int: i32 = 0;
 

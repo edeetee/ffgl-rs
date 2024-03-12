@@ -7,8 +7,8 @@ macro_rules! ffgl_handler {
         extern "C" fn plugMain(
             functionCode: u32,
             inputValue: $crate::conversions::FFGLVal,
-            instanceID: *mut $crate::traits::Instance<
-                <$handler as $crate::traits::FFGLHandler>::Instance,
+            instanceID: *mut $crate::handler::Instance<
+                <$handler as $crate::handler::FFGLHandler>::Instance,
             >,
         ) -> $crate::conversions::FFGLVal {
             match $crate::conversions::Op::try_from(functionCode) {
@@ -49,7 +49,7 @@ macro_rules! ffgl_handler {
 
         #[no_mangle]
         #[allow(non_snake_case)]
-        pub extern "C" fn SetLogCallback(logCallback: $crate::FFGLLogger) {
+        pub extern "C" fn SetLogCallback(logCallback: $crate::log::FFGLLogger) {
             $crate::log::init_logger(logCallback);
         }
     };

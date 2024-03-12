@@ -1,10 +1,16 @@
+//! Used to connect the internal FFGL logging system to your rust code.
+//!
+//!
+
 use std::{
     ffi::{c_char, CString},
     io,
     sync::RwLock,
 };
 
-pub static mut LOADING_LOGGER: std::sync::RwLock<Option<FFGLLogger>> = RwLock::new(None);
+static mut LOADING_LOGGER: std::sync::RwLock<Option<FFGLLogger>> = RwLock::new(None);
+///Type of the logging function the plugin can call
+#[doc(hidden)]
 pub type FFGLLogger = unsafe extern "C" fn(*const c_char) -> ();
 
 struct FFGLWriter;
@@ -28,13 +34,13 @@ impl io::Write for FFGLWriter {
     }
 }
 
-pub fn init_default_subscriber() {
+pub(crate) fn try_init_default_subscriber() -> Result<(), tracing_subscriber::util::TryInitError> {
     let env_filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
 
     //try set tracing logger
-    if let Err(err) = tracing_subscriber::fmt()
+    tracing_subscriber::fmt()
         .with_writer(|| FFGLWriter)
         .without_time()
         .with_file(true)
@@ -42,11 +48,18 @@ pub fn init_default_subscriber() {
         .with_env_filter(env_filter)
         .finish()
         .try_init()
-    {
+}
+
+///Initializes the default subscriber for the logger
+///Will be automatically initialised after [crate::traits::FFGLHandler::init] is called
+pub fn init_default_subscriber() {
+    if let Err(err) = try_init_default_subscriber() {
         tracing::debug!("Failed to initialize logger: {}", err);
     }
 }
 
+///Only called by the plugin loader
+#[doc(hidden)]
 pub fn init_logger(logger: FFGLLogger) {
     unsafe { *LOADING_LOGGER.write().unwrap() = Some(logger) };
 
@@ -55,5 +68,4 @@ pub fn init_logger(logger: FFGLLogger) {
     }));
 }
 
-// pub use logln;
 use tracing_subscriber::{filter::LevelFilter, util::SubscriberInitExt};

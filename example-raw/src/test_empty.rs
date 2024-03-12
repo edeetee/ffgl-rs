@@ -1,9 +1,8 @@
 use core::panic;
 
-
-
-use ffgl_core::traits::{SimpleFFGLInstance};
-use ffgl_core::{FFGLData, PluginInfo};
+use ffgl_core::handler::simplified::SimpleFFGLInstance;
+use ffgl_core::info::{PluginInfo, PluginType};
+use ffgl_core::FFGLData;
 
 #[derive(Debug)]
 pub struct EmptyFFGLHandler;
@@ -17,7 +16,7 @@ impl SimpleFFGLInstance for EmptyFFGLHandler {
         PluginInfo {
             unique_id: [0, 0, 0, 0],
             name: *b"EmptyFFGLPlugin ",
-            ty: ffgl_core::PluginType::Source,
+            ty: PluginType::Source,
             about: "".to_string(),
             description: "".to_string(),
         }

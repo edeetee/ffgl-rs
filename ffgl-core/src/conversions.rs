@@ -1,4 +1,7 @@
-// #![allow(non_snake_case)]
+//! This module contains the basic conversion functions for the FFGL2 API
+//! Consumers of this library should have to use this module directly.
+//! If you run your plugin with RUST_LOG=trace, you should see what functions are being called.
+
 #![allow(non_camel_case_types)]
 
 use std::ffi::{c_void, CStr};
@@ -84,6 +87,13 @@ pub enum PluginCapacity {
 }
 
 #[repr(u32)]
+#[derive(FromPrimitive, ToPrimitive, Debug)]
+pub enum SupportVal {
+    Supported = FF_SUPPORTED,
+    Unsupported = FF_UNSUPPORTED,
+}
+
+#[repr(u32)]
 #[derive(FromPrimitive, Debug)]
 pub enum SuccessVal {
     Success = FF_SUCCESS,
@@ -95,13 +105,6 @@ pub enum SuccessVal {
 pub enum BoolVal {
     True = FF_TRUE,
     False = FF_FALSE,
-}
-
-#[repr(u32)]
-#[derive(FromPrimitive, ToPrimitive, Debug)]
-pub enum SupportVal {
-    Supported = FF_SUPPORTED,
-    Unsupported = FF_UNSUPPORTED,
 }
 
 #[repr(C)]
@@ -196,76 +199,5 @@ impl<'a> Into<GLInput<'a>> for &'a ProcessOpenGLStruct {
             },
             host: self.HostFBO,
         }
-    }
-}
-
-#[repr(u32)]
-#[derive(FromPrimitive, ToPrimitive, Debug, Clone, Copy, PartialEq)]
-pub enum PluginType {
-    Effect = FF_EFFECT,
-    Source = FF_SOURCE,
-    Mixer = FF_MIXER,
-}
-
-#[derive(PartialEq)]
-pub enum FFGLVersion {
-    // V1_5,
-    V2_1,
-}
-
-impl FFGLVersion {
-    pub const fn major(&self) -> u32 {
-        match self {
-            // FFGLVersion::V1_5 => 1,
-            FFGLVersion::V2_1 => 2,
-        }
-    }
-
-    pub const fn minor(&self) -> u32 {
-        match self {
-            // FFGLVersion::V1_5 => 5,
-            FFGLVersion::V2_1 => 1,
-        }
-    }
-}
-
-const FFGL_VERSION_RESOLUME: FFGLVersion = FFGLVersion::V2_1;
-
-#[derive(Debug, Clone)]
-pub struct PluginInfo {
-    pub unique_id: [u8; 4],
-    pub name: [u8; 16],
-    pub ty: PluginType,
-    pub about: String,
-    pub description: String,
-}
-
-use num_traits::ToPrimitive;
-
-pub fn plugin_info(
-    unique_id: &[i8; 4],
-    name: &[i8; 16],
-    plugin_type: PluginType,
-) -> PluginInfoStruct {
-    PluginInfoStruct {
-        APIMajorVersion: FFGL_VERSION_RESOLUME.major(),
-        APIMinorVersion: FFGL_VERSION_RESOLUME.minor(),
-        PluginUniqueID: *unique_id,
-        PluginName: *name,
-        PluginType: plugin_type.to_u32().unwrap(),
-    }
-}
-
-pub const fn plugin_info_extended(
-    about: &'static CStr,
-    description: &'static CStr,
-) -> PluginExtendedInfoStruct {
-    PluginExtendedInfoStruct {
-        PluginMajorVersion: 0,
-        PluginMinorVersion: 0,
-        Description: about.as_ptr().cast_mut().cast(),
-        About: description.as_ptr().cast_mut().cast(),
-        FreeFrameExtendedDataSize: 0,
-        FreeFrameExtendedDataBlock: std::ptr::null::<c_void>() as *mut c_void,
     }
 }

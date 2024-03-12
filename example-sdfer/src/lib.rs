@@ -1,7 +1,4 @@
-use ffgl_glium::{
-    ffgl_handler,
-    traits::{SimpleFFGLHandler, SimpleFFGLInstance},
-};
+use ffgl_glium::{ffgl_handler, handler::simplified::*};
 
 struct Instance;
 
@@ -10,7 +7,7 @@ impl SimpleFFGLInstance for Instance {
         todo!()
     }
 
-    fn plugin_info() -> ffgl_glium::PluginInfo {
+    fn plugin_info() -> ffgl_glium::info::PluginInfo {
         todo!()
     }
 
