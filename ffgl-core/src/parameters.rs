@@ -5,7 +5,7 @@
 #![allow(non_camel_case_types)]
 use std::ffi::{CStr, CString};
 
-use crate::{ffi::ffgl2::*, FFGLVal};
+use crate::{conversions::FFGLVal, ffi::ffgl2::*};
 use num_derive::FromPrimitive;
 
 #[repr(u32)]

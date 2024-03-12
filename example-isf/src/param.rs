@@ -2,10 +2,7 @@ use isf::{Input, InputValues};
 
 use glium::uniforms::UniformValue;
 
-use ffgl_glium::{
-    parameters::{BasicParamInfo, ParameterTypes},
-    Op,
-};
+use ffgl_glium::parameters::{BasicParamInfo, ParameterTypes};
 
 use isf;
 

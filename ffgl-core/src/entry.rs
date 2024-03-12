@@ -2,7 +2,7 @@
 //! You can use [crate::ffgl_handler] to automate calling this entry function from the FFGL ABI
 //!
 use crate::info;
-use crate::instance::FFGLData;
+use crate::FFGLData;
 
 use crate::ffi::ffgl2::*;
 

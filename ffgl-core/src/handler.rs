@@ -8,10 +8,9 @@ use std;
 use std::error::Error;
 use std::fmt::Debug;
 
-use instance::FFGLData;
+use crate::inputs::FFGLData;
 
-use crate::info;
-use crate::{info::PluginInfo, instance, parameters, GLInput};
+use crate::{info, inputs::GLInput, parameters};
 
 #[doc(hidden)]
 pub struct Instance<T> {
@@ -67,13 +66,11 @@ pub mod simplified {
 
     use super::FFGLHandler;
 
-    use crate::GLInput;
-
     use crate::info::PluginInfo;
 
     use crate::parameters::BasicParamInfo;
 
-    use crate::instance::FFGLData;
+    use crate::{FFGLData, GLInput};
 
     use super::FFGLInstance;
 

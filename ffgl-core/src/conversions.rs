@@ -181,23 +181,3 @@ impl Into<FFGLVal> for SupportVal {
         FFGLVal { num: self as u32 }
     }
 }
-
-#[derive(Debug)]
-pub struct GLInput<'a> {
-    pub textures: &'a [FFGLTextureStruct],
-    pub host: u32,
-}
-
-impl<'a> Into<GLInput<'a>> for &'a ProcessOpenGLStruct {
-    fn into(self) -> GLInput<'a> {
-        GLInput {
-            textures: unsafe {
-                std::slice::from_raw_parts(
-                    *self.inputTextures as *const _,
-                    self.numInputTextures as usize,
-                )
-            },
-            host: self.HostFBO,
-        }
-    }
-}

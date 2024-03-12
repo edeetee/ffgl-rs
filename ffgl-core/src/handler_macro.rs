@@ -11,6 +11,7 @@ macro_rules! ffgl_handler {
                 <$handler as $crate::handler::FFGLHandler>::Instance,
             >,
         ) -> $crate::conversions::FFGLVal {
+            use $crate::conversions::*;
             match $crate::conversions::Op::try_from(functionCode) {
                 Ok(function) => {
                     $crate::tracing::trace!("Op::{function:?}");
@@ -31,18 +32,18 @@ macro_rules! ffgl_handler {
                                     "ERROR in {function:?}: {:?}",
                                     err,
                                 );
-                                $crate::SuccessVal::Fail.into()
+                                SuccessVal::Fail.into()
                             }
                         },
                         Err(err) => {
                             $crate::tracing::error!(target: "ffgl_handler", "PANIC AT FFGL C BOUNDARY: {:?}", err);
-                            $crate::SuccessVal::Fail.into()
+                            SuccessVal::Fail.into()
                         }
                     }
                 }
                 Err(err) => {
                     $crate::tracing::error!(target: "ffgl_handler", "ERR: UNKNOWN OPCODE {functionCode}");
-                    $crate::SuccessVal::Fail.into()
+                    SuccessVal::Fail.into()
                 }
             }
         }

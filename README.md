@@ -11,7 +11,7 @@ FFGL (Resolume & VDMX plugin) framework for rust.
 - FFGL 2 (resolume)
 - VDMX 5
 
-Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any questions!
+Please get in contact with me at [dev@edt.nz](mailto:dev@edt.nz) if you have any questions!
 
 ## Functionality
 
