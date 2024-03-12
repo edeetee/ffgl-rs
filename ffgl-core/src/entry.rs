@@ -19,7 +19,7 @@ use crate::conversions::*;
 use crate::handler;
 use anyhow::{Context, Error};
 
-fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static H::Param {
+fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static dyn ParamInfo {
     handler.param_info(unsafe { index.num as usize })
 }
 

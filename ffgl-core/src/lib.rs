@@ -27,7 +27,6 @@ mod instance;
 pub mod log;
 
 pub mod handler;
-pub mod param_handler;
 pub mod parameters;
 
 pub use inputs::*;

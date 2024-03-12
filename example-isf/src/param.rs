@@ -2,14 +2,16 @@ use isf::{Input, InputValues};
 
 use glium::uniforms::UniformValue;
 
-use ffgl_core::{
-    param_handler::ParamHandler,
-    parameters::{ParameterTypes, SimpleParamInfo},
+use ffgl_core::parameters::{
+    builtin::OverlayParams, handler::ParamHandler, ParamInfo, ParameterTypes, SimpleParamInfo,
 };
 
 use isf;
 
-use std::{ffi::CString, mem::transmute};
+use std::{
+    ffi::{CStr, CString},
+    mem::transmute,
+};
 
 fn map_input_values<T, R>(in_values: InputValues<T>, map: &impl Fn(&T) -> R) -> InputValues<R> {
     InputValues {
@@ -152,54 +154,35 @@ impl IsfInputValue {
 #[derive(Debug, Clone)]
 pub enum IsfFFGLParam {
     Isf(IsfShaderParam),
-    Overlay(OverlayParams, SimpleParamInfo, f32),
+    Overlay(OverlayParams, f32),
 }
 
-impl ParamHandler<SimpleParamInfo> for IsfFFGLParam {
-    fn param_info(&self, index: usize) -> &SimpleParamInfo {
+impl ParamHandler for IsfFFGLParam {
+    fn param_info(&self, index: usize) -> &dyn ParamInfo {
         match self {
             Self::Isf(x) => &x.params[0],
-            Self::Overlay(_, x, _) => x,
+            Self::Overlay(x, _) => x,
         }
     }
 
     fn num_params(&self) -> usize {
         match self {
             Self::Isf(x) => x.params.len(),
-            Self::Overlay(_, _, _) => 1,
+            Self::Overlay(_, _) => 1,
         }
     }
 
     fn set_param(&mut self, index: usize, value: f32) {
         match self {
             Self::Isf(x) => x.value.set(index, value),
-            Self::Overlay(_, _, x) => *x = value,
+            Self::Overlay(_, x) => *x = value,
         }
     }
 
     fn get_param(&self, index: usize) -> f32 {
         match self {
             Self::Isf(x) => x.value.get(index),
-            Self::Overlay(_, _, x) => *x,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-#[repr(C)]
-pub enum OverlayParams {
-    Scale,
-}
-
-impl Into<SimpleParamInfo> for OverlayParams {
-    fn into(self) -> SimpleParamInfo {
-        match self {
-            OverlayParams::Scale => SimpleParamInfo {
-                name: CString::new("Resize").unwrap(),
-                default: Some(1.0),
-                group: Some("opts".to_string()),
-                ..Default::default()
-            },
+            Self::Overlay(_, x) => *x,
         }
     }
 }

@@ -6,7 +6,9 @@ use ffgl_core;
 use ffgl_core::info;
 use ffgl_core::info::PluginType;
 
-use ffgl_core::param_handler::ParamHandler;
+use ffgl_core::parameters;
+use ffgl_core::parameters::handler::ParamHandler;
+use ffgl_core::parameters::ParamInfo;
 use rand::rngs::StdRng;
 
 use rand::RngCore;
@@ -58,8 +60,6 @@ impl FFGLHandler for IsfFFGLState {
     type Instance = instance::IsfFFGLInstance;
     type NewInstanceError = IsfShaderLoadError;
 
-    type Param = SimpleParamInfo;
-
     fn init() -> Self {
         init_default_subscriber();
 
@@ -78,13 +78,7 @@ impl FFGLHandler for IsfFFGLState {
         };
 
         let basic_params = vec![param::IsfFFGLParam::Overlay(
-            param::OverlayParams::Scale,
-            SimpleParamInfo {
-                name: CString::new("Resize").unwrap(),
-                default: Some(1.0),
-                group: Some("opts".to_string()),
-                ..Default::default()
-            },
+            parameters::builtin::OverlayParams::Scale,
             1.0,
         )];
 
@@ -128,7 +122,7 @@ impl FFGLHandler for IsfFFGLState {
         }
     }
 
-    fn param_info(&self, mut index: usize) -> &Self::Param {
+    fn param_info(&self, mut index: usize) -> &dyn ParamInfo {
         self.inputs.param_info(index)
     }
 

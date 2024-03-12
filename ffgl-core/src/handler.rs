@@ -41,14 +41,14 @@ pub trait FFGLInstance {
 pub trait FFGLHandler {
     type Instance: FFGLInstance;
     type NewInstanceError: Error + Send + Sync + 'static;
-    type Param: ParamInfo + 'static;
+    // type Param: ParamInfo + 'static;
 
     ///Only called once per plugin
     fn init() -> Self;
 
     fn num_params(&'static self) -> usize;
 
-    fn param_info(&'static self, index: usize) -> &'static Self::Param;
+    fn param_info(&'static self, index: usize) -> &'static dyn ParamInfo;
 
     fn plugin_info(&'static self) -> info::PluginInfo;
 
@@ -66,7 +66,7 @@ pub mod simplified {
 
     use super::FFGLHandler;
 
-    use crate::parameters::SimpleParamInfo;
+    use crate::parameters::{ParamInfo, SimpleParamInfo};
 
     use crate::{FFGLData, GLInput};
 
@@ -117,7 +117,6 @@ pub mod simplified {
 
     impl<T: SimpleFFGLInstance> FFGLHandler for SimpleFFGLHandler<T> {
         type Instance = T;
-        type Param = SimpleParamInfo;
         type NewInstanceError = std::convert::Infallible;
 
         fn init() -> Self {
@@ -130,7 +129,7 @@ pub mod simplified {
             T::num_params()
         }
 
-        fn param_info(&'static self, index: usize) -> &'static Self::Param {
+        fn param_info(&'static self, index: usize) -> &'static dyn ParamInfo {
             T::param_info(index)
         }
 

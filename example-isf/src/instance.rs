@@ -1,12 +1,12 @@
 use crate::handler::IsfFFGLState;
 use crate::param;
 use crate::param::IsfInputValue;
-use crate::param::OverlayParams;
 use crate::shader;
 use crate::shader::IsfShaderLoadError;
 use crate::util::MultiUniforms;
 
-use ffgl_core::param_handler::ParamHandler;
+use ffgl_core::parameters::builtin::OverlayParams;
+use ffgl_core::parameters::handler::ParamHandler;
 use glium::uniforms::UniformValue;
 
 use ffgl_core;
@@ -44,7 +44,7 @@ impl FFGLInstance for IsfFFGLInstance {
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
         let scale = match &self.state.inputs[0] {
-            crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, _, val) => (*val).powf(2.0),
+            crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, val) => (*val).powf(2.0),
             _ => 1.0,
         };
 
