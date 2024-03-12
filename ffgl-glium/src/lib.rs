@@ -7,7 +7,7 @@ pub use ffgl_core::*;
 use glium::{
     backend::Context,
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
-    BlitTarget, Frame, Surface, Texture2d,
+    BlitTarget, CapabilitiesSource, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
 
@@ -40,6 +40,10 @@ impl FFGLGliumInstance {
             )
             .unwrap()
         };
+
+        let valid_versions = &ctx.get_capabilities().supported_glsl_versions;
+
+        tracing::debug!("VALID VERSIONS: {valid_versions:?}");
 
         tracing::debug!("OPENGL_VERSION {}", ctx.get_opengl_version_string());
 
@@ -88,7 +92,7 @@ impl FFGLGliumInstance {
             .collect();
 
         if let Err(err) = render_frame(fb, textures) {
-            tracing::error!("ERROR: {err}");
+            tracing::error!("Render ERROR: {err:?}");
         }
 
         // validate_viewport(&viewport);

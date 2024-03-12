@@ -1,57 +1,59 @@
 /*{
-  "DESCRIPTION": "Based on Conway Game of Life",
-  "CREDIT": "VIDVOX",
-  "CATEGORIES": [
-    "Generator"
-  ],
-  "INPUTS": [
-    {
-      "NAME": "restartNow",
-      "TYPE": "event"
-    },
-    {
-      "NAME": "startThresh",
-      "TYPE": "float",
-      "DEFAULT": 0.5,
-      "MIN": 0,
-      "MAX": 1
-    },
-    {
-      "NAME": "randomRegrowth",
-      "TYPE": "float",
-      "DEFAULT": 0,
-      "MIN": 0,
-      "MAX": 1.0
-    },
-    {
-      "NAME": "randomDeath",
-      "TYPE": "float",
-      "DEFAULT": 0,
-      "MIN": 0,
-      "MAX": 1.0
-    },
-	{
-      "NAME": "reproductionMin",
-      "TYPE": "float",
-      "DEFAULT": 2,
-      "MIN": 0,
-      "MAX": 8
-    },
-	{
-      "NAME": "reproductionMax",
-      "TYPE": "float",
-      "DEFAULT": 4,
-      "MIN": 0,
-      "MAX": 8
-    }
-  ],
-  "PASSES": [
-    {
-      "TARGET": "lastData",
-      "persistent": true
-    }
-  ]
-}*/
+    "CATEGORIES": [
+        "Generator"
+    ],
+    "CREDIT": "VIDVOX",
+    "DESCRIPTION": "Based on Conway Game of Life",
+    "INPUTS": [
+        {
+            "NAME": "restartNow",
+            "TYPE": "event"
+        },
+        {
+            "DEFAULT": 0.5,
+            "MAX": 1,
+            "MIN": 0,
+            "NAME": "startThresh",
+            "TYPE": "float"
+        },
+        {
+            "DEFAULT": 0,
+            "MAX": 1,
+            "MIN": 0,
+            "NAME": "randomRegrowth",
+            "TYPE": "float"
+        },
+        {
+            "DEFAULT": 0,
+            "MAX": 1,
+            "MIN": 0,
+            "NAME": "randomDeath",
+            "TYPE": "float"
+        },
+        {
+            "DEFAULT": 2,
+            "MAX": 8,
+            "MIN": 0,
+            "NAME": "reproductionMin",
+            "TYPE": "float"
+        },
+        {
+            "DEFAULT": 4,
+            "MAX": 8,
+            "MIN": 0,
+            "NAME": "reproductionMax",
+            "TYPE": "float"
+        }
+    ],
+    "ISFVSN": "2",
+    "PASSES": [
+        {
+            "TARGET": "lastData",
+            "persistent": true
+        }
+    ]
+}
+*/
 
 /*
 

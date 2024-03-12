@@ -25,4 +25,4 @@ log_dir="$HOME/Library/Logs/VDMX5"
 log_file="$log_dir/$(/bin/ls -t $log_dir | head -1)"
 
 echo "Log file: $log_file"
-tail -F "$log_file"
+tail -f -n +1 "$log_file"

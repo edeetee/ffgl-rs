@@ -1,3 +1,4 @@
+use build_common::glsl_120;
 use glium::{
     backend::Facade,
     implement_vertex,
@@ -33,8 +34,13 @@ impl FullscreenFrag {
     ) -> Result<Self, GlProgramCreationError> {
         let vert_buffer = new_fullscreen_buffer(facade).unwrap();
 
-        let program = Program::from_source(facade, FULLSCREEN_VERT_SHADER, frag, None)
-            .map_err(|e| e.to_gl_creation_error(frag.to_string()))?;
+        let program = Program::from_source(
+            facade,
+            &glsl_120::transform_to_glsl_120(FULLSCREEN_VERT_SHADER, false),
+            frag,
+            None,
+        )
+        .map_err(|e| e.to_gl_creation_error(frag.to_string()))?;
 
         Ok(Self {
             params,

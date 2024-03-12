@@ -3,6 +3,7 @@ use crate::param;
 use crate::param::IsfInputValue;
 use crate::param::OverlayParams;
 use crate::shader;
+use crate::shader::IsfShaderLoadError;
 use crate::util::MultiUniforms;
 
 use glium::uniforms::UniformValue;
@@ -102,7 +103,10 @@ impl FFGLInstance for IsfFFGLInstance {
 }
 
 impl IsfFFGLInstance {
-    pub(crate) fn new(state: &IsfFFGLState, inst_data: &ffgl_glium::FFGLData) -> Self {
+    pub(crate) fn new(
+        state: &IsfFFGLState,
+        inst_data: &ffgl_glium::FFGLData,
+    ) -> Result<Self, IsfShaderLoadError> {
         tracing::debug!("CREATED INSTANCE");
 
         let glium = FFGLGliumInstance::new(inst_data);
@@ -112,13 +116,12 @@ impl IsfFFGLInstance {
             &state.info,
             inst_data.get_dimensions(),
             &state.source,
-        )
-        .unwrap();
+        )?;
 
-        Self {
+        Ok(Self {
             shader,
             state: state.clone(),
             glium,
-        }
+        })
     }
 }

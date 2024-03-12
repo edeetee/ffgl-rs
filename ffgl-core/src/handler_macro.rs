@@ -28,7 +28,7 @@ macro_rules! ffgl_handler {
                             Err(err) => {
                                 $crate::tracing::error!(
                                     target: "ffgl_handler",
-                                    "ERROR IN FFGL: {}",
+                                    "ERROR in {function:?}: {:?}",
                                     err,
                                 );
                                 $crate::SuccessVal::Fail.into()

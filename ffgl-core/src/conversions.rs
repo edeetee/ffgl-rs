@@ -9,7 +9,7 @@ use crate::ffi::ffgl1;
 use crate::ffi::ffgl2::*;
 
 #[repr(u32)]
-#[derive(FromPrimitive, Debug)]
+#[derive(FromPrimitive, Debug, Clone, Copy)]
 pub enum Op {
     GetInfo = FF_GET_INFO,
     Initialise,

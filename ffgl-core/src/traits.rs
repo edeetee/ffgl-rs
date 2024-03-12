@@ -4,6 +4,7 @@ use parameters::ParamInfo;
 
 use std;
 
+use std::error::Error;
 use std::fmt::Debug;
 
 use instance::FFGLData;
@@ -37,6 +38,7 @@ pub trait FFGLInstance {
 /// You can use it to store static state and create instances
 pub trait FFGLHandler {
     type Instance: FFGLInstance;
+    type NewInstanceError: Error + Send + Sync + 'static;
     type Param: ParamInfo + 'static;
 
     ///Only called once per plugin
@@ -48,7 +50,10 @@ pub trait FFGLHandler {
 
     fn plugin_info(&'static self) -> PluginInfo;
 
-    fn new_instance(&'static self, inst_data: &FFGLData) -> Self::Instance;
+    fn new_instance(
+        &'static self,
+        inst_data: &FFGLData,
+    ) -> Result<Self::Instance, Self::NewInstanceError>;
 }
 
 ///This is a handler that just delegates to a SimpleFFGLInstance
@@ -97,6 +102,7 @@ impl<T: SimpleFFGLInstance> FFGLInstance for T {
 impl<T: SimpleFFGLInstance> FFGLHandler for SimpleFFGLHandler<T> {
     type Instance = T;
     type Param = BasicParamInfo;
+    type NewInstanceError = std::convert::Infallible;
 
     fn init() -> Self {
         Self {
@@ -116,7 +122,7 @@ impl<T: SimpleFFGLInstance> FFGLHandler for SimpleFFGLHandler<T> {
         T::plugin_info()
     }
 
-    fn new_instance(&self, inst_data: &FFGLData) -> Self::Instance {
-        T::new(inst_data)
+    fn new_instance(&self, inst_data: &FFGLData) -> Result<Self::Instance, Self::NewInstanceError> {
+        Ok(T::new(inst_data))
     }
 }

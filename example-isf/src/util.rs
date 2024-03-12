@@ -56,7 +56,11 @@ pub struct GlProgramCreationError {
 impl std::fmt::Debug for GlProgramCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         <Self as std::fmt::Display>::fmt(self, f)?;
-        write!(f, "\n\nShader source:\n{}", self.shader_source)
+        write!(
+            f,
+            "\n\nShader source:\n{}",
+            self.shader_source.replace("\\n", "\n")
+        )
     }
 }
 
