@@ -3,11 +3,11 @@
 //! This crate provides a set of tools to create FFGL plugins in Rust.
 //!
 //! FFGL Plugins require a plugMain function to be defined for the host to call.
-//! the [ffgl_handler] macro will generate this function for you.
+//! the [plugin_main] macro will generate this function for you.
 //!
 //! The quickest way to get started is to implement the [handler::simplified::SimpleFFGLInstance] trait on a struct that represents your plugin instance.
 //!
-//! Then, call ```ffgl_handler!(SimpleFFGLHandler<YourSimpleFFGLInstanceStruct>)``` to generate the plugMain function.
+//! Then, call ```plugin_main!(SimpleFFGLHandler<YourSimpleFFGLInstanceStruct>)``` to generate the plugMain function.
 //!
 //! If you want to control the details of plugin instantiation, see [handler].
 //!

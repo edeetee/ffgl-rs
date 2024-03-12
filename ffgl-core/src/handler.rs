@@ -32,7 +32,7 @@ pub trait FFGLInstance {
     fn get_param(&self, index: usize) -> f32;
     fn set_param(&mut self, index: usize, value: f32);
 
-    ///Called by [Op::FF_PROCESSOPENGL] to draw the plugin
+    ///Called by [crate::conversions::Op::ProcessOpenGL] to draw the plugin
     fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput);
 }
 
@@ -61,8 +61,8 @@ pub trait FFGLHandler {
 pub mod simplified {
     //! This module provides a simplified way to implement a plugin
     //! 1. Implement [SimpleFFGLInstance] for your plugin
-    //! 2. Call [crate::ffgl_handler] with a [SimpleFFGLHandler] and your instance type, such as:
-    //!     ```rust ffgl_handler!(SimpleFFGLHandler<MyInstanceType>);```
+    //! 2. Call [crate::plugin_main] with a [SimpleFFGLHandler] and your instance type, such as:
+    //!     ```rust plugin_main!(SimpleFFGLHandler<MyInstanceType>);```
 
     use super::FFGLHandler;
 
@@ -97,7 +97,7 @@ pub mod simplified {
             panic!("No params")
         }
 
-        ///Called by [Op::FF_PROCESSOPENGL] to draw the plugin
+        ///Called by [crate::conversions::Op::ProcessOpenGL] to draw the plugin
         fn draw(&mut self, inst_data: &FFGLData, frame_data: GLInput);
     }
 

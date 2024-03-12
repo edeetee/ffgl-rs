@@ -1,6 +1,5 @@
 //! Used to connect the internal FFGL logging system to your rust code.
 //!
-//!
 
 use std::{
     ffi::{c_char, CString},
@@ -51,7 +50,7 @@ pub(crate) fn try_init_default_subscriber() -> Result<(), tracing_subscriber::ut
 }
 
 ///Initializes the default subscriber for the logger
-///Will be automatically initialised after [crate::traits::FFGLHandler::init] is called
+///Will be automatically initialised after [crate::handler::FFGLHandler::init] is called
 pub fn init_default_subscriber() {
     if let Err(err) = try_init_default_subscriber() {
         tracing::debug!("Failed to initialize logger: {}", err);

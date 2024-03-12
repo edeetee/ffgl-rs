@@ -1,5 +1,5 @@
 //! Primary entry point of the FFGL plugin. This is the function that is called by the host.
-//! You can use [crate::ffgl_handler] to automate calling this entry function from the FFGL ABI
+//! You can use [crate::plugin_main] to automate calling this entry function from the FFGL ABI
 //!
 use crate::info;
 use crate::FFGLData;

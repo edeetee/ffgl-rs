@@ -29,7 +29,7 @@ macro_rules! plugin_main {
                             Ok(result) => result,
                             Err(err) => {
                                 $crate::tracing::error!(
-                                    target: "ffgl_handler",
+                                    target: "plugin_main",
                                     "ERROR in {function:?}: {:?}",
                                     err,
                                 );
@@ -37,13 +37,13 @@ macro_rules! plugin_main {
                             }
                         },
                         Err(err) => {
-                            $crate::tracing::error!(target: "ffgl_handler", "PANIC AT FFGL C BOUNDARY: {:?}", err);
+                            $crate::tracing::error!(target: "plugin_main", "PANIC AT FFGL C BOUNDARY: {:?}", err);
                             SuccessVal::Fail.into()
                         }
                     }
                 }
                 Err(err) => {
-                    $crate::tracing::error!(target: "ffgl_handler", "ERR: UNKNOWN OPCODE {functionCode}");
+                    $crate::tracing::error!(target: "plugin_main", "ERR: UNKNOWN OPCODE {functionCode}");
                     SuccessVal::Fail.into()
                 }
             }

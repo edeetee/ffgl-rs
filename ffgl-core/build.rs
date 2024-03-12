@@ -17,21 +17,22 @@ fn macos_get_framework_sdk_path() -> String {
 fn main() {
     println!("cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS");
 
-    #[cfg(target_os = "macos")]
     let mut clang_args_ffgl = vec!["-x", "c++", "-IFFGLSDK/Include"];
-
     let mut clang_args_ffgl2 = vec!["-x", "c++", "-Iffgl-resolume/source/lib/ffgl"];
 
-    cfg_if::cfg_if! {
+    let extra_clang_args;
 
+    cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {
             let macos_framework_path = macos_get_framework_sdk_path();
-            let macos_clang_args = vec!["-F", &macos_framework_path, "-framework", "OpenGL"];
-
-            clang_args_ffgl.extend(&macos_clang_args);
-            clang_args_ffgl2.extend(&macos_clang_args);
+            extra_clang_args = vec!["-F", &macos_framework_path, "-framework", "OpenGL"];
+        } else if #[cfg(target_os = "windows")] {
+            extra_clang_args = vec!["-lg", "-lGLEW"];
         }
     }
+
+    clang_args_ffgl.extend(&extra_clang_args);
+    clang_args_ffgl2.extend(&extra_clang_args);
 
     dbg!(&clang_args_ffgl);
     dbg!(&clang_args_ffgl2);
