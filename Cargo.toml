@@ -6,10 +6,19 @@
 [workspace.package]
 authors = ["Edward Taylor <dev@edt.nz>"]
 license = "	GPL-3.0-or-later"
+homepage = "https://github.com/edeetee/ffgl-rs"
+repository = "https://github.com/edeetee/ffgl-rs"
 
 [workspace]
 resolver = "2"
-members = ["example-raw", "ffgl-glium", "ffgl-core", "example-isf", "build-common", "example-sdfer"]
+members = [
+    "example-raw",
+    "ffgl-glium",
+    "ffgl-core",
+    "example-isf",
+    "build-common",
+    "example-sdfer",
+]
 default-members = ["ffgl-core"]
 
 
