@@ -10,7 +10,9 @@ license.workspace = true
 [dependencies]
 ffgl-glium = { path = "../ffgl-glium" }
 ffgl-core = { path = "../ffgl-core" }
-sdfer = { version = "0.2.1", features = ["image"] }
+sdfer = { features = [
+    "image",
+], git = "https://github.com/edeetee/sdfer.git", version = "0.2.3" }
 glium.workspace = true
 image = "0.25.0"
 

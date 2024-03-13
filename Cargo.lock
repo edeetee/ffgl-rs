@@ -1921,9 +1921,8 @@ dependencies = [
 
 [[package]]
 name = "sdfer"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27fd75ebc7c721a70d202c7cdd2beb108bbe5dfaaea68e06aff4de2f4cc240ed"
+version = "0.2.3"
+source = "git+https://github.com/edeetee/sdfer.git#b7a6ee109687d01c9d4c0880ea1649ba2406abd6"
 dependencies = [
  "image 0.24.9",
 ]

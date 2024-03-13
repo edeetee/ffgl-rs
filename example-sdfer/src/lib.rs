@@ -7,23 +7,49 @@ use ffgl_core::{
     plugin_main,
 };
 use ffgl_glium::FFGLGlium;
-use glium::{buffer, Texture2d};
-use sdfer::{esdt::Params, Unorm8};
+use glium::{
+    buffer,
+    texture::{RawImage2d, Texture2dDataSink},
+    Surface, Texture2d,
+};
+use sdfer::{esdt::Params, Image2d, Unorm8};
 
 //https://github.com/LykenSol/sdfer/tree/main/src
 struct SdferInstance {
     // input_file: std::path::PathBuf,
-    sdf: sdfer::Image2d<sdfer::Unorm8>,
     buffers: Option<sdfer::esdt::ReusableBuffers>,
     glium: ffgl_glium::FFGLGlium,
     inputs: Vec<f32>,
 }
 
-static params: [OverlayParams; 1] = [parameters::builtin::OverlayParams::Scale; 1];
+enum SdferParams {
+    Res,
+    Radius,
+}
+
+impl ParamInfo for SdferParams {
+    fn name(&self) -> &std::ffi::CStr {
+        std::ffi::CStr::from_bytes_with_nul(match self {
+            SdferParams::Radius => b"Radius\0",
+            SdferParams::Res => b"res\0",
+        })
+        .expect("Invalid CStr")
+    }
+
+    fn default_val(&self) -> f32 {
+        match self {
+            SdferParams::Radius => 0.1,
+            SdferParams::Res => 0.5,
+        }
+    }
+}
+
+static params: [SdferParams; 2] = [SdferParams::Res, SdferParams::Radius];
 
 fn process(
     texture: &Texture2d,
     buffers: Option<sdfer::esdt::ReusableBuffers>,
+    opts: Params,
 ) -> (sdfer::Image2d<sdfer::Unorm8>, sdfer::esdt::ReusableBuffers) {
     let pixel_buf: Vec<_> = texture.read();
 
@@ -39,13 +65,12 @@ fn process(
         flat_buf,
     );
 
-    sdfer::esdt::glyph_to_sdf(&mut img, Params::default(), buffers)
+    sdfer::esdt::glyph_to_sdf(&mut img, opts, buffers)
 }
 
 impl SimpleFFGLInstance for SdferInstance {
     fn new(inst_data: &ffgl_core::FFGLData) -> Self {
         Self {
-            sdf: Default::default(),
             buffers: Default::default(),
             glium: FFGLGlium::new(inst_data),
             inputs: params.iter().map(|p| (p.default_val())).collect(),
@@ -62,10 +87,17 @@ impl SimpleFFGLInstance for SdferInstance {
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
-        let scale = self.inputs[params
+        let mut scale = self.inputs[params
             .iter()
-            .position(|p| matches!(p, OverlayParams::Scale))
+            .position(|p| matches!(p, SdferParams::Res))
             .expect("No scale")];
+
+        let radius = self.inputs[params
+            .iter()
+            .position(|p| matches!(p, SdferParams::Radius))
+            .expect("No radius")];
+
+        scale = scale.powi(2);
 
         let dest_res = inst_data.get_dimensions();
         let render_res = (
@@ -75,20 +107,46 @@ impl SimpleFFGLInstance for SdferInstance {
 
         self.glium
             .draw(dest_res, render_res, frame_data, &mut |fb, textures| {
-                let (sdf, buffers) =
-                    process(textures.first().expect("No texture"), self.buffers.take());
+                let render_texture = Texture2d::empty(&self.glium.ctx, render_res.0, render_res.1)
+                    .expect("Texture could not be created");
 
-                self.sdf = sdf;
+                //resize to render size
+                textures.first().expect("No texture in").as_surface().fill(
+                    &render_texture.as_surface(),
+                    glium::uniforms::MagnifySamplerFilter::Linear,
+                );
+
+                let esdt_opts = Params {
+                    solidify: false,
+                    radius: render_res.0 as f32 * radius,
+                    ..Default::default()
+                };
+
+                let (sdf, buffers) = process(&render_texture, self.buffers.take(), esdt_opts);
+
                 self.buffers = Some(buffers);
 
-                let gray_img: image::GrayImage = sdf.into();
+                let storage: Vec<_> = sdf
+                    .storage()
+                    .iter()
+                    .map(|x| x.to_bits())
+                    .map(|x| (x, x, x, x))
+                    .collect();
 
-                // let sdf_texture = Texture2d::new(
-                //     &self.glium.ctx,
-                //     gray_img.enumerate_rows()
-                // );
+                let data_src = RawImage2d::from_raw(
+                    std::borrow::Cow::Owned(storage),
+                    sdf.width() as u32,
+                    sdf.height() as u32,
+                );
 
-                Texture2d::empty_with_format(facade, format, mipmaps, width, height)
+                let sdf_texture = Texture2d::new(&self.glium.ctx, data_src)
+                    .expect("Texture could not be created");
+
+                sdf_texture
+                    .as_surface()
+                    .fill(fb, glium::uniforms::MagnifySamplerFilter::Linear);
+
+                // Texture2d::empty_with_format(facade, format, mipmaps, width, height);
 
                 Ok(())
             })
