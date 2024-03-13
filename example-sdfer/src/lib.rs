@@ -56,7 +56,7 @@ impl SimpleFFGLInstance for SdferInstance {
         PluginInfo {
             unique_id: *b"SDFR",
             name: *b"Sdfer           ",
-            ty: ffgl_core::info::PluginType::Source,
+            ty: ffgl_core::info::PluginType::Effect,
             ..Default::default()
         }
     }
@@ -80,6 +80,15 @@ impl SimpleFFGLInstance for SdferInstance {
 
                 self.sdf = sdf;
                 self.buffers = Some(buffers);
+
+                let gray_img: image::GrayImage = sdf.into();
+
+                // let sdf_texture = Texture2d::new(
+                //     &self.glium.ctx,
+                //     gray_img.enumerate_rows()
+                // );
+
+                Texture2d::empty_with_format(facade, format, mipmaps, width, height)
 
                 Ok(())
             })

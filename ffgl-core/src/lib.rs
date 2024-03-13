@@ -11,6 +11,15 @@
 //!
 //! If you want to control the details of plugin instantiation, see [handler].
 //!
+//! # Building
+//!
+//! You must compile your library as a cdylib to be loaded by the host.
+//! You can do this in your Cargo.toml:
+//! ```toml
+//! [lib]
+//! crate-type = ["cdylib"]
+//! ```
+//!
 //! # Running
 //!
 //! To actually run your plugin, you'll need to copy it to the FFGL plugin directory.

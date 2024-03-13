@@ -10,5 +10,9 @@ license.workspace = true
 [dependencies]
 ffgl-glium = { path = "../ffgl-glium" }
 ffgl-core = { path = "../ffgl-core" }
-sdfer = "0.2.1"
+sdfer = { version = "0.2.1", features = ["image"] }
 glium.workspace = true
+image = "0.25.0"
+
+[lib]
+crate-type = ["cdylib"]
