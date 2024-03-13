@@ -1,26 +1,46 @@
+use std::cmp::max;
+
 use ffgl_core::{
     handler::simplified::*,
     info::{plugin_info, PluginInfo},
+    parameters::{self, builtin::OverlayParams, handler::ParamInfoHandler, ParamInfo},
     plugin_main,
 };
 use ffgl_glium::FFGLGlium;
-use glium::Texture2d;
+use glium::{buffer, Texture2d};
+use sdfer::{esdt::Params, Unorm8};
 
 //https://github.com/LykenSol/sdfer/tree/main/src
 struct SdferInstance {
     // input_file: std::path::PathBuf,
     sdf: sdfer::Image2d<sdfer::Unorm8>,
-    buffers: sdfer::esdt::ReusableBuffers,
+    buffers: Option<sdfer::esdt::ReusableBuffers>,
     glium: ffgl_glium::FFGLGlium,
+    inputs: Vec<f32>,
 }
 
-// impl SdferInstance {
-//     fn process(&mut self, texture: Texture2d) {
-//         let img = sdfer::Image2d(path).unwrap().to_rgba8();
-//         let sdf = sdfer::Image2d::from_image(&img);
-//         self.sdf = sdf;
-//     }
-// }
+static params: [OverlayParams; 1] = [parameters::builtin::OverlayParams::Scale; 1];
+
+fn process(
+    texture: &Texture2d,
+    buffers: Option<sdfer::esdt::ReusableBuffers>,
+) -> (sdfer::Image2d<sdfer::Unorm8>, sdfer::esdt::ReusableBuffers) {
+    let pixel_buf: Vec<_> = texture.read();
+
+    let flat_buf: Vec<_> = pixel_buf
+        .iter()
+        .flatten()
+        .map(|(r, ..)| Unorm8::from_bits(*r))
+        .collect();
+
+    let mut img = sdfer::Image2d::from_storage(
+        texture.width() as usize,
+        texture.height() as usize,
+        flat_buf,
+    );
+
+    sdfer::esdt::glyph_to_sdf(&mut img, Params::default(), buffers)
+}
 
 impl SimpleFFGLInstance for SdferInstance {
     fn new(inst_data: &ffgl_core::FFGLData) -> Self {
@@ -28,6 +48,7 @@ impl SimpleFFGLInstance for SdferInstance {
             sdf: Default::default(),
             buffers: Default::default(),
             glium: FFGLGlium::new(inst_data),
+            inputs: params.iter().map(|p| (p.default_val())).collect(),
         }
     }
 
@@ -41,26 +62,43 @@ impl SimpleFFGLInstance for SdferInstance {
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
-        // let res = inst_data.get_resolution();
+        let scale = self.inputs[params
+            .iter()
+            .position(|p| matches!(p, OverlayParams::Scale))
+            .expect("No scale")];
 
-        // self.glium
-        //     .draw(output_res, render_res, frame_data, render_frame)
+        let dest_res = inst_data.get_dimensions();
+        let render_res = (
+            max((dest_res.0 as f32 * scale) as u32, 1),
+            max((dest_res.1 as f32 * scale) as u32, 1),
+        );
+
+        self.glium
+            .draw(dest_res, render_res, frame_data, &mut |fb, textures| {
+                let (sdf, buffers) =
+                    process(textures.first().expect("No texture"), self.buffers.take());
+
+                self.sdf = sdf;
+                self.buffers = Some(buffers);
+
+                Ok(())
+            })
     }
 
     fn num_params() -> usize {
-        1
+        params.len()
     }
 
-    fn param_info(_index: usize) -> &'static ffgl_core::parameters::SimpleParamInfo {
-        panic!("No params")
+    fn param_info(index: usize) -> &'static dyn ParamInfo {
+        params.param_info(index)
     }
 
-    fn get_param(&self, _index: usize) -> f32 {
-        panic!("No params")
+    fn get_param(&self, index: usize) -> f32 {
+        self.inputs[index]
     }
 
-    fn set_param(&mut self, _index: usize, _value: f32) {
-        panic!("No params")
+    fn set_param(&mut self, index: usize, value: f32) {
+        self.inputs[index] = value;
     }
 }
 

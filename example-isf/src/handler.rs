@@ -7,7 +7,8 @@ use ffgl_core::info;
 use ffgl_core::info::PluginType;
 
 use ffgl_core::parameters;
-use ffgl_core::parameters::handler::ParamHandler;
+use ffgl_core::parameters::handler::ParamInfoHandler;
+use ffgl_core::parameters::handler::ParamValueHandler;
 use ffgl_core::parameters::ParamInfo;
 use rand::rngs::StdRng;
 

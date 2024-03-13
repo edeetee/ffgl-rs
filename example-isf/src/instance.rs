@@ -6,7 +6,7 @@ use crate::shader::IsfShaderLoadError;
 use crate::util::MultiUniforms;
 
 use ffgl_core::parameters::builtin::OverlayParams;
-use ffgl_core::parameters::handler::ParamHandler;
+use ffgl_core::parameters::handler::ParamValueHandler;
 use glium::uniforms::UniformValue;
 
 use ffgl_core;

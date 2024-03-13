@@ -2,7 +2,7 @@ use std::ffi::CStr;
 
 use super::info::{ParamInfo, ParameterTypes};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub enum OverlayParams {
     Scale,

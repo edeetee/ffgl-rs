@@ -3,7 +3,9 @@ use isf::{Input, InputValues};
 use glium::uniforms::UniformValue;
 
 use ffgl_core::parameters::{
-    builtin::OverlayParams, handler::ParamHandler, ParamInfo, ParameterTypes, SimpleParamInfo,
+    builtin::OverlayParams,
+    handler::{ParamInfoHandler, ParamValueHandler},
+    ParamInfo, ParameterTypes, SimpleParamInfo,
 };
 
 use isf;
@@ -157,7 +159,7 @@ pub enum IsfFFGLParam {
     Overlay(OverlayParams, f32),
 }
 
-impl ParamHandler for IsfFFGLParam {
+impl ParamInfoHandler for IsfFFGLParam {
     fn param_info(&self, index: usize) -> &dyn ParamInfo {
         match self {
             Self::Isf(x) => &x.params[0],
@@ -171,7 +173,9 @@ impl ParamHandler for IsfFFGLParam {
             Self::Overlay(_, _) => 1,
         }
     }
+}
 
+impl ParamValueHandler for IsfFFGLParam {
     fn set_param(&mut self, index: usize, value: f32) {
         match self {
             Self::Isf(x) => x.value.set(index, value),

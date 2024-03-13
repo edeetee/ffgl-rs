@@ -11,6 +11,12 @@
 //!
 //! If you want to control the details of plugin instantiation, see [handler].
 //!
+//! # Running
+//!
+//! To actually run your plugin, you'll need to copy it to the FFGL plugin directory.
+//! On macos, you will need to additionally package it as a bundle.
+//! There are helper scripts in the repository that can assist you with this (./deploy_bundle.sh)
+//!
 //! ## Support
 //!
 //! If you have any questions, feel free to send me an email at [dev@edt.nz](mailto:dev@edt.nz)
@@ -20,13 +26,13 @@
 pub mod conversions;
 pub mod entry;
 pub mod ffi;
-mod handler_macro;
 pub mod info;
 pub mod inputs;
-mod instance;
 pub mod log;
 
 pub mod handler;
+pub mod handler_macro;
+
 pub mod parameters;
 
 pub use inputs::*;
