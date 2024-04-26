@@ -85,11 +85,11 @@ pub trait ParamInfo {
         ParameterTypes::Standard
     }
 
-    fn element_name(&self, index: usize) -> &CStr {
+    fn element_name(&self, _index: usize) -> &CStr {
         self.name()
     }
 
-    fn element_value(&self, index: usize) -> f32 {
+    fn element_value(&self, _index: usize) -> f32 {
         self.default_val()
     }
 

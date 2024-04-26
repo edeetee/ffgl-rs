@@ -1,6 +1,6 @@
-use std::path::Iter;
 
-use super::{info::ParamInfo, info::ParamValue, info::SimpleParamInfo};
+
+use super::{info::ParamInfo, info::ParamValue};
 
 ///Handle the info for a collection of parameters. Allows for nested parameters.
 pub trait ParamInfoHandler {
@@ -68,17 +68,17 @@ impl<T: ParamInfo> ParamInfoHandler for T {
         1
     }
 
-    fn param_info(&self, index: usize) -> &dyn ParamInfo {
+    fn param_info(&self, _index: usize) -> &dyn ParamInfo {
         self
     }
 }
 
 impl<T: ParamValue> ParamValueHandler for T {
-    fn get_param(&self, index: usize) -> f32 {
+    fn get_param(&self, _index: usize) -> f32 {
         self.get()
     }
 
-    fn set_param(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, _index: usize, value: f32) {
         self.set(value)
     }
 }
