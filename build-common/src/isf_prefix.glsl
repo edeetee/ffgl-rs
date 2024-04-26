@@ -11,7 +11,5 @@ vec2 isf_FragNormCoord = isf_FragCoord.xy / RENDERSIZE;
 ///This one needs to be calculated by the preprocessor
 // #define IMG_PIXEL(sampler,coord) texture(sampler,coord/textureSize(sampler, 0))
 
-#define IMG_NORM_PIXEL(sampler, coord) texture2D(sampler, coord)
-
 #define IMG_THIS_PIXEL(sampler) IMG_THIS_NORM_PIXEL(sampler)
 #define IMG_THIS_NORM_PIXEL(sampler) IMG_NORM_PIXEL(sampler,isf_FragNormCoord)

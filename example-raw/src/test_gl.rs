@@ -69,14 +69,14 @@ impl TestGl {
 
         // Use shader program
         gl::UseProgram(program_id);
-        let out_frag_name = CString::new("out_color").unwrap();
+        let out_frag_name = c"out_color";
         gl::BindFragDataLocation(program_id, 0, out_frag_name.as_ptr());
 
-        let uniform_name = CString::new("beat").unwrap();
+        let uniform_name = c"beat";
         let beat_uniform_id = gl::GetUniformLocation(program_id, uniform_name.as_ptr());
 
         // Specify the layout of the vertex data
-        let vert_pos_name = CString::new("position").unwrap();
+        let vert_pos_name = c"position";
         let pos_attr = gl::GetAttribLocation(program_id, vert_pos_name.as_ptr());
         gl::EnableVertexAttribArray(pos_attr as GLuint);
         gl::VertexAttribPointer(
