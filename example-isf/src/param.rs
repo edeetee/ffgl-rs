@@ -13,6 +13,7 @@ use isf;
 use std::{
     ffi::{CStr, CString},
     mem::transmute,
+    path::Iter,
 };
 
 fn map_input_values<T, R>(in_values: InputValues<T>, map: &impl Fn(&T) -> R) -> InputValues<R> {
@@ -55,7 +56,7 @@ pub enum IsfInputValue {
 }
 
 impl IsfInputValue {
-    pub fn new(ty: InputType) -> Self {
+    pub fn new(ty: &InputType) -> Self {
         match ty {
             InputType::Event => Self::Event(false),
             InputType::Bool(x) => Self::Bool(x.default.unwrap_or_default()),
@@ -63,62 +64,72 @@ impl IsfInputValue {
             InputType::Float(x) => Self::Float(x.default.or(x.identity).unwrap_or_default()),
             InputType::Point2d(x) => Self::Point2d(x.default.or(x.identity).unwrap_or_default()),
             InputType::Color(x) => Self::Color(slice_from_vec(
-                &x.default.or(x.identity).unwrap_or_default(),
+                &x.default
+                    .as_ref()
+                    .or(x.identity.as_ref())
+                    .cloned()
+                    .unwrap_or_default(),
             )),
             InputType::Image => Self::None,
             _ => unimplemented!("Unsupported ISF input type {ty:?}"),
         }
     }
-}
 
-#[derive(Debug, Clone)]
-pub struct IsfInputInfo(pub isf::Input);
-
-impl ParamInfoHandler for IsfInputInfo {
-    fn num_params(&self) -> usize {
-        let ty = &self.0.ty;
-        match ty {
-            InputType::Event => 1,
-            InputType::Bool(..) => 1,
-            InputType::Long(..) => 1,
-            InputType::Float(..) => 1,
-            InputType::Point2d(..) => 2,
-            InputType::Color(..) => 4,
-            // isf::InputType::Image => 1,
-            _ => unimplemented!("Unsupported ISF input type {ty:?}"),
+    pub fn set(&mut self, index: usize, value: f32) {
+        match self {
+            Self::Event(x) => *x = value == 1.0,
+            Self::Bool(x) => *x = value == 1.0,
+            Self::Long(x) => *x = value as i32,
+            Self::Float(x) => *x = value,
+            Self::Point2d(x) => x[index] = value,
+            Self::Color(x) => x[index] = value,
+            Self::None => {}
         }
     }
 
-    fn param_info(&self, index: usize) -> &dyn ParamInfo {
-        let ty = &self.0.ty;
-        let name = self.0.name;
+    pub fn get(&self, index: usize) -> f32 {
+        match self {
+            Self::Event(x) => *x as u32 as f32,
+            Self::Bool(x) => *x as u32 as f32,
+            Self::Long(x) => *x as f32,
+            Self::Float(x) => *x,
+            Self::Point2d(x) => x[index],
+            Self::Color(x) => x[index],
+            Self::None => 0.0,
+        }
+    }
+}
 
-        match ty {
-            InputType::Point2d(x) => {
-                let p_name = CString::new(match index {
+fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleParamInfo> {
+    match ty {
+        InputType::Point2d(x) => (0..2)
+            .map(|i| {
+                let p_name = CString::new(match i {
                     0 => format!("{} x", name),
                     1 => format!("{} y", name),
                     _ => unreachable!("Index out of bounds for Point2d input type"),
                 })
                 .expect("Failed to create CString");
 
-                let param_type = match index {
+                let param_type = match i {
                     0 => ParameterTypes::X,
                     1 => ParameterTypes::Y,
                     _ => unreachable!(),
                 };
 
-                &SimpleParamInfo {
+                SimpleParamInfo {
                     name: p_name,
                     param_type,
-                    default: x.default.map(|x| x[index] as f32),
-                    min: x.min.map(|x| x[index] as f32),
-                    max: x.max.map(|x| x[index] as f32),
-                    group: Some(name),
+                    default: x.default.map(|x| x[i] as f32),
+                    min: x.min.map(|x| x[i] as f32),
+                    max: x.max.map(|x| x[i] as f32),
+                    group: Some(name.clone()),
                 }
-            }
-            InputType::Color(x) => {
-                let p_name = CString::new(match index {
+            })
+            .collect(),
+        InputType::Color(x) => (0..4)
+            .map(|i| {
+                let p_name = CString::new(match i {
                     0 => format!("{} r", name),
                     1 => format!("{} g", name),
                     2 => format!("{} b", name),
@@ -127,7 +138,7 @@ impl ParamInfoHandler for IsfInputInfo {
                 })
                 .expect("Failed to create CString");
 
-                let param_type = match index {
+                let param_type = match i {
                     0 => ParameterTypes::Red,
                     1 => ParameterTypes::Green,
                     2 => ParameterTypes::Blue,
@@ -135,56 +146,66 @@ impl ParamInfoHandler for IsfInputInfo {
                     _ => unreachable!(),
                 };
 
-                &SimpleParamInfo {
+                SimpleParamInfo {
                     name: p_name,
                     param_type,
-                    default: x.default.map(|x| x[index] as f32),
-                    min: x.min.map(|x| x[index] as f32),
-                    max: x.max.map(|x| x[index] as f32),
-                    group: Some(name),
+                    default: x.default.as_ref().map(|x| x[i] as f32),
+                    min: x.min.as_ref().map(|x| x[i] as f32),
+                    max: x.max.as_ref().map(|x| x[i] as f32),
+                    group: Some(name.clone()),
                 }
-            }
-            _ => {
-                let name = CString::new(self.0.name.clone()).unwrap();
+            })
+            .collect(),
 
-                match ty {
-                    InputType::Event => &SimpleParamInfo {
-                        name,
-                        param_type: ParameterTypes::Event,
-                        default: Some(false as u32 as f32),
-                        min: None,
-                        max: None,
-                        group: None,
-                    },
-                    InputType::Bool(x) => &SimpleParamInfo {
-                        name,
-                        param_type: ParameterTypes::Boolean,
-                        default: Some(x.default.unwrap_or_default() as u32 as f32),
-                        min: None,
-                        max: None,
-                        group: None,
-                    },
-                    InputType::Long(x) => &SimpleParamInfo {
-                        name,
-                        param_type: ParameterTypes::Integer,
-                        default: x
-                            .default
-                            .or_else(|| x.values.iter().next().copied())
-                            .map(|x| x as f32),
-                        min: x
-                            .min
-                            .or_else(|| x.values.iter().min().copied())
-                            .map(|x| x as f32),
-                        max: x
-                            .max
-                            .or_else(|| x.values.iter().max().copied())
-                            .map(|x| x as f32),
-                        group: None,
-                    },
+        InputType::Image => vec![],
+        _ => {
+            let name = CString::new(name.clone()).unwrap();
 
-                    _ => unimplemented!("Unsupported ISF input type {ty:?}"),
-                }
-            }
+            vec![match ty {
+                InputType::Event => SimpleParamInfo {
+                    name,
+                    param_type: ParameterTypes::Event,
+                    default: Some(false as u32 as f32),
+                    min: None,
+                    max: None,
+                    group: None,
+                },
+                InputType::Bool(x) => SimpleParamInfo {
+                    name,
+                    param_type: ParameterTypes::Boolean,
+                    default: Some(x.default.unwrap_or_default() as u32 as f32),
+                    min: None,
+                    max: None,
+                    group: None,
+                },
+                InputType::Float(x) => SimpleParamInfo {
+                    name,
+                    param_type: ParameterTypes::Standard,
+                    default: x.default.or(x.identity),
+                    min: x.min.or(x.identity),
+                    max: x.max.or(x.identity),
+                    group: None,
+                },
+                InputType::Long(x) => SimpleParamInfo {
+                    name,
+                    param_type: ParameterTypes::Integer,
+                    default: x
+                        .default
+                        .or_else(|| x.values.first().copied())
+                        .map(|x| x as f32),
+                    min: x
+                        .min
+                        .or_else(|| x.values.iter().min().copied())
+                        .map(|x| x as f32),
+                    max: x
+                        .max
+                        .or_else(|| x.values.iter().max().copied())
+                        .map(|x| x as f32),
+                    group: None,
+                },
+
+                _ => unimplemented!("Unsupported ISF input type {ty:?}"),
+            }]
         }
     }
 }
@@ -198,28 +219,28 @@ pub enum IsfFFGLParam {
 impl ParamInfoHandler for IsfFFGLParam {
     fn param_info(&self, index: usize) -> &dyn ParamInfo {
         match self {
-            Self::Isf(x) => x.info.param_info(index),
+            Self::Isf(x) => &x.params[index],
             Self::Overlay(x, _) => x,
         }
     }
 
     fn num_params(&self) -> usize {
         match self {
-            Self::Isf(x) => x.info.num_params(),
+            Self::Isf(x) => x.params.len(),
             Self::Overlay(_, _) => 1,
         }
     }
 }
 
 impl ParamValueHandler for IsfFFGLParam {
-    fn set(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, index: usize, value: f32) {
         match self {
             Self::Isf(x) => x.value.set(index, value),
             Self::Overlay(_, x) => *x = value,
         }
     }
 
-    fn get(&self, index: usize) -> f32 {
+    fn get_param(&self, index: usize) -> f32 {
         match self {
             Self::Isf(x) => x.value.get(index),
             Self::Overlay(_, x) => *x,
@@ -229,8 +250,10 @@ impl ParamValueHandler for IsfFFGLParam {
 
 #[derive(Debug, Clone)]
 pub struct IsfShaderParam {
-    pub info: IsfInputInfo,
     pub value: IsfInputValue,
+    pub name: String,
+    pub ty: InputType,
+    pub params: Vec<SimpleParamInfo>,
 }
 
 pub fn slice_from_vec(input: &Vec<f32>) -> [f32; 4] {
@@ -252,20 +275,26 @@ impl AsUniformOptional for IsfShaderParam {
         match value {
             IsfInputValue::Event(x) => Some(UniformValue::Bool(*x)),
             IsfInputValue::Bool(x) => Some(UniformValue::Bool(*x)),
-            IsfInputValue::Long(x, _) => Some(UniformValue::SignedInt(*x)),
-            IsfInputValue::Float(x) => Some(UniformValue::Float(x.value)),
-            IsfInputValue::Point2d(x) => Some(UniformValue::Vec2(x.value)),
-            IsfInputValue::Color(x) => Some(UniformValue::Vec4(x.value)),
+            IsfInputValue::Long(x) => Some(UniformValue::SignedInt(*x)),
+            IsfInputValue::Float(x) => Some(UniformValue::Float(*x)),
+            IsfInputValue::Point2d(x) => Some(UniformValue::Vec2(*x)),
+            IsfInputValue::Color(x) => Some(UniformValue::Vec4(*x)),
             IsfInputValue::None => None,
         }
     }
 }
 
 impl IsfShaderParam {
-    pub fn new(isf_input: isf::Input) -> Self {
-        let value = IsfInputValue::new(isf_input.ty.clone());
-        let info = IsfInputInfo(isf_input);
+    pub fn new(input: isf::Input) -> Self {
+        let params = param_info_for_isf_input(&input);
+        let isf::Input { name, ty } = input;
+        let value = IsfInputValue::new(&ty);
 
-        Self { info, value }
+        Self {
+            value,
+            name,
+            ty,
+            params,
+        }
     }
 }

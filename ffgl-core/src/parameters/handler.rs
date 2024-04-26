@@ -11,30 +11,30 @@ pub trait ParamInfoHandler {
 ///
 /// Maybe theres some way to just use a Index and IndexMut implementation for this instead?
 pub trait ParamValueHandler {
-    fn get(&self, index: usize) -> f32;
-    fn set(&mut self, index: usize, value: f32);
+    fn get_param(&self, index: usize) -> f32;
+    fn set_param(&mut self, index: usize, value: f32);
 }
 
 impl<T> ParamValueHandler for [T]
 where
     T: ParamValueHandler + ParamInfoHandler,
 {
-    fn get(&self, index: usize) -> f32 {
+    fn get_param(&self, index: usize) -> f32 {
         let mut index = index;
         for p in self.iter() {
             if index < p.num_params() {
-                return p.get(index);
+                return p.get_param(index);
             }
             index -= p.num_params();
         }
         panic!("Index out of bounds");
     }
 
-    fn set(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, index: usize, value: f32) {
         let mut index = index;
         for p in self.iter_mut() {
             if index < p.num_params() {
-                p.set(index, value);
+                p.set_param(index, value);
                 return;
             }
             index -= p.num_params();
@@ -74,11 +74,11 @@ impl<T: ParamInfo> ParamInfoHandler for T {
 }
 
 impl<T: ParamValue> ParamValueHandler for T {
-    fn get(&self, index: usize) -> f32 {
+    fn get_param(&self, index: usize) -> f32 {
         self.get()
     }
 
-    fn set(&mut self, index: usize, value: f32) {
+    fn set_param(&mut self, index: usize, value: f32) {
         self.set(value)
     }
 }

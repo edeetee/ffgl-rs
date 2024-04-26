@@ -1,6 +1,5 @@
 use crate::handler::IsfFFGLState;
 use crate::param;
-use crate::param::IsfInputValue;
 use crate::shader;
 use crate::shader::IsfShaderLoadError;
 use crate::util::MultiUniforms;
@@ -35,11 +34,11 @@ impl Debug for IsfFFGLInstance {
 
 impl FFGLInstance for IsfFFGLInstance {
     fn get_param(&self, index: usize) -> f32 {
-        self.state.inputs.get(index)
+        self.state.inputs.get_param(index)
     }
 
     fn set_param(&mut self, index: usize, value: f32) {
-        self.state.inputs.set(index, value)
+        self.state.inputs.set_param(index, value)
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
