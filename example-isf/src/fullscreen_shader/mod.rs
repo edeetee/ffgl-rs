@@ -1,10 +1,8 @@
-use build_common::glsl_120;
+use build_common::{glsl_120, transform_glsl};
+use ffgl_glium::glsl::get_best_transpilation_target;
 use glium::{
-    backend::Facade,
-    implement_vertex,
-    index::{self},
-    uniforms::Uniforms,
-    Blend, DrawError, DrawParameters, Program, Smooth, Surface, VertexBuffer,
+    backend::Facade, implement_vertex, index, uniforms::Uniforms, Blend, DrawError, DrawParameters,
+    Program, ProgramCreationError, Smooth, Surface, VertexBuffer,
 };
 
 use crate::util::{GlProgramCreationError, MultiUniforms, ToGlCreationError};
@@ -36,7 +34,13 @@ impl FullscreenFrag {
 
         let program = Program::from_source(
             facade,
-            &glsl_120::transform_to_glsl_120(FULLSCREEN_VERT_SHADER, false),
+            &transform_glsl(
+                FULLSCREEN_VERT_SHADER,
+                get_best_transpilation_target(facade).ok_or(
+                    ProgramCreationError::CompilationNotSupported
+                        .to_gl_creation_error(frag.to_string()),
+                )?,
+            ),
             frag,
             None,
         )

@@ -1,17 +1,21 @@
 use std::{str::FromStr, time::Instant};
 
-use ffgl_glium::texture::{new_texture_2d, DEFAULT_RES};
+use ffgl_glium::{
+    glsl::get_best_transpilation_target,
+    texture::{new_texture_2d, DEFAULT_RES},
+};
 use glium::{
     backend::Facade,
     uniforms::{AsUniformValue, UniformValue, Uniforms},
-    DrawError, Surface, Texture2d,
+    CapabilitiesSource, DrawError, Surface, Texture2d,
 };
 use isf::{Isf, Pass};
+use tracing::debug;
 
 use crate::{fullscreen_shader::FullscreenFrag, util::GlProgramCreationError};
 use thiserror::Error;
 
-use build_common::isf_glsl_preprocess::convert_fragment_source_to_glsl_120;
+use build_common::isf_glsl_preprocess::compile_isf_fragment;
 
 pub struct IsfShader {
     frag: FullscreenFrag,
@@ -85,7 +89,12 @@ impl IsfShader {
         dimensions: (u32, u32),
         original_source: &str,
     ) -> Result<Self, IsfShaderLoadError> {
-        let source = convert_fragment_source_to_glsl_120(&isf, &original_source);
+        let glsl_version_target = get_best_transpilation_target(facade)
+            .ok_or(IsfShaderLoadError::NoSupportedGlslVersion)?;
+
+        debug!("GLSL VERSION TARGET: {:?}", glsl_version_target);
+
+        let source = compile_isf_fragment(&isf, &original_source, glsl_version_target);
 
         let passes = isf
             .passes
@@ -193,4 +202,7 @@ pub enum IsfShaderLoadError {
 
     #[error("Parse error {0}")]
     PassParseError(#[from] PassParseError),
+
+    #[error("No supported GLSL version error")]
+    NoSupportedGlslVersion,
 }

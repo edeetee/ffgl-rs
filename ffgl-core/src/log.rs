@@ -2,6 +2,7 @@
 //!
 
 use std::{
+    borrow::Cow,
     ffi::{c_char, CString},
     io,
     sync::RwLock,
@@ -16,10 +17,17 @@ struct FFGLWriter;
 
 impl io::Write for FFGLWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let str = String::from_utf8_lossy(buf);
+        let mut str = String::from_utf8_lossy(buf);
+
+        //escape nulls
+        if str.contains('\0') {
+            // let mut str = str.to_string();
+            str = Cow::Owned(str.to_string().replace('\0', "\\0"));
+        }
 
         if let Some(logger) = unsafe { *LOADING_LOGGER.read().unwrap() } {
-            let str = CString::new(str.as_bytes()).expect("Failed to convert to CString");
+            let str = CString::new(str.as_bytes()).unwrap();
+
             unsafe { logger(str.as_ptr()) };
         } else {
             eprintln!("{}", str);

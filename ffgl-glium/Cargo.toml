@@ -17,3 +17,4 @@ ffgl-core = { path = "../ffgl-core", version = "0.2.6" }
 gl_loader = "0.1.2"
 glium.workspace = true
 tracing.workspace = true
+build-common = { path = "../build-common" }

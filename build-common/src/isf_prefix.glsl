@@ -1,7 +1,3 @@
-#version 120
-
-#define isf_FragColor gl_FragColor
-
 uniform int PASSINDEX = 0;
 uniform vec2 res;
 uniform int FRAMEINDEX = 0;

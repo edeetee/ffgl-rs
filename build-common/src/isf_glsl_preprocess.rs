@@ -5,11 +5,13 @@ use glsl::syntax::{Expr, FunIdentifier, Identifier, ShaderStage};
 use glsl::visitor::{Host, HostMut, VisitorMut};
 use isf;
 
-const STANDARD_PREFIX: &'static str = include_str!("prefix.glsl");
+const STANDARD_PREFIX: &'static str = include_str!("isf_prefix.glsl");
+const PREFIX_120: &'static str = include_str!("isf_prefix_120.glsl");
+const PREFIX_140: &'static str = include_str!("isf_prefix_140.glsl");
 
 use isf::Isf;
 
-use crate::{glsl_120, translation_unit_to_string};
+use crate::{glsl_120, translation_unit_to_string, GlslVersion};
 
 struct UniformTextureSizeMutator;
 
@@ -49,22 +51,28 @@ impl VisitorMut for UniformTextureSizeMutator {
 pub fn validate_isf_source(original_source: &str) -> Result<(), Box<dyn Error>> {
     let isf = isf::parse(original_source)?;
 
-    let source = convert_fragment_source_to_glsl_120(&isf, original_source);
+    let source = compile_isf_fragment(&isf, original_source, GlslVersion::Glsl140);
 
     ShaderStage::parse(source)?;
 
     Ok(())
 }
 
-pub fn convert_fragment_source_to_glsl_120(def: &Isf, source: &str) -> String {
+pub fn compile_isf_fragment(def: &Isf, source: &str, glsl_version: GlslVersion) -> String {
     let prefix = generate_isf_prefix(def);
 
-    let source = format!("{prefix}\n{source}");
+    let ver_prefix = match glsl_version {
+        GlslVersion::Glsl120 => PREFIX_120,
+        _ => PREFIX_140,
+    };
+
+    let source = format!("{ver_prefix}\n{prefix}\n{source}");
 
     let mut shader = ShaderStage::parse(source).expect("Failed to parse source");
 
     shader.visit_mut(&mut UniformTextureSizeMutator);
-    shader.visit_mut(&mut glsl_120::Glsl120Mutator { is_fragment: true });
+
+    glsl_version.visit_mut(&mut shader);
 
     translation_unit_to_string(&shader)
 }

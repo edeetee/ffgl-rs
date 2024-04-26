@@ -21,6 +21,7 @@ use glium::{
 use std::fmt::Debug;
 
 mod gl_backend;
+pub mod glsl;
 pub mod texture;
 pub mod validate_gl;
 

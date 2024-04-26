@@ -1,28 +1,11 @@
-use core::panic;
-
 use glsl::{
-    parser::Parse,
     syntax::{
-        Declaration, Expr, FunIdentifier, FunctionPrototype, Identifier, NonEmpty,
-        StorageQualifier, TranslationUnit,
+        Declaration, Expr, FunIdentifier, Identifier, NonEmpty, StorageQualifier, TranslationUnit,
     },
-    transpiler::glsl::show_translation_unit,
-    visitor::{HostMut, VisitorMut},
+    visitor::VisitorMut,
 };
 
-use crate::translation_unit_to_string;
-
-pub struct Glsl120Mutator {
-    pub is_fragment: bool,
-}
-
-pub fn transform_to_glsl_120(src: &str, is_fragment: bool) -> String {
-    let mut parsed = glsl::syntax::ShaderStage::parse(src).expect("Failed to parse source");
-
-    parsed.visit_mut(&mut Glsl120Mutator { is_fragment });
-
-    translation_unit_to_string(&parsed)
-}
+pub struct Glsl120Mutator;
 
 impl VisitorMut for Glsl120Mutator {
     fn visit_preprocessor_version(
@@ -118,7 +101,7 @@ mod tests {
 
         let _ = src_parsed
             .as_mut()
-            .map(|a| a.visit_mut(&mut Glsl120Mutator { is_fragment: true }));
+            .map(|a| a.visit_mut(&mut Glsl120Mutator));
 
         let expected_parsed = ShaderStage::parse(expected);
 

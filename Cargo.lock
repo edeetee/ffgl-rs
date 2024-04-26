@@ -563,6 +563,7 @@ dependencies = [
 name = "ffgl-glium"
 version = "0.1.2"
 dependencies = [
+ "build-common",
  "ffgl-core",
  "gl",
  "gl_loader",
