@@ -214,6 +214,36 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
             SuccessVal::Success.into()
         }
+
+        Op::GetNumParameterElements => {
+            let index = unsafe { input_value.num } as usize;
+            (handler.param_info(index).num_elements() as u32).into()
+        }
+
+        Op::GetParameterElementName => {
+            let input: &mut GetParameterElementNameStruct = unsafe { input_value.as_mut() };
+
+            let param_index = input.ParameterNumber;
+            let elm_index = input.ElementNumber;
+
+            handler
+                .param_info(param_index as usize)
+                .element_name(elm_index as usize)
+                .into()
+        }
+
+        Op::GetParameterElementValue => {
+            let input: &mut GetParameterElementValueStruct = unsafe { input_value.as_mut() };
+
+            let param_index = input.ParameterNumber;
+            let elm_index = input.ElementNumber;
+
+            handler
+                .param_info(param_index as usize)
+                .element_value(elm_index as usize)
+                .into()
+        }
+
         // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
         Op::GetInfo => unsafe { INFO_STRUCT.as_ref().context(e!("No info"))?.into() },
 

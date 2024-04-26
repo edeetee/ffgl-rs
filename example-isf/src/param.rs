@@ -10,38 +10,7 @@ use ffgl_core::parameters::{
 
 use isf;
 
-use std::{
-    ffi::{CStr, CString},
-    mem::transmute,
-    path::Iter,
-};
-
-fn map_input_values<T, R>(in_values: InputValues<T>, map: &impl Fn(&T) -> R) -> InputValues<R> {
-    InputValues {
-        default: in_values.default.as_ref().map(map),
-        min: in_values.default.as_ref().map(map),
-        max: in_values.default.as_ref().map(map),
-        identity: in_values.default.as_ref().map(map),
-    }
-}
-
-///Holds ISF info along with the current value
-#[derive(Debug, Clone)]
-pub struct IsfValueAndInfo<T> {
-    pub value: T,
-    pub info: InputValues<T>,
-}
-
-impl<T: Default + Clone> IsfValueAndInfo<T> {
-    pub fn new(info: InputValues<T>) -> Self {
-        let value = info
-            .default
-            .clone()
-            .unwrap_or(info.identity.clone().unwrap_or_default());
-
-        Self { value, info }
-    }
-}
+use std::ffi::CString;
 
 ///Holds the value and the metadata about the value
 #[derive(Debug, Clone)]
@@ -124,6 +93,7 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                     min: x.min.map(|x| x[i] as f32),
                     max: x.max.map(|x| x[i] as f32),
                     group: Some(name.clone()),
+                    ..Default::default()
                 }
             })
             .collect(),
@@ -153,42 +123,42 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                     min: x.min.as_ref().map(|x| x[i] as f32),
                     max: x.max.as_ref().map(|x| x[i] as f32),
                     group: Some(name.clone()),
+                    ..Default::default()
                 }
             })
             .collect(),
 
         InputType::Image => vec![],
         _ => {
-            let name = CString::new(name.clone()).unwrap();
+            let name = CString::new(name.clone()).expect("Failed to create CString");
 
             vec![match ty {
                 InputType::Event => SimpleParamInfo {
-                    name,
                     param_type: ParameterTypes::Event,
                     default: Some(false as u32 as f32),
-                    min: None,
-                    max: None,
-                    group: None,
+                    name,
+                    ..Default::default()
                 },
                 InputType::Bool(x) => SimpleParamInfo {
-                    name,
                     param_type: ParameterTypes::Boolean,
                     default: Some(x.default.unwrap_or_default() as u32 as f32),
-                    min: None,
-                    max: None,
-                    group: None,
+                    name,
+                    ..Default::default()
                 },
                 InputType::Float(x) => SimpleParamInfo {
-                    name,
                     param_type: ParameterTypes::Standard,
                     default: x.default.or(x.identity),
                     min: x.min.or(x.identity),
                     max: x.max.or(x.identity),
-                    group: None,
+                    name,
+                    ..Default::default()
                 },
                 InputType::Long(x) => SimpleParamInfo {
-                    name,
-                    param_type: ParameterTypes::Integer,
+                    param_type: if x.values.len() > 2 {
+                        ParameterTypes::Option
+                    } else {
+                        ParameterTypes::Integer
+                    },
                     default: x
                         .default
                         .or_else(|| x.values.first().copied())
@@ -201,7 +171,20 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                         .max
                         .or_else(|| x.values.iter().max().copied())
                         .map(|x| x as f32),
-                    group: None,
+                    elements: Some(
+                        x.values
+                            .iter()
+                            .zip(x.labels.iter())
+                            .map(|(v, l)| {
+                                (
+                                    CString::new(l.clone()).expect("Cstring could not build"),
+                                    *v as f32,
+                                )
+                            })
+                            .collect(),
+                    ),
+                    name,
+                    ..Default::default()
                 },
 
                 _ => unimplemented!("Unsupported ISF input type {ty:?}"),

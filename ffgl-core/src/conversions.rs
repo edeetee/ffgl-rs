@@ -41,7 +41,11 @@ pub enum Op {
     Resize,
     InitialiseV2 = FF_INITIALISE_V2,
 
-    // FFGL2
+    GetNumParameterElements = FF_GET_NUM_PARAMETER_ELEMENTS,
+    GetParameterElementName = FF_GET_PARAMETER_ELEMENT_NAME,
+    GetParameterElementValue = FF_GET_PARAMETER_ELEMENT_VALUE,
+    SetParameterElementValue = FF_SET_PARAMETER_ELEMENT_VALUE,
+
     GetPluginShortName = FF_GET_PLUGIN_SHORT_NAME,
 
     SetBeatInfo = FF_SET_BEATINFO,
@@ -140,6 +144,12 @@ impl From<f32> for FFGLVal {
         Self {
             num: unsafe { std::mem::transmute(a) },
         }
+    }
+}
+
+impl From<u32> for FFGLVal {
+    fn from(a: u32) -> Self {
+        Self { num: a }
     }
 }
 

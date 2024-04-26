@@ -85,6 +85,18 @@ pub trait ParamInfo {
         ParameterTypes::Standard
     }
 
+    fn element_name(&self, index: usize) -> &CStr {
+        self.name()
+    }
+
+    fn element_value(&self, index: usize) -> f32 {
+        self.default_val()
+    }
+
+    fn num_elements(&self) -> usize {
+        1
+    }
+
     fn default_val(&self) -> f32 {
         self.param_type().default_value()
     }
@@ -117,15 +129,15 @@ pub struct SimpleParamInfo {
     pub min: Option<f32>,
     pub max: Option<f32>,
     pub group: Option<String>,
+    pub elements: Option<Vec<(CString, f32)>>,
 }
 
 impl SimpleParamInfo {
-    pub fn from_name(name: &str) -> Self {
-        let name = unsafe { CStr::from_bytes_with_nul_unchecked(name.as_bytes()) };
+    pub fn new(name: &str) -> Self {
+        let name = CString::new(name).unwrap();
 
         SimpleParamInfo {
-            name: name.into(),
-            param_type: ParameterTypes::Standard,
+            name,
             ..Default::default()
         }
     }
@@ -154,5 +166,25 @@ impl ParamInfo for SimpleParamInfo {
 
     fn group(&self) -> &str {
         self.group.as_deref().unwrap_or("")
+    }
+
+    fn element_name(&self, index: usize) -> &CStr {
+        if let Some(elements) = &self.elements {
+            &elements[index].0
+        } else {
+            self.name()
+        }
+    }
+
+    fn element_value(&self, index: usize) -> f32 {
+        if let Some(elements) = &self.elements {
+            elements[index].1
+        } else {
+            self.default_val()
+        }
+    }
+
+    fn num_elements(&self) -> usize {
+        self.elements.as_ref().map(|x| x.len()).unwrap_or(1)
     }
 }
