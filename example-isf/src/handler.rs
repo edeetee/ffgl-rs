@@ -100,9 +100,12 @@ impl FFGLHandler for IsfFFGLState {
 
         name[0..name_len].copy_from_slice(&name_b[0..name_len]);
 
-        let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
+        // let mut rng = Seeder::from(ISF_SOURCE).make_rng::<StdRng>();
         let mut code = [0; 4];
-        rng.fill_bytes(&mut code);
+        code[1..].copy_from_slice(&name[1..4]);
+        code[0] = b'*';
+
+        // rng.fill_bytes(&mut code);
 
         let plugin_info = info::PluginInfo {
             unique_id: code,
