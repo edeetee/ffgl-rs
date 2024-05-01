@@ -65,8 +65,10 @@ pub enum ParameterEventFlags {
 //Param as a trait
 pub trait ParamInfo {
     fn name(&self) -> &CStr;
-    fn display_name(&self) -> &CStr {
+    fn display_name(&self) -> &str {
         self.name()
+            .to_str()
+            .expect("Invalid UTF-8 in parameter name")
     }
 
     fn usage(&self) -> ParameterUsages {
@@ -129,6 +131,7 @@ pub struct SimpleParamInfo {
     pub min: Option<f32>,
     pub max: Option<f32>,
     pub group: Option<String>,
+    pub display_name: Option<String>,
     pub elements: Option<Vec<(CString, f32)>>,
 }
 
@@ -146,6 +149,13 @@ impl SimpleParamInfo {
 impl ParamInfo for SimpleParamInfo {
     fn name(&self) -> &CStr {
         &self.name
+    }
+
+    fn display_name(&self) -> &str {
+        self.display_name
+            .as_ref()
+            .map(String::as_str)
+            .unwrap_or(self.name.to_str().expect("Invalid UTF-8 in parameter name"))
     }
 
     fn param_type(&self) -> ParameterTypes {

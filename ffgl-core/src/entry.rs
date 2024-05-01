@@ -1,6 +1,7 @@
 //! Primary entry point of the FFGL plugin. This is the function that is called by the host.
 //! You can use [crate::plugin_main] to automate calling this entry function from the FFGL ABI
 //!
+use crate::ffi::util::copy_str_to_host_buffer;
 use crate::info;
 use crate::FFGLData;
 
@@ -155,25 +156,42 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
         Op::GetParameterDefault => param(handler, input_value).default_val().into(),
         Op::GetParameterGroup => {
-            let input: &GetStringStructTag = unsafe { input_value.as_ref() };
+            let input: &GetStringStruct = unsafe { input_value.as_ref() };
             let buffer = input.stringBuffer;
 
             let group = H::param_info(handler, input.parameterNumber as usize).group();
 
-            let string_target: &mut [char] = unsafe {
-                slice::from_raw_parts_mut(buffer.address as *mut char, buffer.maxToWrite as usize)
+            unsafe {
+                copy_str_to_host_buffer(
+                    buffer.address as *mut u8,
+                    buffer.maxToWrite as usize,
+                    group,
+                )
             };
-
-            let copied_chars = std::cmp::min(group.len(), buffer.maxToWrite as usize);
-
-            string_target[..copied_chars]
-                .copy_from_slice(&group[..copied_chars].chars().collect::<Vec<_>>());
 
             debug!("GET PARAM GROUP {group:?}");
 
             SuccessVal::Success.into()
         }
-        Op::GetParameterDisplay => param(handler, input_value).display_name().into(),
+        Op::GetParameterDisplayName => {
+            let input: &GetStringStruct = unsafe { input_value.as_ref() };
+            let buffer = input.stringBuffer;
+
+            let display_name =
+                H::param_info(handler, input.parameterNumber as usize).display_name();
+
+            unsafe {
+                copy_str_to_host_buffer(
+                    buffer.address as *mut u8,
+                    buffer.maxToWrite as usize,
+                    display_name,
+                )
+            };
+
+            debug!("GET DISPLAY NAME {display_name:?}");
+
+            SuccessVal::Success.into()
+        }
         Op::GetParameterName => param(handler, input_value).name().into(),
         Op::GetParameterType => param(handler, input_value).param_type().into(),
 

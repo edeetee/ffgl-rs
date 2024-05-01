@@ -9,18 +9,14 @@ ISF_LIB_FILES=(
     # "v002-CRT-Mask" Haven't implemented the IMPORTED isf spec yet
 )
 
-ISF_EXTRA_FILES=(
-    "life"
-    )
-
 deploy() {
     $(dirname $0)/deploy_isf.sh "$1"
 }
 
-for ISF_FILE in "${ISF_EXTRA_FILES[@]}"
+for ISF_FILE in $(pwd $0)/example-isf/isf-extras/*.fs
 do
     echo "Deploying $ISF_FILE"
-    deploy "$(pwd $0)/example-isf/isf-extras/$ISF_FILE.fs"
+    deploy "$ISF_FILE" || echo "Failed to deploy $ISF_FILE" || true
 done
 
 for ISF_FILE in "${ISF_LIB_FILES[@]}"

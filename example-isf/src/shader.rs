@@ -1,9 +1,6 @@
 use std::{str::FromStr, time::Instant};
 
-use ffgl_glium::{
-    glsl::get_best_transpilation_target,
-    texture::{new_texture_2d, DEFAULT_RES},
-};
+use ffgl_glium::{glsl::get_best_transpilation_target, texture::new_texture_2d};
 use glium::{
     backend::Facade,
     uniforms::{AsUniformValue, UniformValue, Uniforms},

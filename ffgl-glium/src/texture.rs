@@ -6,8 +6,6 @@ use glium::{
     Texture2d,
 };
 
-pub const DEFAULT_RES: (u32, u32) = (1920, 1080);
-
 const NO_MIPMAP: glium::texture::MipmapsOption = glium::texture::MipmapsOption::NoMipmap;
 
 pub fn new_texture_2d(

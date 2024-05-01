@@ -73,12 +73,15 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
     match ty {
         InputType::Point2d(x) => (0..2)
             .map(|i| {
-                let p_name = CString::new(match i {
-                    0 => format!("{} x", name),
-                    1 => format!("{} y", name),
+                let disp_name = match i {
+                    0 => "x",
+                    1 => "y",
                     _ => unreachable!("Index out of bounds for Point2d input type"),
-                })
-                .expect("Failed to create CString");
+                }
+                .to_string();
+
+                let p_name =
+                    CString::new(format!("{name} {disp_name}")).expect("Failed to create CString");
 
                 let param_type = match i {
                     0 => ParameterTypes::X,
@@ -93,20 +96,24 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                     min: x.min.map(|x| x[i] as f32),
                     max: x.max.map(|x| x[i] as f32),
                     group: Some(name.clone()),
+                    display_name: Some(disp_name),
                     ..Default::default()
                 }
             })
             .collect(),
         InputType::Color(x) => (0..4)
             .map(|i| {
-                let p_name = CString::new(match i {
-                    0 => format!("{} r", name),
-                    1 => format!("{} g", name),
-                    2 => format!("{} b", name),
-                    3 => format!("{} a", name),
+                let disp_name = match i {
+                    0 => "red",
+                    1 => "green",
+                    2 => "blue",
+                    3 => "alpha",
                     _ => unreachable!("Index out of bounds for Color input type"),
-                })
-                .expect("Failed to create CString");
+                }
+                .to_string();
+
+                let p_name =
+                    CString::new(format!("{name} {disp_name}")).expect("Failed to create CString");
 
                 let param_type = match i {
                     0 => ParameterTypes::Red,
@@ -123,6 +130,7 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                     min: x.min.as_ref().map(|x| x[i] as f32),
                     max: x.max.as_ref().map(|x| x[i] as f32),
                     group: Some(name.clone()),
+                    display_name: Some(disp_name),
                     ..Default::default()
                 }
             })

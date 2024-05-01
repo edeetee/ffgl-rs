@@ -59,6 +59,7 @@ pub enum Op {
     GetParameterRange = FF_GET_RANGE,
     GetParameterVisibility = FF_GET_PRAMETER_VISIBILITY,
     GetParameterGroup = FF_GET_PARAM_GROUP,
+    GetParameterDisplayName = FF_GET_PARAM_DISPLAY_NAME,
 
     EnablePluginCap = FF_ENABLE_PLUGIN_CAP,
 }
