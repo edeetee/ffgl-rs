@@ -10,6 +10,8 @@ else
     RELEASE_TEXT="--release"
 fi
 
+PREFIX="$2"
+
 abspath() {                                               
     cd "$(dirname "$1")"
     printf "%s/%s\n" "$(pwd)" "$(basename "$1")"
@@ -17,7 +19,8 @@ abspath() {
 
 export ISF_SOURCE="$(abspath "$1")"
 FILENAME="$(basename "$ISF_SOURCE" .fs)"
-export ISF_NAME="$(echo "$FILENAME" | cut -c1-16)"
+
+export ISF_NAME="$PREFIX$(echo "$FILENAME" | cut -c1-16)"
 
 echo "NAME: $ISF_NAME, FILE: $ISF_SOURCE"
 

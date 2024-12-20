@@ -6,6 +6,9 @@ ISF_LIB_FILES=(
     "Dither-Bayer"
     "Radial Gradient"
     "Truchet Tile"
+    "CMYK Halftone-Lookaround"
+    "CMYK Halftone"
+    "Noise"
     # "v002-CRT-Mask" Haven't implemented the IMPORTED isf spec yet
 )
 
@@ -22,5 +25,5 @@ done
 for ISF_FILE in "${ISF_LIB_FILES[@]}"
 do
     echo "Deploying $ISF_FILE"
-    deploy "/Library/Graphics/ISF/$ISF_FILE.fs"
+    deploy "/Library/Graphics/ISF/$ISF_FILE.fs" "vdmx_"
 done
