@@ -11,7 +11,6 @@ use crate::handler::{FFGLHandler, FFGLInstance};
 use crate::log::try_init_default_subscriber;
 use crate::parameters::ParamInfo;
 
-use core::slice;
 
 use std::{any::Any, ffi::CString};
 
@@ -32,8 +31,6 @@ static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
-use tracing::span;
-use tracing::Level;
 use tracing::{debug, info, trace};
 
 ///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
