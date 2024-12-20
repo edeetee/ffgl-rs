@@ -2,10 +2,12 @@
 
 set -e
 
+PROFILE="${PROFILE:-release}"
+
 LIB_NAME=$1
 BUNDLE_NAME=${2:-$LIB_NAME}
 
-LIB_PATH="target/release/lib$LIB_NAME.dylib"
+LIB_PATH="target/$PROFILE/lib$LIB_NAME.dylib"
 
 if [ ! -f "$LIB_PATH" ]; then
     echo "$LIB_PATH not found!"

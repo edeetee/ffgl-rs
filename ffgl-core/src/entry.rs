@@ -32,6 +32,8 @@ static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
+use tracing::span;
+use tracing::Level;
 use tracing::{debug, info, trace};
 
 ///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
@@ -105,7 +107,6 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             );
         }
     }
-
     let info = unsafe { INFO.as_ref().context(e!("No info"))? };
 
     let handler = unsafe { &HANDLER }

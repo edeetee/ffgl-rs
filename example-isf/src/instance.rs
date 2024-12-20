@@ -34,14 +34,17 @@ impl Debug for IsfFFGLInstance {
 
 impl FFGLInstance for IsfFFGLInstance {
     fn get_param(&self, index: usize) -> f32 {
+        let _ = self.state.span.enter();
         self.state.inputs.get_param(index)
     }
 
     fn set_param(&mut self, index: usize, value: f32) {
+        let _ = self.state.span.enter();
         self.state.inputs.set_param(index, value)
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
+        let _ = self.state.span.enter();
         let scale = match &self.state.inputs[0] {
             crate::param::IsfFFGLParam::Overlay(OverlayParams::Scale, val) => (*val).powf(2.0),
             _ => 1.0,

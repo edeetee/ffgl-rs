@@ -14,6 +14,8 @@ use rand::rngs::StdRng;
 
 use rand::RngCore;
 use rand_seeder::Seeder;
+use tracing::span;
+use tracing::Span;
 
 use crate::instance;
 use crate::param;
@@ -34,7 +36,8 @@ use ffgl_core::info::PluginInfo;
 
 use isf::Isf;
 
-const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
+pub const ISF_SOURCE: &'static str = include_str!(env!("ISF_SOURCE"));
+pub const ISF_NAME: &'static str = env!("ISF_NAME");
 
 #[derive(Debug, Clone)]
 pub struct IsfFFGLState {
@@ -42,6 +45,7 @@ pub struct IsfFFGLState {
     pub info: Isf,
     pub inputs: Vec<param::IsfFFGLParam>,
     pub plugin_info: info::PluginInfo,
+    pub span: tracing::Span,
 }
 
 impl Uniforms for IsfFFGLState {
@@ -62,6 +66,9 @@ impl FFGLHandler for IsfFFGLState {
     type NewInstanceError = IsfShaderLoadError;
 
     fn init() -> Self {
+        let span = span!(tracing::Level::TRACE, ISF_NAME);
+        let _ = span.enter();
+
         init_default_subscriber();
 
         let info = isf::parse(ISF_SOURCE).unwrap();
@@ -93,7 +100,7 @@ impl FFGLHandler for IsfFFGLState {
             .collect();
 
         let mut name = [0; 16];
-        let name_str = format!("*{}", env!("ISF_NAME"));
+        let name_str = format!("*{}", ISF_NAME);
         let name_b = name_str.as_bytes();
 
         let name_len = name_b.len().min(name.len());
@@ -123,18 +130,22 @@ impl FFGLHandler for IsfFFGLState {
             info,
             inputs: params,
             plugin_info,
+            span,
         }
     }
 
     fn param_info(&self, mut index: usize) -> &dyn ParamInfo {
+        self.span.enter();
         self.inputs.param_info(index)
     }
 
     fn num_params(&'static self) -> usize {
+        self.span.enter();
         self.inputs.num_params()
     }
 
     fn plugin_info(&'static self) -> info::PluginInfo {
+        self.span.enter();
         self.plugin_info.clone()
     }
 
@@ -142,6 +153,7 @@ impl FFGLHandler for IsfFFGLState {
         &'static self,
         inst_data: &ffgl_core::FFGLData,
     ) -> Result<Self::Instance, Self::NewInstanceError> {
+        self.span.enter();
         instance::IsfFFGLInstance::new(self, inst_data)
     }
 }

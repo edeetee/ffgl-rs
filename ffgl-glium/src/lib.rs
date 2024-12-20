@@ -10,15 +10,17 @@
 //!
 //! I make assumptions about the OpenGL context inside the host. Bugs and crashes may occur. Testing infrastructure is required.
 //!
-use std::{error::Error, fmt::Formatter, rc::Rc};
+use std::{any::Any, error::Error, fmt::Formatter, rc::Rc};
 
 use ffgl_core::*;
 use glium::{
     backend::Context,
+    debug,
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
     BlitTarget, CapabilitiesSource, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
+use tracing::{debug, field::debug};
 
 mod gl_backend;
 pub mod glsl;
@@ -106,15 +108,18 @@ impl FFGLGlium {
             tracing::error!("Render ERROR: {err:?}");
         }
 
-        // validate_viewport(&viewport);
-
         //puts the texture into the framebuffer
-        fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
+        // fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
 
-        // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
         unsafe {
             gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
-            blit_fb(render_res, output_res);
+            blit_fb(
+                render_res,
+                (
+                    frame_data.textures[0].HardwareWidth,
+                    frame_data.textures[0].HardwareHeight,
+                ),
+            );
         }
 
         frame.finish().unwrap();
@@ -142,6 +147,7 @@ unsafe fn blit_fb((read_w, read_h): (u32, u32), (write_w, write_h): (u32, u32)) 
         height: write_h as i32,
     };
 
+    // https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glBlitFramebuffer.xhtml#:~:text=glBlitFramebuffer%20transfers%20a%20rectangle%20of,GL_COLOR_BUFFER_BIT%20%2C%20GL_DEPTH_BUFFER_BIT%20%2C%20and%20GL_STENCIL_BUFFER_BIT%20.
     gl::BlitFramebuffer(
         src_rect.left as gl::types::GLint,
         src_rect.bottom as gl::types::GLint,

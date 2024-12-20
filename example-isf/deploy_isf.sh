@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+DEBUG="${DEBUG:-0}"
+
+if [ "$DEBUG" -eq 1 ]; then
+    RELEASE_TEXT=""
+    PROFILE="debug"
+else
+    RELEASE_TEXT="--release"
+fi
+
 abspath() {                                               
     cd "$(dirname "$1")"
     printf "%s/%s\n" "$(pwd)" "$(basename "$1")"
@@ -14,6 +23,6 @@ echo "NAME: $ISF_NAME, FILE: $ISF_SOURCE"
 
 echo "BUILDING"
 
-cargo build --release -p example-isf
+cargo build $RELEASE_TEXT -p example-isf
 
-./deploy_bundle.sh example_isf "$ISF_NAME"
+PROFILE="$PROFILE" ./deploy_bundle.sh example_isf "$ISF_NAME"
