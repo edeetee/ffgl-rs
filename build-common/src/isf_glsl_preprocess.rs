@@ -2,7 +2,7 @@ use std::error::Error;
 
 use glsl::parser::Parse;
 use glsl::syntax::{Expr, FunIdentifier, Identifier, ShaderStage};
-use glsl::visitor::{Host, HostMut, VisitorMut};
+use glsl::visitor::{HostMut, VisitorMut};
 use isf;
 
 const STANDARD_PREFIX: &'static str = include_str!("isf_prefix.glsl");
@@ -11,7 +11,7 @@ const PREFIX_140: &'static str = include_str!("isf_prefix_140.glsl");
 
 use isf::Isf;
 
-use crate::{glsl_120, translation_unit_to_string, GlslVersion};
+use crate::{translation_unit_to_string, GlslVersion};
 
 struct UniformTextureSizeMutator;
 
