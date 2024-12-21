@@ -9,6 +9,7 @@ use ffgl_core::parameters::{
 };
 
 use isf;
+use tracing::warn;
 
 use std::ffi::CString;
 
@@ -40,7 +41,10 @@ impl IsfInputValue {
                     .unwrap_or_default(),
             )),
             InputType::Image => Self::None,
-            _ => unimplemented!("Unsupported ISF input type {ty:?}"),
+            _ => {
+                warn!("Unsupported ISF input type {ty:?}");
+                Self::None
+            }
         }
     }
 
@@ -195,7 +199,10 @@ fn param_info_for_isf_input(isf::Input { name, ty }: &isf::Input) -> Vec<SimpleP
                     ..Default::default()
                 },
 
-                _ => unimplemented!("Unsupported ISF input type {ty:?}"),
+                _ => {
+                    warn!("Unsupported ISF input type {ty:?}");
+                    return vec![];
+                }
             }]
         }
     }
