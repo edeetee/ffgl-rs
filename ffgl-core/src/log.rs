@@ -54,11 +54,12 @@ pub(crate) fn try_init_default_subscriber() -> Result<(), tracing_subscriber::ut
 
     //try set tracing logger
     tracing_subscriber::fmt()
+        .compact()
         .with_writer(|| FFGLWriter)
         .without_time()
-        .with_file(true)
+        // .with_file(true)
         // .with_span_events(FmtSpan::ENTER)
-        .with_line_number(true)
+        // .with_line_number(true)
         .with_env_filter(env_filter)
         .finish()
         .try_init()
@@ -82,4 +83,8 @@ pub fn init_logger(logger: FFGLLogger) {
     }));
 }
 
-use tracing_subscriber::{filter::LevelFilter, fmt::format::FmtSpan, util::SubscriberInitExt};
+use tracing_subscriber::{
+    filter::LevelFilter,
+    fmt::format::{Compact, FmtSpan},
+    util::SubscriberInitExt,
+};

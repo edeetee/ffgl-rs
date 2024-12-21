@@ -84,9 +84,9 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             ));
 
             info!(
-                "INITIALIZED PLUGIN '{id:?}' '{name}'",
-                name = std::str::from_utf8(&info.name)?,
-                id = info.unique_id
+                name = ?std::str::from_utf8(&info.name)?,
+                id = ?info.unique_id,
+                "INITIALIZED PLUGIN",
             );
         }
     }
@@ -96,9 +96,9 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     let name = unsafe { std::str::from_utf8_unchecked(&info.name) };
 
     let _span = if !function.is_noisy() {
-        debug_span!("entry", "fn" = ?function, "in" = unsafe { input_value.num }, name)
+        debug_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
     } else {
-        trace_span!("entry", "fn" = ?function, "in" = unsafe { input_value.num }, name)
+        trace_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
     }
     .entered();
 
@@ -127,7 +127,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 _ => SupportVal::Unsupported.into(),
             };
 
-            debug!("{cap:?} => {}", unsafe { result.num });
+            debug!(r = unsafe { result.num }, "{cap:?}");
 
             result
         }
@@ -141,7 +141,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 _ => SuccessVal::Fail.into(),
             };
 
-            debug!("{cap:?} => {}", unsafe { result.num });
+            debug!(r = unsafe { result.num }, "{cap:?}");
 
             result
         }
@@ -165,7 +165,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 )
             };
 
-            debug!("GET PARAM GROUP {group:?}");
+            debug!(g = group);
 
             SuccessVal::Success.into()
         }
@@ -184,7 +184,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 )
             };
 
-            debug!("GET DISPLAY NAME {display_name:?}");
+            debug!(d = display_name);
 
             SuccessVal::Success.into()
         }
@@ -281,9 +281,9 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             let instance = handler::Instance { data, renderer };
 
             info!(
-                "Created INSTANCE \n{instance:#?} of ({id:?}, '{name:?}')",
-                id = info.unique_id,
-                name = String::from_utf8_lossy(&info.name),
+                id = ?info.unique_id,
+                name = ?String::from_utf8_lossy(&info.name),
+                "Created INSTANCE:\n{instance:#?}",
             );
 
             FFGLVal::from_static(Box::leak(Box::<handler::Instance<H::Instance>>::new(
@@ -294,7 +294,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
         Op::DeinstantiateGL => {
             let inst = instance.context(e!("No instance"))?;
 
-            debug!("DEINSTGL\n{inst:#?}");
+            debug!(?inst, "DEINSTGL");
             unsafe {
                 drop(Box::from_raw(inst as *mut handler::Instance<H::Instance>));
             }
@@ -332,7 +332,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
         Op::Resize => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
-            debug!("RESIZE\n{viewport:#?}");
+            debug!(v = ?viewport, "RESIZE");
             SuccessVal::Success.into()
         }
 
@@ -350,9 +350,9 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     };
 
     if !function.is_noisy() {
-        debug!("=> {}", unsafe { resp.num });
+        debug!(r = unsafe { resp.num }, "DONE");
     } else {
-        trace!("=> {}", unsafe { resp.num });
+        trace!(r = unsafe { resp.num }, "DONE");
     }
 
     Ok(resp)
