@@ -1,21 +1,12 @@
-use std::cell::OnceCell;
-use std::ffi::CString;
-
 use ffgl_core;
 
 use ffgl_core::info;
-use ffgl_core::info::PluginType;
 
 use ffgl_core::parameters;
 use ffgl_core::parameters::handler::ParamInfoHandler;
-use ffgl_core::parameters::handler::ParamValueHandler;
 use ffgl_core::parameters::ParamInfo;
-use rand::rngs::StdRng;
 
-use rand::RngCore;
-use rand_seeder::Seeder;
 use tracing::span;
-use tracing::Span;
 
 use crate::instance;
 use crate::param;
@@ -24,15 +15,11 @@ use crate::shader::IsfShaderLoadError;
 
 use ffgl_core::log::init_default_subscriber;
 
-use ffgl_core::parameters::SimpleParamInfo;
-
 use ffgl_core::handler::FFGLHandler;
 
 use glium::uniforms::UniformValue;
 
 use glium::uniforms::Uniforms;
-
-use ffgl_core::info::PluginInfo;
 
 use isf::Isf;
 
@@ -134,18 +121,18 @@ impl FFGLHandler for IsfFFGLState {
         }
     }
 
-    fn param_info(&self, mut index: usize) -> &dyn ParamInfo {
-        self.span.enter();
+    fn param_info(&self, index: usize) -> &dyn ParamInfo {
+        let _ = self.span.enter();
         self.inputs.param_info(index)
     }
 
     fn num_params(&'static self) -> usize {
-        self.span.enter();
+        let _ = self.span.enter();
         self.inputs.num_params()
     }
 
     fn plugin_info(&'static self) -> info::PluginInfo {
-        self.span.enter();
+        let _ = self.span.enter();
         self.plugin_info.clone()
     }
 
@@ -153,7 +140,7 @@ impl FFGLHandler for IsfFFGLState {
         &'static self,
         inst_data: &ffgl_core::FFGLData,
     ) -> Result<Self::Instance, Self::NewInstanceError> {
-        self.span.enter();
+        let _ = self.span.enter();
         instance::IsfFFGLInstance::new(self, inst_data)
     }
 }

@@ -2,17 +2,16 @@ use std::cmp::max;
 
 use ffgl_core::{
     handler::simplified::*,
-    info::{plugin_info, PluginInfo},
-    parameters::{self, builtin::OverlayParams, handler::ParamInfoHandler, ParamInfo},
+    info::PluginInfo,
+    parameters::{handler::ParamInfoHandler, ParamInfo},
     plugin_main,
 };
 use ffgl_glium::FFGLGlium;
 use glium::{
-    buffer,
     texture::{RawImage2d, Texture2dDataSink},
     Surface, Texture2d,
 };
-use sdfer::{esdt::Params, Image2d, Unorm8};
+use sdfer::{esdt::Params, Unorm8};
 
 //https://github.com/LykenSol/sdfer/tree/main/src
 struct SdferInstance {

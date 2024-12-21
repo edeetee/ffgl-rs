@@ -1,4 +1,4 @@
-use isf::{Input, InputLong, InputType, InputValues};
+use isf::InputType;
 
 use glium::uniforms::UniformValue;
 

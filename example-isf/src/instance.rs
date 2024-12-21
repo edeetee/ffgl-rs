@@ -13,7 +13,6 @@ use ffgl_core;
 use ffgl_core::handler::FFGLInstance;
 
 use std::cmp::max;
-use std::cmp::min;
 use std::fmt::Formatter;
 
 use std::fmt::Debug;

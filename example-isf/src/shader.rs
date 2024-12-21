@@ -3,8 +3,7 @@ use std::{str::FromStr, time::Instant};
 use ffgl_glium::{glsl::get_best_transpilation_target, texture::new_texture_2d};
 use glium::{
     backend::Facade,
-    uniforms::{AsUniformValue, UniformValue, Uniforms},
-    CapabilitiesSource, DrawError, Surface, Texture2d,
+    uniforms::{AsUniformValue, UniformValue, Uniforms}, DrawError, Surface, Texture2d,
 };
 use isf::{Isf, Pass};
 use tracing::debug;

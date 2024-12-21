@@ -1,4 +1,4 @@
-use build_common::{glsl_120, transform_glsl};
+use build_common::transform_glsl;
 use ffgl_glium::glsl::get_best_transpilation_target;
 use glium::{
     backend::Facade, implement_vertex, index, uniforms::Uniforms, Blend, DrawError, DrawParameters,
