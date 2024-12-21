@@ -25,7 +25,7 @@ deploy() {
     return $RESULT
 }
 
-for ISF_FILE in $(pwd $0)/example-isf/isf-extras/*.fs
+for ISF_FILE in $(pwd $0)/ffgl-isf/isf-extras/*.fs
 do
     echo "Deploying $ISF_FILE"
     deploy "$ISF_FILE" || echo "ERROR deploying $ISF_FILE" || true

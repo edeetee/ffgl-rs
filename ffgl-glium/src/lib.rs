@@ -42,7 +42,7 @@ impl Debug for FFGLGlium {
     }
 }
 
-pub type DefaultSurface<'a> = SimpleFrameBuffer<'a>;
+pub type DefaultSurface<'a> = Frame;
 
 impl FFGLGlium {
     pub fn new(inst_data: &FFGLData) -> Self {
@@ -91,6 +91,8 @@ impl FFGLGlium {
         let mut fb =
             SimpleFrameBuffer::new(&self.ctx, &rb).expect("SimpleFrameBuffer could not be created");
 
+        // fb.clear_color(0.0, 0.0, 0.0, 0.0);
+
         let textures: Vec<_> = frame_data
             .textures
             .iter()
@@ -109,7 +111,11 @@ impl FFGLGlium {
             })
             .collect();
 
-        if let Err(err) = render_frame(&mut fb, textures) {
+        let mut frame = Frame::new(self.ctx.clone(), out_res);
+
+        self.set_default_db_to_ffgl_fb(&frame_data);
+
+        if let Err(err) = render_frame(&mut frame, textures) {
             tracing::error!("Render ERROR: {err:?}");
         }
 
@@ -127,18 +133,11 @@ impl FFGLGlium {
             .unwrap_or(out_res);
 
         // trace!("")
-        trace!("OUT RES: {out_res:?}");
-
-        let frame = Frame::new(self.ctx.clone(), out_res);
+        trace!(?out_res, ?render_res, "RENDERED");
+        // frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
         //tell glium to draw to the default framebuffer
-        self.ctx.swap_buffers().expect("swap_buffers failed");
-        // actually draw to frame_data.host
-        unsafe {
-            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
-        }
-
-        fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
+        // fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
 
         // let blit_target_size = output_res;
 
@@ -161,6 +160,16 @@ impl FFGLGlium {
         // validate::validate_context_state();
 
         // validate_viewport(&viewport);
+    }
+
+    // use this before a draw call to make glium think it's drawing to the default framebuffer
+    fn set_default_db_to_ffgl_fb(&self, frame_data: &GLInput<'_>) {
+        self.ctx.swap_buffers().expect("swap_buffers failed");
+        // actually draw to frame_data.host
+        unsafe {
+            // gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
+        }
     }
 }
 

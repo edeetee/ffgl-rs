@@ -55,7 +55,7 @@ impl FFGLHandler for IsfFFGLState {
     fn init() -> Self {
         init_default_subscriber();
 
-        let span = span!(tracing::Level::TRACE, ISF_NAME);
+        let span = span!(tracing::Level::TRACE, "isf_handler", isf = ISF_NAME);
         let _span = span.enter();
 
         let info = isf::parse(ISF_SOURCE).unwrap();

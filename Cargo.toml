@@ -10,7 +10,7 @@ members = [
     "example-raw",
     "ffgl-glium",
     "ffgl-core",
-    "example-isf",
+    "ffgl-isf",
     "build-common",
     "example-sdfer",
 ]

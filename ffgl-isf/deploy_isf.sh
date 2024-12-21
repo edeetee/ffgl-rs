@@ -19,13 +19,12 @@ abspath() {
 
 export ISF_SOURCE="$(abspath "$1")"
 FILENAME="$(basename "$ISF_SOURCE" .fs)"
-
 export ISF_NAME="$PREFIX$(echo "$FILENAME" | cut -c1-16)"
 
 echo "NAME: $ISF_NAME, FILE: $ISF_SOURCE"
 
 echo "BUILDING"
 
-cargo build $RELEASE_TEXT -p example-isf
+cargo build $RELEASE_TEXT -p ffgl-isf
 
-PROFILE="$PROFILE" ./deploy_bundle.sh example_isf "$ISF_NAME"
+PROFILE="$PROFILE" ./deploy_bundle.sh ffgl_isf "$ISF_NAME"

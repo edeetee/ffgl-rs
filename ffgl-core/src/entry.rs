@@ -332,6 +332,10 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
         Op::Resize => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };
+
+            let handler::Instance { data, .. } = instance.context(e!("No instance"))?;
+            data.viewport = *viewport;
+
             debug!(v = ?viewport, "RESIZE");
             SuccessVal::Success.into()
         }

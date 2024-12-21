@@ -489,25 +489,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
-name = "example-isf"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "build-common",
- "ffgl-core",
- "ffgl-glium",
- "genmesh",
- "glium",
- "isf",
- "rand 0.8.5",
- "rand_seeder",
- "rng",
- "serde",
- "thiserror",
- "tracing",
-]
-
-[[package]]
 name = "example-sdfer"
 version = "0.1.0"
 dependencies = [
@@ -568,6 +549,25 @@ dependencies = [
  "gl",
  "gl_loader",
  "glium",
+ "tracing",
+]
+
+[[package]]
+name = "ffgl-isf"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "build-common",
+ "ffgl-core",
+ "ffgl-glium",
+ "genmesh",
+ "glium",
+ "isf",
+ "rand 0.8.5",
+ "rand_seeder",
+ "rng",
+ "serde",
+ "thiserror",
  "tracing",
 ]
 
