@@ -6,11 +6,14 @@ use crate::util::MultiUniforms;
 
 use ffgl_core::parameters::builtin::OverlayParams;
 use ffgl_core::parameters::handler::ParamValueHandler;
+use glium::framebuffer::RenderBuffer;
+use glium::framebuffer::SimpleFrameBuffer;
 use glium::uniforms::UniformValue;
 
 use ffgl_core;
 
 use ffgl_core::handler::FFGLInstance;
+use glium::Surface;
 
 use std::cmp::max;
 use std::fmt::Formatter;
@@ -56,7 +59,7 @@ impl FFGLInstance for IsfFFGLInstance {
         );
 
         self.glium
-            .draw(dest_res, render_res, frame_data, &mut |target, textures| {
+            .draw(render_res, dest_res, frame_data, &mut |target, textures| {
                 let image_uniforms = self
                     .state
                     .inputs

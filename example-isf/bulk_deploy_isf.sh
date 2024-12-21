@@ -8,7 +8,7 @@ ISF_LIB_FILES=(
     "Truchet Tile"
     "CMYK Halftone-Lookaround"
     "CMYK Halftone"
-    "Noise"
+    # "Noise" Customised
     # "v002-CRT-Mask" Haven't implemented the IMPORTED isf spec yet
 )
 

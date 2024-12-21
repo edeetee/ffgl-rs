@@ -1,10 +1,38 @@
+/*
+{
+    "DESCRIPTION": "CRT TV Shader",
+    "CREDIT": "Ryan Green / greenrhyno",
+    "CATEGORIES": [
+        "Stylize"
+    ],
+    "INPUTS": [
+        {
+            "NAME": "uIntensity",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 2.0
+        },
+        {
+            "NAME": "uPixelSize",
+            "TYPE": "color",
+            "DEFAULT": [0.85, 0.96, 0.3, 0.15]
+        },
+        {
+            "NAME": "inputImage",
+            "TYPE": "image"
+        }
+    ],
+    "ISFVSN": "2"
+}
+*/
+
 // CRT TV Shader
 // Ryan Green / greenrhyno
 // 2023
 
-uniform vec2 uVirtualResolution;
-uniform float uIntensity;
-uniform vec4 uPixelSize; // pixelSize.xy + pixelSoftness.xy 
+// uniform float uIntensity;
+// uniform vec4 uPixelSize; // pixelSize.xy + pixelSoftness.xy 
 
 float roundedRect(in vec2 st, vec2 size, vec2 softness) {
     size = (vec2(1.f) - size) * .5f;
@@ -23,7 +51,7 @@ vec3 pixelUnit(in vec2 st, in vec2 sampleCoord) {
     vec2 size = vec2(.85f, .96f);
     vec2 softness = vec2(.3f, .15f);
 
-    vec3 texSample = texture(sTD2DInputs[0], sampleCoord).rgb;
+    vec3 texSample = IMG_NORM_PIXEL(inputImage, sampleCoord).rgb;
 
     color += texSample.r * vec3(1.f, 0.f, 0.f) * roundedRect(vec2(st.x * 3.f, st.y), size, softness);
     color += texSample.g * vec3(0.f, 1.f, 0.f) * roundedRect(vec2((st.x - .3333f) * 3.f, st.y), size, softness);
@@ -34,11 +62,11 @@ vec3 pixelUnit(in vec2 st, in vec2 sampleCoord) {
 
 out vec4 fragColor;
 void main() {
-    vec2 sampleCoord = vUV.st * uVirtualResolution;
+    vec2 sampleCoord = vUV.st * RENDERSIZE;
     sampleCoord.y -= step(1.f, mod(sampleCoord.x, 2.f)) * 0.5f;
     vec2 offsetUV = fract(sampleCoord);
-    sampleCoord = (floor(sampleCoord) + 0.5f) / uVirtualResolution;
+    sampleCoord = (floor(sampleCoord) + 0.5f) / RENDERSIZE;
 
     vec3 color = pixelUnit(offsetUV, sampleCoord) * uIntensity;
-    fragColor = TDOutputSwizzle(vec4(color, 1.0f));
+    fragColor = vec4(color, 1.0f);
 }

@@ -15,10 +15,15 @@ use std::{error::Error, fmt::Formatter, rc::Rc};
 use ffgl_core::*;
 use glium::{
     backend::Context,
-    framebuffer::{RenderBuffer, SimpleFrameBuffer},
-    BlitTarget, CapabilitiesSource, Frame, Surface, Texture2d,
+    debug,
+    framebuffer::{
+        DefaultFramebuffer, EmptyFrameBuffer, MultiOutputFrameBuffer, RenderBuffer,
+        SimpleFrameBuffer,
+    },
+    BlitTarget, CapabilitiesSource, Frame, GlObject, Surface, Texture2d,
 };
 use std::fmt::Debug;
+use tracing::debug;
 
 mod gl_backend;
 pub mod glsl;
@@ -36,6 +41,8 @@ impl Debug for FFGLGlium {
         f.debug_struct("FFGLGliumHandler").finish()
     }
 }
+
+pub type DefaultSurface<'a> = SimpleFrameBuffer<'a>;
 
 impl FFGLGlium {
     pub fn new(inst_data: &FFGLData) -> Self {
@@ -63,26 +70,26 @@ impl FFGLGlium {
 
     pub fn draw(
         &self,
-        output_res: (u32, u32),
         render_res: (u32, u32),
+        out_res: (u32, u32),
         frame_data: GLInput<'_>,
-        render_frame: &mut impl FnMut(
-            &mut SimpleFrameBuffer,
-            Vec<Texture2d>,
-        ) -> Result<(), Box<dyn Error>>,
+        render_frame: &mut impl FnMut(&mut DefaultSurface, Vec<Texture2d>) -> Result<(), Box<dyn Error>>,
     ) {
-        unsafe { self.ctx.rebuild(self.backend.clone()).unwrap() };
+        unsafe {
+            self.ctx.rebuild(self.backend.clone()).unwrap();
+            // make glium think it's drawing to the default framebuffer
+        };
 
-        let frame = Frame::new(self.ctx.clone(), (render_res.0, render_res.1));
         let rb = RenderBuffer::new(
             &self.ctx,
             glium::texture::UncompressedFloatFormat::U8U8U8U8,
             render_res.0,
             render_res.1,
         )
-        .unwrap();
+        .expect("RenderBuffer could not be created");
 
-        let fb = &mut SimpleFrameBuffer::new(&self.ctx, &rb).unwrap();
+        let mut fb =
+            SimpleFrameBuffer::new(&self.ctx, &rb).expect("SimpleFrameBuffer could not be created");
 
         let textures: Vec<_> = frame_data
             .textures
@@ -102,25 +109,46 @@ impl FFGLGlium {
             })
             .collect();
 
-        if let Err(err) = render_frame(fb, textures) {
+        if let Err(err) = render_frame(&mut fb, textures) {
             tracing::error!("Render ERROR: {err:?}");
         }
 
+        // let empty = EmptyFrameBuffer::new(&self.ctx, render_res.0, render_res.1, None, None, false);
+
         //puts the texture into the framebuffer
+        // let id = fb.get_id();
+        // let id = rb.get_id();
         // fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
 
+        let out_res = frame_data
+            .textures
+            .first()
+            .map(|t| (t.HardwareWidth, t.HardwareHeight))
+            .unwrap_or(out_res);
+
+        debug!("OUT RES: {out_res:?}");
+
+        let frame = Frame::new(self.ctx.clone(), out_res);
+
+        //tell glium to draw to the default framebuffer
+        self.ctx.swap_buffers().expect("swap_buffers failed");
+        // actually draw to frame_data.host
         unsafe {
             gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
-            blit_fb(
-                render_res,
-                (
-                    frame_data.textures[0].HardwareWidth,
-                    frame_data.textures[0].HardwareHeight,
-                ),
-            );
         }
 
+        fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
+
+        // let blit_target_size = output_res;
+
+        // debug!("BLITTING {render_res:?} -> {blit_target_size:?}");
         frame.finish().unwrap();
+
+        // unsafe {
+        //     // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
+        //     gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
+        //     blit_fb(render_res, blit_target_size);
+        // }
 
         //reset to what host expects
         // gl_reset(frame_data);
@@ -129,6 +157,24 @@ impl FFGLGlium {
         // validate_viewport(&viewport);
     }
 }
+
+// Swaps the buffers between the default and the given id
+// unsafe fn swap_buffers(id: i32) {
+//     gl::BindFramebuffer(gl::READ_FRAMEBUFFER, id);
+//     gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, 0);
+//     gl::BlitFramebuffer(
+//         0,
+//         0,
+//         1920,
+//         1080,
+//         0,
+//         0,
+//         1920,
+//         1080,
+//         gl::COLOR_BUFFER_BIT,
+//         gl::NEAREST,
+//     );
+// }
 
 unsafe fn blit_fb((read_w, read_h): (u32, u32), (write_w, write_h): (u32, u32)) {
     let src_rect = BlitTarget {

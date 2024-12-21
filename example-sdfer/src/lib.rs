@@ -8,6 +8,7 @@ use ffgl_core::{
 };
 use ffgl_glium::FFGLGlium;
 use glium::{
+    framebuffer::{RenderBuffer, SimpleFrameBuffer},
     texture::{RawImage2d, Texture2dDataSink},
     Surface, Texture2d,
 };
@@ -104,51 +105,56 @@ impl SimpleFFGLInstance for SdferInstance {
             max((dest_res.1 as f32 * scale) as u32, 1),
         );
 
-        self.glium
-            .draw(dest_res, render_res, frame_data, &mut |fb, textures| {
-                let render_texture = Texture2d::empty(&self.glium.ctx, render_res.0, render_res.1)
-                    .expect("Texture could not be created");
+        // let scaled_target = if scale != 1.0 {
+        //     Some(SimpleFrameBuffer)
+        // } else {
+        //     None
+        // };
 
-                //resize to render size
-                textures.first().expect("No texture in").as_surface().fill(
-                    &render_texture.as_surface(),
-                    glium::uniforms::MagnifySamplerFilter::Linear,
-                );
+        self.glium.draw(dest_res, frame_data, &mut |fb, textures| {
+            let render_texture = Texture2d::empty(&self.glium.ctx, render_res.0, render_res.1)
+                .expect("Texture could not be created");
 
-                let esdt_opts = Params {
-                    solidify: false,
-                    radius: render_res.0 as f32 * radius,
-                    ..Default::default()
-                };
+            //resize to render size
+            textures.first().expect("No texture in").as_surface().fill(
+                &render_texture.as_surface(),
+                glium::uniforms::MagnifySamplerFilter::Linear,
+            );
 
-                let (sdf, buffers) = process(&render_texture, self.buffers.take(), esdt_opts);
+            let esdt_opts = Params {
+                solidify: false,
+                radius: render_res.0 as f32 * radius,
+                ..Default::default()
+            };
 
-                self.buffers = Some(buffers);
+            let (sdf, buffers) = process(&render_texture, self.buffers.take(), esdt_opts);
 
-                let storage: Vec<_> = sdf
-                    .storage()
-                    .iter()
-                    .map(|x| x.to_bits())
-                    .map(|x| (x, x, x, x))
-                    .collect();
+            self.buffers = Some(buffers);
 
-                let data_src = RawImage2d::from_raw(
-                    std::borrow::Cow::Owned(storage),
-                    sdf.width() as u32,
-                    sdf.height() as u32,
-                );
+            let storage: Vec<_> = sdf
+                .storage()
+                .iter()
+                .map(|x| x.to_bits())
+                .map(|x| (x, x, x, x))
+                .collect();
 
-                let sdf_texture = Texture2d::new(&self.glium.ctx, data_src)
-                    .expect("Texture could not be created");
+            let data_src = RawImage2d::from_raw(
+                std::borrow::Cow::Owned(storage),
+                sdf.width() as u32,
+                sdf.height() as u32,
+            );
 
-                sdf_texture
-                    .as_surface()
-                    .fill(fb, glium::uniforms::MagnifySamplerFilter::Linear);
+            let sdf_texture =
+                Texture2d::new(&self.glium.ctx, data_src).expect("Texture could not be created");
 
-                // Texture2d::empty_with_format(facade, format, mipmaps, width, height);
+            sdf_texture
+                .as_surface()
+                .fill(fb, glium::uniforms::MagnifySamplerFilter::Linear);
 
-                Ok(())
-            })
+            // Texture2d::empty_with_format(facade, format, mipmaps, width, height);
+
+            Ok(())
+        })
     }
 
     fn num_params() -> usize {
