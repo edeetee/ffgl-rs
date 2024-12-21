@@ -65,6 +65,21 @@ pub enum Op {
     EnablePluginCap = FF_ENABLE_PLUGIN_CAP,
 }
 
+impl Op {
+    pub fn is_noisy(&self) -> bool {
+        match self {
+            Op::ProcessOpenGL
+            | Op::SetBeatInfo
+            | Op::SetTime
+            | Op::GetParameterEvents
+            | Op::SetParameter
+            | Op::GetParameterDisplay
+            | Op::GetParameterType => true,
+            _ => false,
+        }
+    }
+}
+
 impl TryFrom<u32> for Op {
     type Error = ();
 

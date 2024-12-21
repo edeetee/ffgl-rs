@@ -15,7 +15,7 @@ ISF_LIB_FILES=(
 )
 
 deploy() {
-    LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" 2>&1)
+    LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" "$2" 2>&1)
     RESULT=$?
     if [ $RESULT -ne 0 ]; then
         if [ ! -z "$DEBUG" ]; then

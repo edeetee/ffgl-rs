@@ -49,13 +49,15 @@ impl io::Write for FFGLWriter {
 pub(crate) fn try_init_default_subscriber() -> Result<(), tracing_subscriber::util::TryInitError> {
     let env_filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
-        .from_env_lossy();
+        .from_env()
+        .expect("Failed to get env filter");
 
     //try set tracing logger
     tracing_subscriber::fmt()
         .with_writer(|| FFGLWriter)
         .without_time()
         .with_file(true)
+        // .with_span_events(FmtSpan::ENTER)
         .with_line_number(true)
         .with_env_filter(env_filter)
         .finish()
@@ -80,4 +82,4 @@ pub fn init_logger(logger: FFGLLogger) {
     }));
 }
 
-use tracing_subscriber::{filter::LevelFilter, util::SubscriberInitExt};
+use tracing_subscriber::{filter::LevelFilter, fmt::format::FmtSpan, util::SubscriberInitExt};

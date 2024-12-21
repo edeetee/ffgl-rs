@@ -39,6 +39,7 @@ pub fn handle_plugin_main<H: FFGLHandler + 'static>(
     instance_id: *mut handler::Instance<H::Instance>,
 ) -> FFGLVal {
     use crate::conversions::*;
+    let _span = tracing::span!(tracing::Level::TRACE, "plug", "fn" = function_code).entered();
     match Op::try_from(function_code) {
         Ok(function) => {
             tracing::trace!("Op::{function:?}");

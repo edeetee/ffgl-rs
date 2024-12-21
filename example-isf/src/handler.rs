@@ -53,10 +53,10 @@ impl FFGLHandler for IsfFFGLState {
     type NewInstanceError = IsfShaderLoadError;
 
     fn init() -> Self {
-        let span = span!(tracing::Level::TRACE, ISF_NAME);
-        let _ = span.enter();
-
         init_default_subscriber();
+
+        let span = span!(tracing::Level::TRACE, ISF_NAME);
+        let _span = span.enter();
 
         let info = isf::parse(ISF_SOURCE).unwrap();
         let shader_params: Vec<param::IsfShaderParam> = info
@@ -112,6 +112,8 @@ impl FFGLHandler for IsfFFGLState {
         tracing::trace!("ISF INFO: {info:#?}");
         tracing::trace!("ISF PARAMS: {params:#?}");
 
+        drop(_span);
+
         Self {
             source: ISF_SOURCE.to_string(),
             info,
@@ -122,17 +124,17 @@ impl FFGLHandler for IsfFFGLState {
     }
 
     fn param_info(&self, index: usize) -> &dyn ParamInfo {
-        let _ = self.span.enter();
+        let _span = self.span.enter();
         self.inputs.param_info(index)
     }
 
     fn num_params(&'static self) -> usize {
-        let _ = self.span.enter();
+        let _span = self.span.enter();
         self.inputs.num_params()
     }
 
     fn plugin_info(&'static self) -> info::PluginInfo {
-        let _ = self.span.enter();
+        let _span = self.span.enter();
         self.plugin_info.clone()
     }
 
@@ -140,7 +142,7 @@ impl FFGLHandler for IsfFFGLState {
         &'static self,
         inst_data: &ffgl_core::FFGLData,
     ) -> Result<Self::Instance, Self::NewInstanceError> {
-        let _ = self.span.enter();
+        let _span = self.span.enter();
         instance::IsfFFGLInstance::new(self, inst_data)
     }
 }

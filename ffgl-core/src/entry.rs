@@ -32,6 +32,8 @@ static mut DESCRIPTION: Option<CString> = None;
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
 static mut HANDLER: Option<Box<dyn Any>> = None;
 
+use tracing::debug_span;
+use tracing::trace_span;
 use tracing::{debug, info, trace};
 
 ///backtrace didn't seem to work. Maybe a problem with FFI. This is a hacky way to get the source
@@ -49,23 +51,6 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     mut input_value: FFGLVal,
     instance: Option<&mut handler::Instance<H::Instance>>,
 ) -> Result<FFGLVal, Error> {
-    let noisy_op = match function {
-        Op::ProcessOpenGL
-        | Op::SetBeatInfo
-        | Op::SetTime
-        | Op::GetParameterEvents
-        | Op::SetParameter
-        | Op::GetParameterDisplay
-        | Op::GetParameterType => true,
-        _ => false,
-    };
-
-    if !noisy_op {
-        debug!("Op::{function:?}({})", unsafe { input_value.num });
-    } else {
-        trace!("Op::{function:?}({})", unsafe { input_value.num });
-    }
-
     unsafe {
         if !INITIALIZED {
             INITIALIZED = true;
@@ -105,7 +90,19 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             );
         }
     }
+
     let info = unsafe { INFO.as_ref().context(e!("No info"))? };
+
+    let name = unsafe { std::str::from_utf8_unchecked(&info.name) };
+
+    let _span = if !function.is_noisy() {
+        debug_span!("entry", "fn" = ?function, "in" = unsafe { input_value.num }, name)
+    } else {
+        trace_span!("entry", "fn" = ?function, "in" = unsafe { input_value.num }, name)
+    }
+    .entered();
+
+    // let span = tracing::trace_span!()
 
     let handler = unsafe { &HANDLER }
         .as_ref()
@@ -352,7 +349,7 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
         _ => SuccessVal::Fail.into(),
     };
 
-    if !noisy_op {
+    if !function.is_noisy() {
         debug!("=> {}", unsafe { resp.num });
     } else {
         trace!("=> {}", unsafe { resp.num });
