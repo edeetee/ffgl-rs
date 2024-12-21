@@ -40,7 +40,7 @@ pub mod inputs;
 pub mod log;
 
 pub mod handler;
-pub mod handler_macro;
+pub mod plugin_main;
 
 pub mod parameters;
 
