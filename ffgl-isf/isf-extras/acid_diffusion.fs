@@ -15,7 +15,7 @@
     ],
     "PASSES": [
         {
-            "FLOAT": true,
+            "FLOAT": false,
             "PERSISTENT": true,
             "TARGET": "BufferA"
         },

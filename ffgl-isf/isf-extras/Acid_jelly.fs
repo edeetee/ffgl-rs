@@ -175,6 +175,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     uv *= zoom;
     uv /= dot(uv, uv);
     uv *= rotate(rotation * iTime / 10.f);
+    vec4 c = vec4(0.f);
     for(float i = 0.f; i < orbs; i++) {
         uv.x += sinMul * sin(uv.y * yMul + iTime * xSpeed) + cos(uv.y / yDivide - iTime);
         uv.y += cosMul * cos(uv.x * xMul - iTime * ySpeed) - sin(uv.x / xDivide - iTime);
@@ -183,9 +184,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float y = radius * cos(t + iTime / 10.f);
         vec2 position = vec2(x, y);
         vec3 color = cos(.02f * uv.x + .02f * uv.y * vec3(-2, 0, -1) * PI * 2.f / 3.f + PI * (float(i) / colorShift)) * 0.5f + 0.5f;
-        fragColor += .65f - orb(uv, orbSize, position, 1.f - color, contrast);
+        c += .65f - orb(uv, orbSize, position, 1.f - color, contrast);
     }
-    fragColor.a = 1.0f;
+    c.a = 1.0f;
+    fragColor = c;
 }
 
 void main(void) {

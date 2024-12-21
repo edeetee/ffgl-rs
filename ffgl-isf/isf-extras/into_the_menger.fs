@@ -9,17 +9,17 @@
     },
     "INPUTS": [
         {
-            "NAME": "iMouse",
-            "TYPE": "point2D"
+            "NAME": "animate",
+            "TYPE": "float"
         }
     ]
 }
 
 */
 
-const int MAX_RAY_STEPS = 24;
+const int MAX_RAY_STEPS = 30;
 const float RAY_STOP_TRESHOLD = 0.0001f;
-const int MENGER_ITERATIONS = 5;
+const int MENGER_ITERATIONS = 10;
 const float PI = 3.14159265359f;
 
 float maxcomp(vec2 v) {
@@ -79,15 +79,15 @@ vec3 cameraPath(float t) {
 }
 
 void main() {
+    float p = animate;
 
     vec2 screenPos = gl_FragCoord.xy / RENDERSIZE.xy * 2.0f - 1.0f;
-    vec2 mousePos = iMouse.xy / RENDERSIZE.xy * 2.0f - 1.0f;
-    float s = mod(TIME * 0.25f, 1.0f);
+    float s = mod(p, 1.0f);
     float t = 0.5f * (3.0f * s - s * s);
     vec3 cameraPos1 = vec3(0.0f, 0.0f, 0.0f);
     vec3 cameraPos2 = vec3(0.0f, 2.0f / 3.0f, 2.0f / 3.0f);
 
-    float mixAmount = sin(TIME) * 0.5f + 0.5f;
+    float mixAmount = sin(p * PI * 2) * 0.5f + 0.5f;
 
     vec3 cameraPos = cameraPath(t);
 	//cameraPos = vec3(0.0);
