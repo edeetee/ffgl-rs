@@ -261,6 +261,8 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
                 .into()
         }
 
+        Op::GetNumElementSeparators => (0 as u32).into(),
+
         // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
         Op::GetInfo => unsafe { INFO_STRUCT.as_ref().context(e!("No info"))?.into() },
 

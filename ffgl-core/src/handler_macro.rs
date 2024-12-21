@@ -43,7 +43,7 @@ macro_rules! plugin_main {
                     }
                 }
                 Err(err) => {
-                    $crate::tracing::error!(target: "plugin_main", "ERR: UNKNOWN OPCODE {functionCode}");
+                    $crate::tracing::warn!(target: "plugin_main", "ERR: UNKNOWN OPCODE {functionCode}");
                     SuccessVal::Fail.into()
                 }
             }

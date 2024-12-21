@@ -23,7 +23,7 @@ use glium::{
     BlitTarget, CapabilitiesSource, Frame, GlObject, Surface, Texture2d,
 };
 use std::fmt::Debug;
-use tracing::debug;
+use tracing::{debug, trace};
 
 mod gl_backend;
 pub mod glsl;
@@ -126,7 +126,7 @@ impl FFGLGlium {
             .map(|t| (t.HardwareWidth, t.HardwareHeight))
             .unwrap_or(out_res);
 
-        debug!("OUT RES: {out_res:?}");
+        trace!("OUT RES: {out_res:?}");
 
         let frame = Frame::new(self.ctx.clone(), out_res);
 

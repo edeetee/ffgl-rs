@@ -55,6 +55,7 @@ pub enum Op {
     GetThumbnail = FF_GET_THUMBNAIL,
 
     GetParameterEvents = FF_GET_PARAMETER_EVENTS,
+    GetNumElementSeparators = FF_GET_NUM_ELEMENT_SEPARATORS,
 
     GetParameterRange = FF_GET_RANGE,
     GetParameterVisibility = FF_GET_PRAMETER_VISIBILITY,

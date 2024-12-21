@@ -6,14 +6,19 @@ ISF_LIB_FILES=(
     "Dither-Bayer"
     "Radial Gradient"
     "Truchet Tile"
-    "CMYK Halftone-Lookaround"
+    # "CMYK Halftone-Lookaround"
     "CMYK Halftone"
     # "Noise" Customised
     # "v002-CRT-Mask" Haven't implemented the IMPORTED isf spec yet
 )
 
 deploy() {
-    $(dirname $0)/deploy_isf.sh "$1"
+    LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" 2>&1)
+    RESULT=$?
+    if [ $RESULT -ne 0 ]; then
+        echo "$LOG_OUTPUT"
+    fi
+    return $RESULT
 }
 
 for ISF_FILE in $(pwd $0)/example-isf/isf-extras/*.fs
