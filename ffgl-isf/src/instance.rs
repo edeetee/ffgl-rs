@@ -52,7 +52,12 @@ impl FFGLInstance for IsfFFGLInstance {
             _ => 1.0,
         };
 
-        let dest_res = inst_data.get_dimensions();
+        let dest_res = frame_data
+            .textures
+            .first()
+            .map(|t| (t.HardwareWidth, t.HardwareHeight))
+            .unwrap_or(inst_data.get_dimensions());
+
         let render_res = (
             max((dest_res.0 as f32 * scale) as u32, 1),
             max((dest_res.1 as f32 * scale) as u32, 1),

@@ -2,10 +2,22 @@
 
 set -e
 
+: ${LEVEL:=debug}
+: ${FIELD_X:=}
+
+# If $1 is empty, run bulk_deploy_isf.sh intead
+if [ -z "$1" ]; then
+    export RUST_LOG=$LEVEL
+    ./ffgl-isf/bulk_deploy_isf.sh
+    ./resolume.sh
+    exit 0
+fi
+
 # $1 may exclude the .fs extension
 # $1 may be a full path or just the filename
 # $1 may be a relative path to either the current directory or the ISF directory
 ISF_FILE_IN=$1
+
 
 FFGL_EXTRA_PATH=$(dirname "$(realpath "$0")")/ffgl-isf/isf-extras
 FFGL_LIB_PATH=/Library/Graphics/ISF
@@ -35,8 +47,6 @@ FILENAME="$(basename "$ISF_FILE" .fs)"
 export ISF_NAME="$PREFIX$(echo "$FILENAME" | cut -c1-16)"
 
 # DEBUG=1
-: ${LEVEL:=debug}
-: ${FIELD_X:=}
 export RUST_LOG="[entry{name=.*$ISF_NAME.*}$FIELD_X]=$LEVEL"
 
 ffgl-isf/deploy_isf.sh "$ISF_FILE"

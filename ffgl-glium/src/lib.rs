@@ -80,18 +80,28 @@ impl FFGLGlium {
             // make glium think it's drawing to the default framebuffer
         };
 
-        let rb = RenderBuffer::new(
-            &self.ctx,
-            glium::texture::UncompressedFloatFormat::U8U8U8U8,
-            render_res.0,
-            render_res.1,
-        )
-        .expect("RenderBuffer could not be created");
+        // let rb = RenderBuffer::new(
+        //     &self.ctx,
+        //     glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        //     render_res.0,
+        //     render_res.1,
+        // )
+        // .expect("RenderBuffer could not be created");
 
-        let mut fb =
-            SimpleFrameBuffer::new(&self.ctx, &rb).expect("SimpleFrameBuffer could not be created");
+        // // let tx = Texture2d::empty_with_format(
+        // //     &self.ctx,
+        // //     glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        // //     glium::texture::MipmapsOption::NoMipmap,
+        // //     render_res.0,
+        // //     render_res.1,
+        // // )
+        // // .expect("Texture2d could not be created");
+
+        // let mut fb =
+        //     SimpleFrameBuffer::new(&self.ctx, &rb).expect("SimpleFrameBuffer could not be created");
 
         // fb.clear_color(0.0, 0.0, 0.0, 0.0);
+        // let x = SimpleFrameBuffer::
 
         let textures: Vec<_> = frame_data
             .textures
@@ -113,11 +123,12 @@ impl FFGLGlium {
 
         let mut frame = Frame::new(self.ctx.clone(), out_res);
 
-        self.set_default_db_to_ffgl_fb(&frame_data);
-
         if let Err(err) = render_frame(&mut frame, textures) {
             tracing::error!("Render ERROR: {err:?}");
         }
+
+        // frame.clear_color(0.0, 0.0, 0.0, 0.0);
+        // self.set_default_db_to_ffgl_fb(&frame_data);
 
         // let empty = EmptyFrameBuffer::new(&self.ctx, render_res.0, render_res.1, None, None, false);
 
@@ -125,12 +136,6 @@ impl FFGLGlium {
         // let id = fb.get_id();
         // let id = rb.get_id();
         // fb.fill(&frame, glium::uniforms::MagnifySamplerFilter::Nearest);
-
-        let out_res = frame_data
-            .textures
-            .first()
-            .map(|t| (t.HardwareWidth, t.HardwareHeight))
-            .unwrap_or(out_res);
 
         // trace!("")
         trace!(?out_res, ?render_res, "RENDERED");
@@ -142,12 +147,17 @@ impl FFGLGlium {
         // let blit_target_size = output_res;
 
         // debug!("BLITTING {render_res:?} -> {blit_target_size:?}");
-        frame.finish().unwrap();
 
         unsafe {
+            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_data.host);
+
+            blit_fb(render_res, out_res);
+
             self.ctx.rebuild(self.backend.clone()).unwrap();
             // make glium think it's drawing to the default framebuffer
         };
+
+        frame.finish().unwrap();
 
         // unsafe {
         //     // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
