@@ -1,8 +1,5 @@
 use crate::shader_helper::*;
-use std::{
-    ffi::CString,
-    ptr::{self},
-};
+use std::ptr::{self};
 
 use ffgl_core::{handler::simplified::SimpleFFGLInstance, FFGLData, GLInput};
 use gl::{self, types::*};

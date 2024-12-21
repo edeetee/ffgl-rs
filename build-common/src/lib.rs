@@ -1,8 +1,8 @@
 use glsl::{
     parser::Parse,
-    syntax::{Identifier, NonEmpty, TranslationUnit, TypeQualifier},
+    syntax::TranslationUnit,
     transpiler::glsl::show_translation_unit,
-    visitor::{HostMut, Visitor, VisitorMut},
+    visitor::{HostMut, VisitorMut},
 };
 use glsl_120::Glsl120Mutator;
 use glsl_140plus::Glsl140PlusMutator;

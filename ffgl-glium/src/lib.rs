@@ -10,17 +10,15 @@
 //!
 //! I make assumptions about the OpenGL context inside the host. Bugs and crashes may occur. Testing infrastructure is required.
 //!
-use std::{any::Any, error::Error, fmt::Formatter, rc::Rc};
+use std::{error::Error, fmt::Formatter, rc::Rc};
 
 use ffgl_core::*;
 use glium::{
     backend::Context,
-    debug,
     framebuffer::{RenderBuffer, SimpleFrameBuffer},
     BlitTarget, CapabilitiesSource, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
-use tracing::{debug, field::debug};
 
 mod gl_backend;
 pub mod glsl;
