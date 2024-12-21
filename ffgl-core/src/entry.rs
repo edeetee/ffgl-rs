@@ -11,6 +11,7 @@ use crate::handler::{FFGLHandler, FFGLInstance};
 use crate::log::try_init_default_subscriber;
 use crate::parameters::ParamInfo;
 
+use core::slice;
 
 use std::{any::Any, ffi::CString};
 

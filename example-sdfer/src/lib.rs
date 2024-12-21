@@ -43,7 +43,7 @@ impl ParamInfo for SdferParams {
     }
 }
 
-static params: [SdferParams; 2] = [SdferParams::Res, SdferParams::Radius];
+static PARAMS: [SdferParams; 2] = [SdferParams::Res, SdferParams::Radius];
 
 fn process(
     texture: &Texture2d,
@@ -72,7 +72,7 @@ impl SimpleFFGLInstance for SdferInstance {
         Self {
             buffers: Default::default(),
             glium: FFGLGlium::new(inst_data),
-            inputs: params.iter().map(|p| (p.default_val())).collect(),
+            inputs: PARAMS.iter().map(|p| (p.default_val())).collect(),
         }
     }
 
@@ -86,12 +86,12 @@ impl SimpleFFGLInstance for SdferInstance {
     }
 
     fn draw(&mut self, inst_data: &ffgl_core::FFGLData, frame_data: ffgl_core::GLInput) {
-        let mut scale = self.inputs[params
+        let mut scale = self.inputs[PARAMS
             .iter()
             .position(|p| matches!(p, SdferParams::Res))
             .expect("No scale")];
 
-        let radius = self.inputs[params
+        let radius = self.inputs[PARAMS
             .iter()
             .position(|p| matches!(p, SdferParams::Radius))
             .expect("No radius")];
@@ -152,11 +152,11 @@ impl SimpleFFGLInstance for SdferInstance {
     }
 
     fn num_params() -> usize {
-        params.len()
+        PARAMS.len()
     }
 
     fn param_info(index: usize) -> &'static dyn ParamInfo {
-        params.param_info(index)
+        PARAMS.param_info(index)
     }
 
     fn get_param(&self, index: usize) -> f32 {
