@@ -126,6 +126,7 @@ impl FFGLGlium {
             .map(|t| (t.HardwareWidth, t.HardwareHeight))
             .unwrap_or(out_res);
 
+        // trace!("")
         trace!("OUT RES: {out_res:?}");
 
         let frame = Frame::new(self.ctx.clone(), out_res);
@@ -143,6 +144,11 @@ impl FFGLGlium {
 
         // debug!("BLITTING {render_res:?} -> {blit_target_size:?}");
         frame.finish().unwrap();
+
+        unsafe {
+            self.ctx.rebuild(self.backend.clone()).unwrap();
+            // make glium think it's drawing to the default framebuffer
+        };
 
         // unsafe {
         //     // gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+
+
 ISF_LIB_FILES=(
     "Channel Slide"
     "Dither-Bayer"
@@ -16,7 +18,9 @@ deploy() {
     LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" 2>&1)
     RESULT=$?
     if [ $RESULT -ne 0 ]; then
-        echo "$LOG_OUTPUT"
+        if [ ! -z "$DEBUG" ]; then
+            echo "$LOG_OUTPUT"
+        fi
     fi
     return $RESULT
 }
@@ -24,7 +28,7 @@ deploy() {
 for ISF_FILE in $(pwd $0)/example-isf/isf-extras/*.fs
 do
     echo "Deploying $ISF_FILE"
-    deploy "$ISF_FILE" || echo "Failed to deploy $ISF_FILE" || true
+    deploy "$ISF_FILE" || echo "ERROR deploying $ISF_FILE" || true
 done
 
 for ISF_FILE in "${ISF_LIB_FILES[@]}"
