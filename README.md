@@ -29,10 +29,10 @@ Please get in contact with me at [dev@edt.nz](mailto:dev@edt.nz) if you have any
 
 The following command will take an ISF file, compile it to a plugin and deploy it to the system plugin folder. It is a good example of the steps required to make a plugin work.
 
-`example_isf/deploy_isf.sh <isf_file>`
+`ffgl-isf/deploy_isf.sh <isf_file>`
 
 There also a bulk version of the script that will deploy all the ISF files in the example_isf folder and some from the system ISF directory.
-`example_isf/bulk_deploy_isf.sh`
+`ffgl-isf/bulk_deploy_isf.sh`
 
 ### Commands
 
