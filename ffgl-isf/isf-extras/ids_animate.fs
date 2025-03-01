@@ -71,6 +71,12 @@
       "DEFAULT": 1.0,
       "MIN": 0.0,
       "MAX": 1.0
+    },
+    {
+        "NAME": "noiseSource",
+        "LABEL": "Noise Source",
+        "TYPE": "float",
+        "DEFAULT": 0.5
     }
   ]
 }*/
@@ -122,7 +128,7 @@ void main() {
     // Only process if the pixel has some opacity
     if(inputColor.a > 0.001f) {
         // Generate noise based on ID, position, and progress-based offset
-        float noiseVal = valueNoise((uv + id * 10.0f) * noisePeriod + noiseOffset * 5.0f);
+        float noiseVal = valueNoise(mix(uv * 2.0f - 1.0f, vec2(0, id * 10.0f), noiseSource) * noisePeriod + noiseOffset * 5.0f);
 
         float combinedProgress = progress + id * loops + noiseVal * noiseAmplitude;
 
