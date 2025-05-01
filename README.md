@@ -67,10 +67,13 @@ I have integrated [tracing](https://docs.rs/tracing/latest/tracing/index.html) i
 `RUST_LOG=trace ./resolume.sh`
 
 The logs have structured data relating to your plugin:
-name: the name of the plugin
-id: the unique id of the plugin
-fn: the function enum that is being called
-in: the input data as int
+
+- name: the name of the plugin
+- id: the unique id of the plugin
+- fn: the function enum that is being called
+- in: the input data as int
+
+See `ffgl_run_resolume.sh` for an advanced example of how to filter the logs to only show the plugin you are working on.
 
 ## Extending
 
@@ -88,7 +91,7 @@ Use this to create a glium instance while inside an ffgl plugin
 
 Use this to create an isf plugin. Needs more work to be modular.
 
-## Future work
+# Future work
 
 - Get working on Windows
 - Embed any linked photos into the dylib along with the ISf source
@@ -96,6 +99,6 @@ Use this to create an isf plugin. Needs more work to be modular.
 - Label inputs
 - String inputs
 
-## Aims
+# Aims
 
 I want a simple wrapper to make plugins for VJ programs such as resolume and present the user a basic GL context that can be used however you want for fun &advanced FX/Sources. This could be a good starting point for other connections (Connect to a touchdesigner instance that can automatically pause and swap between COMPs)
