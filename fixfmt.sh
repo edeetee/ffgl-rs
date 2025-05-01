@@ -1,1 +1,1 @@
-cargo fix 
+cargo fix --workspace && cargo fmt --all
