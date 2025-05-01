@@ -17,7 +17,7 @@ pub struct SimpleFFGLHandler<T: SimpleFFGLInstance> {
 }
 
 ///Implement this trait for a plugin without any static state
-pub trait SimpleFFGLInstance: FFGLInstance {
+pub trait SimpleFFGLInstance: FFGLInstance + Send + Sync {
     fn new(inst_data: &FFGLData) -> Self;
 
     fn num_params() -> usize {

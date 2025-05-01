@@ -175,6 +175,21 @@ impl<T> From<&'static mut T> for FFGLVal {
         Self::from_static(a)
     }
 }
+impl<T> From<*const T> for FFGLVal {
+    fn from(a: *const T) -> Self {
+        Self {
+            ptr: a as *const c_void,
+        }
+    }
+}
+
+impl<T> From<*mut T> for FFGLVal {
+    fn from(a: *mut T) -> Self {
+        Self {
+            ptr: a as *const c_void,
+        }
+    }
+}
 
 impl FFGLVal {
     ///Only use for const variables that will stick around

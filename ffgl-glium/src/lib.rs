@@ -169,7 +169,7 @@ impl FFGLGlium {
     }
 
     // use this before a draw call to make glium think it's drawing to the default framebuffer
-    fn set_default_db_to_ffgl_fb(&self, frame_data: &GLInput<'_>) {
+    pub fn set_default_db_to_ffgl_fb(&self, frame_data: &GLInput<'_>) {
         self.ctx.swap_buffers().expect("swap_buffers failed");
         // actually draw to frame_data.host
         unsafe {

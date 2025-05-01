@@ -11,7 +11,6 @@ use glium::uniforms::UniformValue;
 use ffgl_core;
 
 use ffgl_core::handler::FFGLInstance;
-use glium::Surface;
 
 use std::cmp::max;
 use std::fmt::Formatter;

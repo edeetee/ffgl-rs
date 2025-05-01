@@ -11,6 +11,7 @@ use crate::handler::{FFGLHandler, FFGLInstance};
 use crate::log::try_init_default_subscriber;
 use crate::parameters::ParamInfo;
 
+use std::sync::OnceLock;
 use std::{any::Any, ffi::CString};
 
 use crate::conversions::*;
@@ -22,13 +23,14 @@ fn param<H: FFGLHandler>(handler: &'static H, index: FFGLVal) -> &'static dyn Pa
     handler.param_info(unsafe { index.num as usize })
 }
 
-static mut INITIALIZED: bool = false;
-static mut INFO: Option<info::PluginInfo> = None;
-static mut INFO_STRUCT: Option<PluginInfoStruct> = None;
-static mut ABOUT: Option<CString> = None;
-static mut DESCRIPTION: Option<CString> = None;
+static INFO: OnceLock<info::PluginInfo> = OnceLock::new();
+static INFO_STRUCT: OnceLock<PluginInfoStruct> = OnceLock::new();
+static ABOUT: OnceLock<CString> = OnceLock::new();
+static DESCRIPTION: OnceLock<CString> = OnceLock::new();
+
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
-static mut HANDLER: Option<Box<dyn Any>> = None;
+
+static HANDLER: OnceLock<Box<dyn Any + Send + Sync>> = OnceLock::new();
 
 use tracing::debug_span;
 use tracing::trace_span;
@@ -49,49 +51,37 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     mut input_value: FFGLVal,
     instance: Option<&mut handler::Instance<H::Instance>>,
 ) -> Result<FFGLVal, Error> {
-    unsafe {
-        if !INITIALIZED {
-            INITIALIZED = true;
-
-            HANDLER = Some(Box::new(H::init()));
-
+    let handler = HANDLER
+        .get_or_init(|| {
             let _ = try_init_default_subscriber();
+            Box::new(H::init())
+        })
+        .downcast_ref::<H>()
+        .context(e!("Handler type mismatch"))?;
 
-            let handler = &*HANDLER
-                .as_ref()
-                .context(e!("No handler"))?
-                .downcast_ref::<H>()
-                .context(e!("Handler incorrect type"))?;
+    // Initialize plugin info if not already initialized
+    let info = INFO.get_or_init(|| handler.plugin_info());
 
-            INFO = Some(handler.plugin_info());
-            let info = INFO.as_ref().context(e!("No info"))?;
-            ABOUT = Some(CString::new(info.about.clone())?);
-            DESCRIPTION = Some(CString::new(info.description.clone())?);
+    // Initialize about and description strings
+    let about =
+        ABOUT.get_or_init(|| CString::new(info.about.clone()).expect("Invalid about string"));
+    let description = DESCRIPTION.get_or_init(|| {
+        CString::new(info.description.clone()).expect("Invalid description string")
+    });
 
-            INFO_STRUCT = Some(info::plugin_info(
-                std::mem::transmute(&info.unique_id),
-                std::mem::transmute(&info.name),
-                info.ty,
-            ));
-
-            INFO_STRUCT_EXTENDED = Some(info::plugin_info_extended(
-                ABOUT.as_ref().context(e!("ABOUT not initialized"))?,
-                DESCRIPTION
-                    .as_ref()
-                    .context(e!("DESCRIPTION not initialized"))?,
-            ));
-
-            info!(
-                name = ?std::str::from_utf8(&info.name)?,
-                id = ?info.unique_id,
-                "INITIALIZED PLUGIN",
-            );
+    // Initialize info structs
+    let _info_struct = INFO_STRUCT.get_or_init(|| {
+        unsafe {
+            INFO_STRUCT_EXTENDED = Some(info::plugin_info_extended(about, description));
         }
-    }
+        info::plugin_info(
+            unsafe { std::mem::transmute(&info.unique_id) },
+            unsafe { std::mem::transmute(&info.name) },
+            info.ty,
+        )
+    });
 
-    let info = unsafe { INFO.as_ref().context(e!("No info"))? };
-
-    let name = unsafe { std::str::from_utf8_unchecked(&info.name) };
+    let name = std::str::from_utf8(&info.name).unwrap_or_default();
 
     let _span = if !function.is_noisy() {
         debug_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
@@ -99,14 +89,6 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
         trace_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
     }
     .entered();
-
-    // let span = tracing::trace_span!()
-
-    let handler = unsafe { &HANDLER }
-        .as_ref()
-        .context(e!("Handler not initialized"))?
-        .downcast_ref::<H>()
-        .context(e!("Handler type mismatch"))?;
 
     let resp = match function {
         Op::GetPluginCaps => {
@@ -258,15 +240,9 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
         Op::GetNumElementSeparators => (0 as u32).into(),
 
-        // Op::GetParameterGroup => param(instance, ffgl2::GetParameterGroupStruct).group.into(),
-        Op::GetInfo => unsafe { INFO_STRUCT.as_ref().context(e!("No info"))?.into() },
+        Op::GetInfo => INFO_STRUCT.get().context(e!("No info"))?.into(),
 
-        Op::GetExtendedInfo => unsafe {
-            INFO_STRUCT_EXTENDED
-                .as_ref()
-                .context(e!("No extended info"))?
-                .into()
-        },
+        Op::GetExtendedInfo => (&raw mut INFO_STRUCT_EXTENDED).into(),
 
         Op::InstantiateGL => {
             let viewport: &FFGLViewportStruct = unsafe { input_value.as_ref() };

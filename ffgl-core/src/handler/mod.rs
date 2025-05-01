@@ -38,7 +38,7 @@ pub trait FFGLInstance {
 
 ///This type is created once per plugin load.
 /// You can use it to store static state and create instances
-pub trait FFGLHandler {
+pub trait FFGLHandler: Send + Sync {
     type Instance: FFGLInstance;
     type NewInstanceError: Error + Send + Sync + 'static;
     // type Param: ParamInfo + 'static;

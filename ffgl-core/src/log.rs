@@ -5,10 +5,10 @@ use std::{
     borrow::Cow,
     ffi::{c_char, CString},
     io,
-    sync::RwLock,
+    sync::OnceLock,
 };
 
-static mut LOADING_LOGGER: std::sync::RwLock<Option<FFGLLogger>> = RwLock::new(None);
+static LOADING_LOGGER: OnceLock<FFGLLogger> = OnceLock::new();
 ///Type of the logging function the plugin can call
 #[doc(hidden)]
 pub type FFGLLogger = unsafe extern "C" fn(*const c_char) -> ();
@@ -29,7 +29,7 @@ impl io::Write for FFGLWriter {
             str = Cow::Owned(str.to_string().trim_end_matches('\n').to_string());
         }
 
-        if let Some(logger) = unsafe { *LOADING_LOGGER.read().unwrap() } {
+        if let Some(logger) = LOADING_LOGGER.get() {
             let str = CString::new(str.as_bytes()).unwrap();
 
             unsafe { logger(str.as_ptr()) };
@@ -75,7 +75,18 @@ pub fn init_default_subscriber() {
 ///Only called by the plugin loader
 #[doc(hidden)]
 pub fn init_logger(logger: FFGLLogger) {
-    unsafe { *LOADING_LOGGER.write().unwrap() = Some(logger) };
+    match LOADING_LOGGER.set(logger) {
+        Ok(_) => {}
+        Err(_) => {
+            unsafe {
+                logger(
+                    CString::new("FFGL logger already set, ignoring")
+                        .unwrap()
+                        .as_ptr(),
+                )
+            };
+        }
+    };
 
     std::panic::set_hook(Box::new(|cause| {
         tracing::error!("{}", cause);
