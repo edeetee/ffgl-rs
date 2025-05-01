@@ -36,6 +36,22 @@
             "MIN": 0.05,
             "MAX": 1.0,
             "LABEL": "Zoom"
+        },
+        {
+            "NAME": "waveCount",
+            "TYPE": "long",
+            "DEFAULT": 2,
+            "MIN": 1,
+            "MAX": 5,
+            "LABEL": "Wave Grid Size"
+        },
+        {
+            "NAME": "waveSpacing",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.5,
+            "MAX": 2.0,
+            "LABEL": "Wave Spacing"
         }
     ]
 }*/
@@ -51,7 +67,7 @@ float rand(vec2 co) {
 #define S(X,Y,period) color += sin(length(UVcoords + vec2(X,Y)*d2)*zoom)-.2
 
 void main() {
-    vec2 UVcoords = gl_FragCoord.xy / RENDERSIZE;
+    vec2 UVcoords = gl_FragCoord.xy;
     vec4 color = vec4(0.0f);
 
     vec2 id = ceil(UVcoords / SIZE);
@@ -67,20 +83,26 @@ void main() {
 
     //function to make color concentric sinewaves like water drop waves radiating from a pt:   
 
-    //make 5 wave machines where the color is added together on coordinates of pentagon:
-
-    //these dots are arranged in a + arrangement, one origin for on xy axes. 
-    //central wave machine on origin
+    // Central wave machine on origin
     S(0.0f, 0.0f, mouseX * 0.002f);
 
-    //4 other wave machines on axes
-    S(0, 1.0f * d2, d1);
-    S(0, -1.0f * d2, d1);
-    S(-1.0f * d2, -0.0f, d1);
-    S(1.0f * d2, 0.0f, d1);
-    S(2.0f * d2, 2.0f * d2, d1);
-    S(-2.0f * d2, -2.0f * d2, d1);
-    S(2.0f * d2, -2.0f * d2, d1);
-    S(-2.0f * d2, 2.0f * d2, d1);
+    // Convert waveCount to integer grid size
+    int gridSize = int(floor(waveCount));
+
+    // Loop through wave machines in a grid pattern
+    for(int x = -gridSize; x <= gridSize; x++) {
+        for(int y = -gridSize; y <= gridSize; y++) {
+            // Skip the center point (0,0) as we already rendered it
+            if(x == 0 && y == 0)
+                continue;
+
+            // Apply wave spacing factor
+            float xPos = float(x) * waveSpacing;
+            float yPos = float(y) * waveSpacing;
+
+            S(xPos, yPos, d1);
+        }
+    }
+
     gl_FragColor = color;
 }

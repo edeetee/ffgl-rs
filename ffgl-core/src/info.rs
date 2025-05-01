@@ -52,6 +52,26 @@ pub struct PluginInfo {
     pub description: String,
 }
 
+impl PluginInfo {
+    ///Converts to str, trimming null bytes
+    pub fn name_str(&self) -> &str {
+        let index_first_null = self
+            .name
+            .iter()
+            .position(|&x| x == 0)
+            .unwrap_or(self.name.len());
+
+        let slice = &self.name[..index_first_null];
+
+        std::str::from_utf8(slice).expect("Invalid UTF-8")
+    }
+
+    ///Converts the hash to a string, converting each character to a hex string
+    pub fn id_hash_str(&self) -> &str {
+        std::str::from_utf8(&self.unique_id).expect("Invalid UTF-8")
+    }
+}
+
 pub fn plugin_info(
     unique_id: &[i8; 4],
     name: &[i8; 16],

@@ -4,7 +4,7 @@ FFGL (Resolume & VDMX plugin) framework for rust.
 
 ![Screenshot](docs/screenshot.png)
 
-## Support
+# Support
 
 - ! Currently Macos only
   - Wouldn't require too much to get working on windows, someone just needs to test and create the build script
@@ -14,7 +14,7 @@ FFGL (Resolume & VDMX plugin) framework for rust.
 
 Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any questions!
 
-## Functionality
+# Functionality
 
 - Logging inside resolume
 - Handy scripts to build and run inside resolume
@@ -24,9 +24,18 @@ Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any
 - Compile error for invalid ISF code
 - GLSL translation
 
-## Usage
+# Usage
 
-### ISF Example
+## ISF
+
+I have mostly used this to create ISF plugins.
+
+#### Debug ISF on Resolume Arena
+
+This script intelligently finds the isf file you're talking about and runs it.
+It will automatically add RUST_LOG parameters to filter for the specific isf file you're working on.
+
+`ffgl_run_resolume.sh <isf_file\name>`
 
 The following command will take an ISF file, compile it to a plugin and deploy it to the system plugin folder. It is a good example of the steps required to make a plugin work.
 
@@ -38,31 +47,30 @@ There also a bulk version of the script that will deploy all the ISF files in th
 `ffgl-isf/bulk_deploy_isf.sh`
 Add the `-e` flag to only print the compilation errors.
 
-#### Debug & iterate script
+## General purpose scripts
 
-`ffgl_run_resolume.sh <isf_file\name>`
-
-This script intelligently finds the isf file you're talking about and runs it.
-It will automatically add RUST_LOG parameters to filter for the specific isf file you're working on.
-
-### Commands
-
-#### Deploy
+### Deploy
 
 Once a plugin has been built, it needs to be deployed to the system FFGL directory. On macos, it needs to be packaged as a 'Bundle' (A fancy folder).
 `deploy_bundle.sh <output_lib_name>`
 
-#### Run
+### Run
 
 `./resolume.sh`
 or
 `./vdmx.sh`
 
-#### Change log level
+### Change log level
 
 I have integrated [tracing](https://docs.rs/tracing/latest/tracing/index.html) into the plugin. To change the log level you can set the `RUST_LOG` environment variable. For example to set the log level to trace you can run
 
 `RUST_LOG=trace ./resolume.sh`
+
+The logs have structured data relating to your plugin:
+name: the name of the plugin
+id: the unique id of the plugin
+fn: the function enum that is being called
+in: the input data as int
 
 ## Extending
 

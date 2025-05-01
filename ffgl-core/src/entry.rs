@@ -27,9 +27,8 @@ static INFO: OnceLock<info::PluginInfo> = OnceLock::new();
 static INFO_STRUCT: OnceLock<PluginInfoStruct> = OnceLock::new();
 static ABOUT: OnceLock<CString> = OnceLock::new();
 static DESCRIPTION: OnceLock<CString> = OnceLock::new();
-
 static mut INFO_STRUCT_EXTENDED: Option<PluginExtendedInfoStruct> = None;
-
+static INITIALIZED: OnceLock<()> = OnceLock::new();
 static HANDLER: OnceLock<Box<dyn Any + Send + Sync>> = OnceLock::new();
 
 use tracing::debug_span;
@@ -51,16 +50,27 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
     mut input_value: FFGLVal,
     instance: Option<&mut handler::Instance<H::Instance>>,
 ) -> Result<FFGLVal, Error> {
+    INITIALIZED.get_or_init(|| {
+        // Initialize the logger
+        let _ = try_init_default_subscriber();
+    });
+
     let handler = HANDLER
-        .get_or_init(|| {
-            let _ = try_init_default_subscriber();
-            Box::new(H::init())
-        })
+        .get_or_init(|| Box::new(H::init()))
         .downcast_ref::<H>()
         .context(e!("Handler type mismatch"))?;
 
     // Initialize plugin info if not already initialized
     let info = INFO.get_or_init(|| handler.plugin_info());
+
+    let name = info.name_str();
+
+    let _span = if !function.is_noisy() {
+        debug_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
+    } else {
+        trace_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
+    }
+    .entered();
 
     // Initialize about and description strings
     let about =
@@ -80,15 +90,6 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
             info.ty,
         )
     });
-
-    let name = std::str::from_utf8(&info.name).unwrap_or_default();
-
-    let _span = if !function.is_noisy() {
-        debug_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
-    } else {
-        trace_span!("entry", "fn" = ?function, name, "in" = unsafe { input_value.num })
-    }
-    .entered();
 
     let resp = match function {
         Op::GetPluginCaps => {
@@ -256,7 +257,6 @@ pub fn default_ffgl_entry<H: FFGLHandler + 'static>(
 
             info!(
                 id = ?info.unique_id,
-                name = ?String::from_utf8_lossy(&info.name),
                 "Created INSTANCE:\n{instance:#?}",
             );
 
