@@ -73,7 +73,7 @@ void main() {
 	int j;
 
 	//	for each of the channels (i) of CMYK...
-	for(i = 0; i < 4; ++i) {
+	for(int i = 0; i < 4; ++i) {
 		//	figure out the rotation of the grid in radians
 		float rotRad = radians(gridRot[i]);
 		//	the grids are rotated counter-clockwise- to find the nearest dot, take the fragment pixel loc, 
@@ -114,7 +114,7 @@ void main() {
 		}
 
 		//	calcluate the size of the dots abov/below/to the left/right to see if they're overlapping
-		for(j = 0; j < 4; ++j) {
+		for(int j = 0; j < 4; ++j) {
 			gridDotLoc = vec2((gridOriginLoc.x + originOffsets[j].x) * gridSize, (gridOriginLoc.y + originOffsets[j].y) * gridSize) + vec2(gridSize / 2.0f);
 			renderDotLoc = ccTrans * gridDotLoc;
 			renderDotImageColorRGB = IMG_PIXEL(inputImage, renderDotLoc);

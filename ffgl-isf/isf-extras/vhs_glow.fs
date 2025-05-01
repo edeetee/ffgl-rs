@@ -11,6 +11,20 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "useNTSC",
+            "TYPE": "bool",
+            "DEFAULT": false,
+            "LABEL": "Use NTSC (otherwise PAL)"
+        },
+        {
+            "NAME": "progress",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.0,
+            "LABEL": "Effect Progress"
         }
     ],
     "PASSES": [
@@ -21,26 +35,26 @@
         }
     ]
 }
-
 */
 
 float iFrameRate = 60.f;
 float frameRatio = RENDERSIZE.x / RENDERSIZE.y;
 #define lerp mix
 
-#define NTSC 0
-#define PAL 1
-
 // Effect params
-#define VIDEO_STANDARD PAL
+const int NTSC = 0;
+const int PAL = 1;
+int VIDEO_STANDARD = useNTSC ? NTSC : PAL;
 
-#if VIDEO_STANDARD == NTSC
-const vec2 maxResLuminance = vec2(333.0f, 480.0f);
-const vec2 maxResChroma = vec2(40.0f, 480.0f);
-#elif VIDEO_STANDARD == PAL
-const vec2 maxResLuminance = vec2(335.0f, 576.0f);
-const vec2 maxResChroma = vec2(40.0f, 240.0f);
-#endif
+// Define both sets of resolution constants
+const vec2 ntscMaxResLuminance = vec2(333.0f, 480.0f);
+const vec2 ntscMaxResChroma = vec2(40.0f, 480.0f);
+const vec2 palMaxResLuminance = vec2(335.0f, 576.0f);
+const vec2 palMaxResChroma = vec2(40.0f, 240.0f);
+
+// Use conditionals to select the right values at runtime
+vec2 maxResLuminance = (VIDEO_STANDARD == NTSC) ? ntscMaxResLuminance : palMaxResLuminance;
+vec2 maxResChroma = (VIDEO_STANDARD == NTSC) ? ntscMaxResChroma : palMaxResChroma;
 
 const vec2 blurAmount = vec2(0.2f, 0.2f);
 
@@ -150,7 +164,9 @@ void main() {
         gl_FragColor = vec4(luminance, chroma, 1);
     } else if(PASSINDEX == 1) {
         vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
-        vec2 mouseNormalized = iMouse.xy / RENDERSIZE.xy;
+
+        // Use progress instead of mouse position for animation control
+        float effectThreshold = progress;
 
         vec2 resLuminance = min(maxResLuminance, vec2(RENDERSIZE));
         vec2 resChroma = min(maxResChroma, vec2(RENDERSIZE));
@@ -160,12 +176,12 @@ void main() {
 
         vec3 result;
 
-        if(uv.x > mouseNormalized.x) {
-            float luminance = textureBicubic(BufferB, uvLuminance).x;
-            vec2 chroma = textureBicubic(BufferB, uvChroma).yz;
+        if(uv.x > effectThreshold) {
+            float luminance = textureBicubic(BufferA, uvLuminance).x;
+            vec2 chroma = textureBicubic(BufferA, uvChroma).yz;
             result = vec3(luminance, chroma) * yiq2rgb;
         } else {
-            result = IMG_NORM_PIXEL(BufferA, mod(uv, 1.0f)).rgb;
+            result = IMG_NORM_PIXEL(inputImage, mod(uv, 1.0f)).rgb;
         }
 
         gl_FragColor = vec4(result, 1);

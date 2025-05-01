@@ -1,20 +1,21 @@
-/*
+/ *
 {
     "CATEGORIES": [
         "Automatically Converted",
         "Shadertoy"
     ],
     "DESCRIPTION": "Automatically converted from https://www.shadertoy.com/view/4sjSW1 by Dave_Hoskins.  Binary subdivision finds the surface really well with this fractal. Two light sources with shadows, and near surface glows. MOUSE X TO TIME WARP",
-    "IMPORTED": {
-        "iChannel0": {
-            "NAME": "iChannel0",
-            "PATH": "f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png"
-        }
-    },
     "INPUTS": [
         {
             "NAME": "animate",
             "TYPE": "float"
+        },
+        {
+            "NAME": "progress",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 1.0
         }
     ],
     "PASSES": [
@@ -27,14 +28,17 @@
         }
     ]
 }
-
-*/
+* e
 
 // Remnant X
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 // by David Hoskins.
 
 #define TAU  6.28318530718
+#define PI 3.14159
+#define CONTRAST 1.08
+#define SATURATION 1.5
+#define BRIGHTNESS 1.5
 
 float n1 = 0.0f;
 float n2 = 0.0f;
@@ -47,6 +51,37 @@ float p4 = 1.0e-24f;
 
 float gTime;
 float beat;
+
+// Stable hash functions to replace iChannel0 texture
+float hash1D(float p) {
+p = fract(p * 0.1031f);
+    p *= p + 33.33f;
+    p *= p + p;
+    return fract(p);
+}
+
+vec2 hash2D(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031f, 0.1030f, 0.0973f));
+    p3 += dot(p3, p3.yxz + 33.33f);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+float hash3D(vec3 p) {
+    p = fract(p * vec3(0.1031f, 0.1030f, 0.0973f));
+    p += dot(p, p.yxz + 33.33f);
+    return fract((p.x + p.y) * p.z);
+}
+
+// Stable noise function that doesn't require textures
+float stableNoise(in vec3 x) {
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0f - 2.0f * f);
+
+    float n = p.x + p.y * 157.0f + 113.0f * p.z;
+
+    return mix(mix(mix(hash1D(n + 0.0f), hash1D(n + 1.0f), f.x), mix(hash1D(n + 157.0f), hash1D(n + 158.0f), f.x), f.y), mix(mix(hash1D(n + 113.0f), hash1D(n + 114.0f), f.x), mix(hash1D(n + 270.0f), hash1D(n + 271.0f), f.x), f.y), f.z);
+}
 
 #define N(a, b) if(t > a){x = a; n = b;}
 #define K(a) if(t > a) x = a;
@@ -81,8 +116,6 @@ float Hash(float p) {
 // Thanks to boxplorer and the folks at 'Fractalforums.com'
 // HD Video:- https://www.youtube.com/watch?v=BjkK9fLXXo0
 
-// #define STEREO
-
 vec3 sunDir = normalize(vec3(0.35f, 0.1f, 0.3f));
 const vec3 sunColour = vec3(1.0f, .95f, .8f);
 
@@ -103,9 +136,7 @@ float Noise(in vec3 x) {
     vec3 f = fract(x);
     f = f * f * (3.0f - 2.0f * f);
 
-    vec2 uv = (p.xy + vec2(37.0f, 17.0f) * p.z) + f.xy;
-    vec2 rg = IMG_NORM_PIXEL(iChannel0, mod((uv + 0.5f) / 256.0f, 1.0f), -99.0f).yx;
-    return mix(rg.x, rg.y, f.z);
+    return stableNoise(x);
 }
 
 //----------------------------------------------------------------------------------------
@@ -152,8 +183,8 @@ vec3 Colour(vec3 pos, float sphereR) {
 
 //----------------------------------------------------------------------------------------
 vec3 GetNormal(vec3 pos, float distance) {
-    distance *= 0.001f + .0001f;
-    vec2 eps = vec2(distance, 0.0f);
+distance *= 0.001f + .0001f;
+vec2 eps = vec2(distance, 0.0f);
     vec3 nor = vec3(Map(pos + eps.xyy) - Map(pos - eps.xyy), Map(pos + eps.yxy) - Map(pos - eps.yxy), Map(pos + eps.yyx) - Map(pos - eps.yyx));
     return normalize(nor);
 }
@@ -186,7 +217,7 @@ float BinarySubdivision(in vec3 rO, in vec3 rD, vec2 t) {
 
 //----------------------------------------------------------------------------------------
 vec2 Scene(in vec3 rO, in vec3 rD, in vec2 fragCoord) {
-    float t = .05f + 0.05f * IMG_NORM_PIXEL(iChannel0, mod(fragCoord.xy / IMG_SIZE(iChannel0).xy, 1.0f)).y;
+    float t = .05f + 0.05f * hash1D(fragCoord.x + fragCoord.y * 113.0f);
     vec3 p = vec3(0.0f);
     float oldT = 0.0f;
     bool hit = false;
@@ -226,9 +257,6 @@ vec3 PostEffects(vec3 rgb, vec2 xy) {
 	// Gamma first...
 
 	// Then...
-	#define CONTRAST 1.08
-	#define SATURATION 1.5
-	#define BRIGHTNESS 1.5
     rgb = mix(vec3(.5f), mix(vec3(dot(vec3(.2125f, .7154f, .0721f), rgb * BRIGHTNESS)), rgb * BRIGHTNESS, SATURATION), CONTRAST);
 	// Noise...
 	//rgb = clamp(rgb+Hash(xy*TIME)*.1, 0.0, 1.0);
@@ -275,8 +303,6 @@ vec3 LightSource(vec3 spotLight, vec3 dir, float dis) {
     return vec3(.6f) * g;
 }
 
-#define PI 3.14159
-
 //----------------------------------------------------------------------------------------
 vec3 CameraPath(float t) {
     vec3 p = vec3(-.78f + 3.f * sin(TAU * 8 * t), .05f + 2.5f * sin(TAU * t + 1.3f), .05f + 3.5f * cos(TAU * t));
@@ -288,14 +314,10 @@ void main() {
     if(PASSINDEX == 0) {
     } else if(PASSINDEX == 1) {
 
-        float aTime = animate + TIME * 0.0001f;
+        float aTime = progress + animate + TIME * 0.0001f;
         gTime = TIME * 0.01f;
         vec2 xy = gl_FragCoord.xy / RENDERSIZE.xy;
         vec2 uv = (-1.0f + 2.0f * xy) * vec2(RENDERSIZE.x / RENDERSIZE.y, 1.0f);
-
-		#ifdef STEREO
-        float isRed = mod(gl_FragCoord.x + mod(gl_FragCoord.y, 2.0f), 2.0f);
-		#endif
 
         vec3 cameraPos = CameraPath(aTime);
         vec3 camTar = CameraPath(aTime + .01f);
@@ -309,10 +331,6 @@ void main() {
         vec3 cv = normalize(cross(cu, cw));
         cw = RotationMatrix(cv, sin(-aTime * TAU * 10) * .7f) * cw;
         vec3 dir = normalize(uv.x * cu + uv.y * cv + 1.3f * cw);
-
-		#ifdef STEREO
-        cameraPos += .008f * cu * isRed; // move camera to the right
-		#endif
 
         vec3 spotLight = CameraPath(gTime + .03f) + vec3(sin(gTime * 18.4f), cos(gTime * 17.98f), sin(gTime * 22.53f)) * .2f;
         vec3 col = vec3(0.0f);
@@ -346,11 +364,7 @@ void main() {
         col += vec3(pow(abs(ret.y), 2.f)) * vec3(.02f, .04f, .1f);
 
         col += LightSource(spotLight - cameraPos, dir, ret.x);
-        col = PostEffects(col, xy);	
-
-		#ifdef STEREO	
-        col *= vec3(isRed, 1.0f - isRed, 1.0f - isRed);	
-		#endif
+        col = PostEffects(col, xy);
 
         gl_FragColor = vec4(col, 1.0f);
     }

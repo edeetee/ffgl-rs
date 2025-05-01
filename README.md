@@ -9,9 +9,10 @@ FFGL (Resolume & VDMX plugin) framework for rust.
 - ! Currently Macos only
   - Wouldn't require too much to get working on windows, someone just needs to test and create the build script
 - FFGL 2 (resolume)
-- VDMX 5
+- VDMX 5 (Currently borked)
+- ISF Shader support
 
-Please get in contact with me at [dev@edt.nz](mailto:dev@edt.nz) if you have any questions!
+Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any questions!
 
 ## Functionality
 
@@ -20,7 +21,7 @@ Please get in contact with me at [dev@edt.nz](mailto:dev@edt.nz) if you have any
 - Example ISF plugin
   - Give an input ISF file and output an FFGL plugin
   - Quicker than using Wire for basic ISF shaders
-- Buildtime error for invalid ISF code
+- Compile error for invalid ISF code
 - GLSL translation
 
 ## Usage
@@ -31,8 +32,18 @@ The following command will take an ISF file, compile it to a plugin and deploy i
 
 `ffgl-isf/deploy_isf.sh <isf_file>`
 
+#### Bulk script
+
 There also a bulk version of the script that will deploy all the ISF files in the example_isf folder and some from the system ISF directory.
 `ffgl-isf/bulk_deploy_isf.sh`
+Add the `-e` flag to only print the compilation errors.
+
+#### Debug & iterate script
+
+`ffgl_run_resolume.sh <isf_file\name>`
+
+This script intelligently finds the isf file you're talking about and runs it.
+It will automatically add RUST_LOG parameters to filter for the specific isf file you're working on.
 
 ### Commands
 

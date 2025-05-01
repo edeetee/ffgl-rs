@@ -18,7 +18,6 @@ fi
 # $1 may be a relative path to either the current directory or the ISF directory
 ISF_FILE_IN=$1
 
-
 FFGL_EXTRA_PATH=$(dirname "$(realpath "$0")")/ffgl-isf/isf-extras
 FFGL_LIB_PATH=/Library/Graphics/ISF
 

@@ -31,14 +31,18 @@ ISF_LIB_FILES=(
 )
 
 deploy() {
-    LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" "$2" 2>&1)
+    LOG_OUTPUT=$(CARGO_TERM_COLOR=always $(dirname $0)/deploy_isf.sh "$1" "$2" 2>&1)
     RESULT=$?
     if [ $RESULT -ne 0 ]; then
-        echo "ERROR deploying $1"
+        echo ""
+        echo "========================================================"
+        echo "❌ ERROR deploying $1"
         echo "$LOG_OUTPUT"
+        echo "========================================================"
+        echo ""
         return $RESULT
     elif [ "$ERROR_LOGS_ONLY" = false ]; then
-        echo "Successfully deployed $1"
+        echo "✅ Successfully deployed $1"
     fi
 }
 

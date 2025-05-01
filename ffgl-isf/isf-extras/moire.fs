@@ -1,10 +1,3 @@
-// SaturdayShader Week 35 : Moirée
-// by Joseph Fiola (http://www.joefiola.com)
-// 2016-04-16
-
-// Based on "Hyper-lightweight2 XOR ..." Shadertoy by Fabrice NEYRET @FabriceNEYRET 
-// https://www.shadertoy.com/view/4slXWn
-
 /*{
   "CREDIT": "",
   "DESCRIPTION": "",
@@ -15,7 +8,7 @@
     {
       "NAME": "invert",
       "TYPE": "bool",
-      "DEFAULT": "0"
+      "DEFAULT": false
     },
     {
       "NAME": "zoom",
@@ -85,32 +78,39 @@
   ]
 }*/
 
+// SaturdayShader Week 35 : Moirée
+// by Joseph Fiola (http://www.joefiola.com)
+// 2016-04-16
+
+// Based on "Hyper-lightweight2 XOR ..." Shadertoy by Fabrice NEYRET @FabriceNEYRET 
+// https://www.shadertoy.com/view/4slXWn
+
 #define TWO_PI 6.28318530718
 
 mat2 rotate2d(float _angle) {
-    return mat2(cos(_angle), -sin(_angle), sin(_angle), cos(_angle));
+  return mat2(cos(_angle), -sin(_angle), sin(_angle), cos(_angle));
 }
 
 float f(float a, float b, vec2 uv) {
-    return sin(length(uv - vec2(cos(a) * amp, sin(b) * amp) * frequency) * details) * sharpen;
+  return sin(length(uv - vec2(cos(a) * amp, sin(b) * amp) * frequency) * details) * sharpen;
 }
 
 void main() {
 
-    float t = TIME * speed;
+  float t = TIME * speed;
 
-    vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
-    uv -= vec2(pos);
-    uv.x *= RENDERSIZE.x / RENDERSIZE.y;
+  vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
+  uv -= vec2(pos);
+  uv.x *= RENDERSIZE.x / RENDERSIZE.y;
 
-    uv = rotate2d(rotate * -TWO_PI) * uv;
-    uv *= zoom;
+  uv = rotate2d(rotate * -TWO_PI) * uv;
+  uv *= zoom;
 
-    float offset = 0.7f;
-    vec4 color = vec4(f(t, t, uv) * f(t * (offset * 2.0f), t * offset, uv));
+  float offset = 0.7f;
+  vec4 color = vec4(f(t, t, uv) * f(t * (offset * 2.0f), t * offset, uv));
 
-    if(invert)
-        color = color * -1.0f + 1.0f;
+  if(invert)
+    color = color * -1.0f + 1.0f;
 
-    gl_FragColor = vec4(color);
+  gl_FragColor = vec4(color);
 }

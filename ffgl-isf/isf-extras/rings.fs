@@ -44,7 +44,7 @@ float opSmoothIntersection(float d1, float d2, float k) {
     float h = clamp(0.5f - 0.5f * (d2 - d1) / k, 0.0f, 1.0f);
     return mix(d2, d1, h) + k * h * (1.0f - h);
 }
- 
+
 // sc = sin/cos of aperture
 vec3 sdgArc(in vec2 p, in vec2 sc, in float ra, in float rb) {
     vec2 q = p;
@@ -60,27 +60,26 @@ vec3 sdgArc(in vec2 p, in vec2 sc, in float ra, in float rb) {
         return vec3(abs(w) - rb, sign(w) * q / l);
     }
 }
- 
+
 float sdRing(in vec2 p) {
     return sdgArc(p, vec2(0.0f, 0.0f), radius, width).r;
 }
 
 vec4 points(int pointIndex) {
-	return IMG_PIXEL(inputPoints, vec2(pointIndex,0.5f)*IMG_SIZE(inputPoints));
+    return IMG_PIXEL(inputPoints, vec2(pointIndex, 0.5f) * IMG_SIZE(inputPoints));
 }
 
 void main() {
-	
+
     vec4 uv = isf_FragNormCoord;
- 
+
     float dist = sdRing(uv.xy + points(0).xy);
 
     for(int i = 1; i < IMG_SIZE(inputPoints).x; i++) {
         dist = opSmoothUnion(dist, sdRing(uv.xy + points(i).xy), 0.01f);
     }
- 
+
 	// float val = 1-step(width/2, dist);
 
     fragColor = vec4(dist);
 }
- 
