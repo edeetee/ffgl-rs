@@ -15,15 +15,11 @@ use std::{error::Error, fmt::Formatter, rc::Rc};
 use ffgl_core::*;
 use glium::{
     backend::Context,
-    debug,
-    framebuffer::{
-        DefaultFramebuffer, EmptyFrameBuffer, MultiOutputFrameBuffer, RenderBuffer,
-        SimpleFrameBuffer,
-    },
-    BlitTarget, CapabilitiesSource, Frame, GlObject, Surface, Texture2d,
+    framebuffer::{RenderBuffer, SimpleFrameBuffer},
+    BlitTarget, CapabilitiesSource, Frame, Surface, Texture2d,
 };
 use std::fmt::Debug;
-use tracing::{debug, trace};
+use tracing::trace;
 
 mod gl_backend;
 pub mod glsl;

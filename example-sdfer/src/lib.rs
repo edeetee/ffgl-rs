@@ -8,7 +8,6 @@ use ffgl_core::{
 };
 use ffgl_glium::FFGLGlium;
 use glium::{
-    framebuffer::{RenderBuffer, SimpleFrameBuffer},
     texture::{RawImage2d, Texture2dDataSink},
     Surface, Texture2d,
 };

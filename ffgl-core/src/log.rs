@@ -1,7 +1,6 @@
 //! Used to connect the internal FFGL logging system to your rust code.
 //!
 
-use core::str;
 use std::{
     borrow::Cow,
     ffi::{c_char, CString},
@@ -17,7 +16,7 @@ pub type FFGLLogger = unsafe extern "C" fn(*const c_char) -> ();
 struct FFGLWriter;
 
 impl io::Write for FFGLWriter {
-    fn write(&mut self, mut buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let mut str = String::from_utf8_lossy(buf);
 
         //escape nulls
@@ -83,8 +82,4 @@ pub fn init_logger(logger: FFGLLogger) {
     }));
 }
 
-use tracing_subscriber::{
-    filter::LevelFilter,
-    fmt::format::{Compact, FmtSpan},
-    util::SubscriberInitExt,
-};
+use tracing_subscriber::{filter::LevelFilter, util::SubscriberInitExt};

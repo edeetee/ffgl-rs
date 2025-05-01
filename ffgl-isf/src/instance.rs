@@ -6,8 +6,6 @@ use crate::util::MultiUniforms;
 
 use ffgl_core::parameters::builtin::OverlayParams;
 use ffgl_core::parameters::handler::ParamValueHandler;
-use glium::framebuffer::RenderBuffer;
-use glium::framebuffer::SimpleFrameBuffer;
 use glium::uniforms::UniformValue;
 
 use ffgl_core;

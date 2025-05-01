@@ -5,7 +5,7 @@
 
 use super::FFGLHandler;
 
-use crate::parameters::{ParamInfo};
+use crate::parameters::ParamInfo;
 
 use crate::{FFGLData, GLInput};
 
