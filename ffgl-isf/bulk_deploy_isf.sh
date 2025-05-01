@@ -1,7 +1,19 @@
 #!/bin/bash
 set -e
 
-
+# Process command line arguments
+ERROR_LOGS_ONLY=false
+while getopts "e" opt; do
+  case $opt in
+    e)
+      ERROR_LOGS_ONLY=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
 
 ISF_LIB_FILES=(
     "Channel Slide"
@@ -22,21 +34,26 @@ deploy() {
     LOG_OUTPUT=$($(dirname $0)/deploy_isf.sh "$1" "$2" 2>&1)
     RESULT=$?
     if [ $RESULT -ne 0 ]; then
-        if [ ! -z "$DEBUG" ]; then
-            echo "$LOG_OUTPUT"
-        fi
+        echo "ERROR deploying $1"
+        echo "$LOG_OUTPUT"
+        return $RESULT
+    elif [ "$ERROR_LOGS_ONLY" = false ]; then
+        echo "Successfully deployed $1"
     fi
-    return $RESULT
 }
 
 for ISF_FILE in $(pwd $0)/ffgl-isf/isf-extras/*.fs
 do
-    echo "Deploying $ISF_FILE"
-    deploy "$ISF_FILE" || echo "ERROR deploying $ISF_FILE" || true
+    if [ "$ERROR_LOGS_ONLY" = false ]; then
+        echo "Deploying $ISF_FILE"
+    fi
+    deploy "$ISF_FILE" || true
 done
 
 for ISF_FILE in "${ISF_LIB_FILES[@]}"
 do
-    echo "Deploying $ISF_FILE"
-    deploy "/Library/Graphics/ISF/$ISF_FILE.fs" "v "
+    if [ "$ERROR_LOGS_ONLY" = false ]; then
+        echo "Deploying $ISF_FILE"
+    fi
+    deploy "/Library/Graphics/ISF/$ISF_FILE.fs" "v " || true
 done

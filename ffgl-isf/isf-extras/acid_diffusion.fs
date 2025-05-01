@@ -11,6 +11,62 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "diffusionSpeed",
+            "TYPE": "float",
+            "DEFAULT": 3.0,
+            "MIN": 0.1,
+            "MAX": 10.0,
+            "LABEL": "Diffusion Speed"
+        },
+        {
+            "NAME": "decayRate",
+            "TYPE": "float",
+            "DEFAULT": 0.002,
+            "MIN": 0.0,
+            "MAX": 0.01,
+            "LABEL": "Decay Rate"
+        },
+        {
+            "NAME": "noiseAmount",
+            "TYPE": "float",
+            "DEFAULT": 0.0025,
+            "MIN": 0.0,
+            "MAX": 0.01,
+            "LABEL": "Noise Amount"
+        },
+        {
+            "NAME": "reactionStrength",
+            "TYPE": "float",
+            "DEFAULT": 0.145,
+            "MIN": 0.01,
+            "MAX": 0.5,
+            "LABEL": "Reaction Strength"
+        },
+        {
+            "NAME": "colorContrast",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 5.0,
+            "LABEL": "Color Contrast"
+        },
+        {
+            "NAME": "colorSaturation",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 3.0,
+            "LABEL": "Color Saturation"
+        },
+        {
+            "NAME": "progress",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "LABEL": "Progress"
         }
     ],
     "PASSES": [
@@ -20,6 +76,7 @@
             "TARGET": "BufferA"
         },
         {
+            
         }
     ]
 }
@@ -152,17 +209,17 @@ void main() {
 	    // that the following few lines are simply putting it into effect.
 
 	    // Gradient of the blurred pixels from the previous frame.
-        vec2 lap = vec2(tx(uv + e.xy * pwr).y - tx(uv - e.xy * pwr).y, tx(uv + e.yx * pwr).y - tx(uv - e.yx * pwr).y);//
+        vec2 lap = vec2(tx(uv + e.xy * pwr).y - tx(uv - e.xy * pwr).y, tx(uv + e.yx * pwr).y - tx(uv - e.yx * pwr).y);
 
 	    // Add some diffusive expansion, scaled down to the order of a pixel width.
-        uv = uv + lap * pw * 3.0f; 
+        uv = uv + lap * pw * diffusionSpeed; 
 
 	    // Stochastic decay. Ie: A differention equation, influenced by noise.
 	    // You need the decay, otherwise things would keep increasing, which in this case means a white screen.
-        float newReactDiff = tx(uv).x + (noise.z - 0.5f) * 0.0025f - 0.002f; 
+        float newReactDiff = tx(uv).x + (noise.z - 0.5f) * noiseAmount - decayRate; 
 
 	    // Reaction-diffusion.
-        newReactDiff += dot(tx(uv + (noise.xy - 0.5f) * pw).xy, vec2(1, -1)) * 0.145f; 
+        newReactDiff += dot(tx(uv + (noise.xy - 0.5f) * pw).xy, vec2(1, -1)) * reactionStrength; 
 
 	    // Storing the reaction diffusion value in the X channel, and avgReactDiff (the blurred pixel value) 
 	    // in the Y channel. However, for the first few frames, we add some noise. Normally, one frame would 
@@ -178,21 +235,26 @@ void main() {
     // Read in the blurred pixel value. There's no rule that says you can't read in the
     // value in the "X" channel, but blurred stuff is easier to bump, that's all.
         float c = 1.f - IMG_NORM_PIXEL(BufferA, mod(uv, 1.0f)).y; 
+    // Apply contrast adjustment
+        c = pow(c, colorContrast);
+
     // Reading in the same at a slightly offsetted position. The difference between
     // "c2" and "c" is used to provide the highlighting.
         float c2 = 1.f - IMG_NORM_PIXEL(BufferA, mod(uv + .5f / RENDERSIZE.xy, 1.0f)).y;
+        c2 = pow(c2, colorContrast);
 
     // Color the pixel by mixing two colors in a sinusoidal kind of pattern.
-    //
-        float pattern = -cos(uv.x * 0.75f * 3.14159f - 0.9f) * cos(uv.y * 1.5f * 3.14159f - 0.75f) * 0.5f + 0.5f;
+    // Now affected by progress parameter for animation
+        float patternFreq = mix(0.75f, 2.0f, progress);
+        float pattern = -cos(uv.x * patternFreq * 3.14159f - 0.9f) * cos(uv.y * patternFreq * 2.0f * 3.14159f - 0.75f) * 0.5f + 0.5f;
     //
     // Blue and gold, for an abstract sky over a... wheat field look. Very artsy. :)
         vec3 col = vec3(c * 1.5f, pow(c, 2.25f), pow(c, 6.f));
         col = mix(col, col.zyx, clamp(pattern - .2f, 0.f, 1.f));
 
-    // Extra color variations.
-    //vec3 col = mix(vec3(c*1.2, pow(c, 8.), pow(c, 2.)), vec3(c*1.3, pow(c, 2.), pow(c, 10.)), pattern );
-	//vec3 col = mix(vec3(c*1.3, c*c, pow(c, 10.)), vec3(c*c*c, c*sqrt(c), c), pattern );
+    // Apply saturation control (adjust color saturation using luminance as reference)
+        float luminance = dot(col, vec3(0.299f, 0.587f, 0.114f));
+        col = mix(vec3(luminance), col, colorSaturation);
 
     // Adding the highlighting. Not as nice as bump mapping, but still pretty effective.
         col += vec3(.6f, .85f, 1.f) * max(c2 * c2 - c * c, 0.f) * 12.f;

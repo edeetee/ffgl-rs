@@ -3,7 +3,9 @@ use std::{str::FromStr, time::Instant};
 use ffgl_glium::{glsl::get_best_transpilation_target, texture::new_texture_2d};
 use glium::{
     backend::Facade,
-    uniforms::{AsUniformValue, UniformValue, Uniforms}, DrawError, Surface, Texture2d,
+    texture::{MipmapsOption, UncompressedFloatFormat},
+    uniforms::{AsUniformValue, UniformValue, Uniforms},
+    DrawError, Surface, Texture2d,
 };
 use isf::{Isf, Pass};
 use tracing::debug;
@@ -45,6 +47,29 @@ fn parse_or_default<T: FromStr>(text: &Option<String>, default: T) -> T {
         .unwrap_or(default)
 }
 
+fn texture_from_pass(
+    facade: &impl Facade,
+    pass: &Pass,
+    res: (u32, u32),
+) -> Result<Texture2d, PassParseError> {
+    let size = calculate_pass_size(pass, res);
+
+    let texture = Texture2d::empty_with_format(
+        facade,
+        if pass.float {
+            UncompressedFloatFormat::F32F32F32F32
+        } else {
+            UncompressedFloatFormat::U8U8U8U8
+        },
+        MipmapsOption::NoMipmap,
+        size.0,
+        size.1,
+    )
+    .expect("Failed to create texture");
+
+    Ok(texture)
+}
+
 fn calculate_pass_size(pass: &Pass, (width, height): (u32, u32)) -> (u32, u32) {
     (
         parse_or_default(&pass.width, width),
@@ -58,17 +83,15 @@ impl PassTexture {
         pass: Pass,
         res: (u32, u32),
     ) -> Result<PassTexture, PassParseError> {
-        let size = calculate_pass_size(&pass, res);
+        let texture = texture_from_pass(facade, &pass, res).expect("Failed to create texture");
 
-        Ok(Self {
-            pass,
-            texture: new_texture_2d(facade, size).unwrap(),
-        })
+        Ok(Self { pass, texture })
     }
 
     pub fn update_size(&mut self, facade: &impl Facade, size: (u32, u32)) {
-        let size = calculate_pass_size(&self.pass, size);
-        let new_texture = new_texture_2d(facade, size).unwrap();
+        let new_texture =
+            texture_from_pass(facade, &self.pass, size).expect("Failed to create texture");
+
         self.texture.as_surface().fill(
             &new_texture.as_surface(),
             glium::uniforms::MagnifySamplerFilter::Nearest,
@@ -106,7 +129,6 @@ impl IsfShader {
             prev_frame_inst: now,
             frame_count: 0,
             passes,
-            // res
         })
     }
 
@@ -139,12 +161,14 @@ impl IsfShader {
         if self.passes.is_empty() {
             self.frag.draw(surface, &uniforms)?;
         } else {
-            let filter = glium::uniforms::MagnifySamplerFilter::Nearest;
-
             for pass_tex in &self.passes {
+                if pass_tex.pass.target.is_none() {
+                    self.frag.draw(surface, &uniforms)?;
+                } else {
+                    self.frag
+                        .draw(&mut pass_tex.texture.as_surface(), &uniforms)?;
+                }
                 uniforms.pass_index += 1;
-                self.frag.draw(surface, &uniforms)?;
-                surface.fill(&pass_tex.texture.as_surface(), filter);
             }
         }
 
