@@ -5,7 +5,7 @@ use glium::{
     Program, ProgramCreationError, Smooth, Surface, VertexBuffer,
 };
 
-use crate::util::{GlProgramCreationError, MultiUniforms, ToGlCreationError};
+use crate::util::{GlProgramCreationError, MultiUniforms};
 #[derive(Debug)]
 pub struct FullscreenFrag {
     pub verts: VertexBuffer<VertexAttr>,
@@ -32,19 +32,23 @@ impl FullscreenFrag {
     ) -> Result<Self, GlProgramCreationError> {
         let vert_buffer = new_fullscreen_buffer(facade).unwrap();
 
+        let transpilation_target = get_best_transpilation_target(facade).ok_or_else(|| {
+            GlProgramCreationError::new(
+                ProgramCreationError::CompilationNotSupported,
+                frag.to_string(),
+                None,
+            )
+        })?;
+
         let program = Program::from_source(
             facade,
-            &transform_glsl(
-                FULLSCREEN_VERT_SHADER,
-                get_best_transpilation_target(facade).ok_or(
-                    ProgramCreationError::CompilationNotSupported
-                        .to_gl_creation_error(frag.to_string()),
-                )?,
-            ),
+            &transform_glsl(FULLSCREEN_VERT_SHADER, transpilation_target),
             frag,
             None,
         )
-        .map_err(|e| e.to_gl_creation_error(frag.to_string()))?;
+        .map_err(|e| {
+            GlProgramCreationError::new(e, frag.to_string(), Some(transpilation_target))
+        })?;
 
         Ok(Self {
             params,

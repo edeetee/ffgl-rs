@@ -1,3 +1,4 @@
+use build_common::GlslVersion;
 use glium::{
     uniforms::{AsUniformValue, UniformValue, Uniforms},
     ProgramCreationError,
@@ -34,23 +35,21 @@ impl<'b, T: Uniforms> Uniforms for MultiUniforms<'b, T> {
     }
 }
 
-pub trait ToGlCreationError {
-    fn to_gl_creation_error(self, shader_source: String) -> GlProgramCreationError;
-}
-
-impl ToGlCreationError for ProgramCreationError {
-    fn to_gl_creation_error(self, shader_source: String) -> GlProgramCreationError {
-        GlProgramCreationError {
-            shader_source,
-            inner: self,
-        }
-    }
-}
-
 #[derive(Error)]
 pub struct GlProgramCreationError {
     shader_source: String,
     pub inner: ProgramCreationError,
+    pub target: Option<GlslVersion>,
+}
+
+impl GlProgramCreationError {
+    pub fn new(inner: ProgramCreationError, source: String, target: Option<GlslVersion>) -> Self {
+        Self {
+            shader_source: source,
+            inner,
+            target,
+        }
+    }
 }
 
 impl std::fmt::Debug for GlProgramCreationError {
@@ -67,11 +66,12 @@ impl std::fmt::Debug for GlProgramCreationError {
 impl std::fmt::Display for GlProgramCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.inner {
-            glium::ProgramCreationError::CompilationError(source, shader_type) => {
+            glium::ProgramCreationError::CompilationError(error, shader_type) => {
                 write!(
                     f,
-                    "CompilationError for {shader_type:?} (\n{source})",
-                    source = source.replace("\\n", "\n")
+                    "CompilationError for {shader_type:?}: (\n{error})\n({source})",
+                    error = error.replace("\\n", "\n"),
+                    source = self.shader_source.replace("\\n", "\n")
                 )
             }
             glium::ProgramCreationError::LinkingError(source) => {

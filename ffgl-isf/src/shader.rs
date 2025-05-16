@@ -214,13 +214,13 @@ impl<U: Uniforms> Uniforms for IsfUniforms<'_, U> {
 
 #[derive(Error, Debug)]
 pub enum IsfShaderLoadError {
-    #[error("Load error {0}")]
+    #[error("Load error")]
     IoError(#[from] std::io::Error),
 
-    #[error("Compile error {0}")]
+    #[error("Compile error")]
     CompileError(#[from] GlProgramCreationError),
 
-    #[error("Parse error {0}")]
+    #[error("Parse error")]
     PassParseError(#[from] PassParseError),
 
     #[error("No supported GLSL version error")]

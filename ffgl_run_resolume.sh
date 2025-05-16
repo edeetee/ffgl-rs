@@ -50,4 +50,20 @@ export RUST_LOG="[entry{name=.*$ISF_NAME.*}$FIELD_X]=$LEVEL"
 
 ffgl-isf/deploy_isf.sh "$ISF_FILE"
 echo "RUST_LOG=$RUST_LOG"
+
+# Check arguments for the vdmx flag
+RUN_VDMX=0
+for arg in "$@"; do
+    if [ "$arg" == "--vdmx" ]; then
+        RUN_VDMX=1
+        break
+    fi
+done
+
+# If vdmx flag is present, run vdmx.sh and exit
+if [ "$RUN_VDMX" -eq 1 ]; then
+        ./vdmx.sh
+        exit 0
+fi
+
 ./resolume.sh

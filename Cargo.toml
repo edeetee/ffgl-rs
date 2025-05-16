@@ -12,7 +12,7 @@ members = [
     "ffgl-core",
     "ffgl-isf",
     "build-common",
-    "example-sdfer",
+    "example-sdfer", "shadertoy",
 ]
 default-members = ["ffgl-core"]
 

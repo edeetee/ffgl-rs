@@ -1,4 +1,4 @@
-/ *
+/*
 {
     "CATEGORIES": [
         "Automatically Converted",
@@ -28,7 +28,7 @@
         }
     ]
 }
-* e
+*/
 
 // Remnant X
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
@@ -54,7 +54,7 @@ float beat;
 
 // Stable hash functions to replace iChannel0 texture
 float hash1D(float p) {
-p = fract(p * 0.1031f);
+    p = fract(p * 0.1031f);
     p *= p + 33.33f;
     p *= p + p;
     return fract(p);
@@ -183,8 +183,8 @@ vec3 Colour(vec3 pos, float sphereR) {
 
 //----------------------------------------------------------------------------------------
 vec3 GetNormal(vec3 pos, float distance) {
-distance *= 0.001f + .0001f;
-vec2 eps = vec2(distance, 0.0f);
+    distance *= 0.001f + .0001f;
+    vec2 eps = vec2(distance, 0.0f);
     vec3 nor = vec3(Map(pos + eps.xyy) - Map(pos - eps.xyy), Map(pos + eps.yxy) - Map(pos - eps.yxy), Map(pos + eps.yyx) - Map(pos - eps.yyx));
     return normalize(nor);
 }
