@@ -27,8 +27,13 @@ fn main() {
 
             clang_args_ffgl.extend(&extra_clang_args);
             clang_args_ffgl2.extend(&extra_clang_args);
+        } else if #[cfg(target_os = "windows")] {
+            println!("cargo:rustc-link-lib=opengl32");
+            // Add linker argument for bindgen
+            let extra_clang_args = vec!["-lopengl32"];
+            clang_args_ffgl.extend(&extra_clang_args);
+            clang_args_ffgl2.extend(&extra_clang_args);
         }
-
     }
 
     dbg!(&clang_args_ffgl);
