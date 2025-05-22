@@ -11,7 +11,7 @@ const PREFIX_140: &'static str = include_str!("isf_prefix_140.glsl");
 
 use isf::Isf;
 
-use crate::{translation_unit_to_string, GlslVersion};
+use crate::{translation_unit_to_string, DisplayResult, GlslVersion};
 
 struct UniformTextureSizeMutator;
 
@@ -68,7 +68,16 @@ pub fn compile_isf_fragment(def: &Isf, source: &str, glsl_version: GlslVersion) 
 
     let source = format!("{ver_prefix}\n{prefix}\n{source}");
 
-    let mut shader = ShaderStage::parse(source).expect("Failed to parse source");
+    let mut shader = ShaderStage::parse(source).unwrap_or_else(|e| {
+        println!("Failed to parse compiled isf shader: {e}");
+
+        if e.info.contains("#define") && e.info.contains("expected '}', found #") {
+            println!("?! '#define' preprocessors are not supported outside of the global scope");
+            println!("?! Ensure that all #define directives are outside of functions");
+        }
+
+        panic!();
+    });
 
     shader.visit_mut(&mut UniformTextureSizeMutator);
 

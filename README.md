@@ -24,6 +24,40 @@ Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any
 - Compile error for invalid ISF code
 - GLSL translation
 
+# Issues
+
+## Please submit any issues you find to the [issues page](https://github.com/edeetee/ffgl-rs/issues)
+
+## Known issues:
+
+VDMX 5 is currently broken
+
+Windows is not supported
+
+<details>
+<summary>Using a #define macro outside global scope is not supported</summary>
+
+### From the glsl parser changelog:
+
+### 0.13
+
+> Wed 21st of November 2018
+
+[...]
+
+- The `#define` preprocessor pragma is now supported in a limited form (it can only be used in
+  the global scope).
+
+</details>
+
+# Installation
+
+## macOS
+
+1. Install [rust](https://www.rustup.rs/): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+2. Install xcode build tools: `xcode-select --install`
+3. May need to accept the xcode license: `sudo xcodebuild -license`
+
 # Usage
 
 ## ISF
@@ -59,6 +93,10 @@ Once a plugin has been built, it needs to be deployed to the system FFGL directo
 `./resolume.sh`
 or
 `./vdmx.sh`
+
+### Validating ISF
+
+use the `ffgl-isf/validate_isf.sh` script to validate an ISF file. It will print out any errors in the code.
 
 ### Change log level
 
