@@ -2,7 +2,18 @@
 
 FFGL (Resolume & VDMX plugin) framework for rust.
 
-![Screenshot](docs/screenshot.png)
+<table>
+<tr>
+<td width="50%">
+<img src="docs/screenshot.png" alt="macOS Screenshot" width="100%">
+<p align="center"><em>macOS</em></p>
+</td>
+<td width="50%">
+<img src="docs/screenshot_win.PNG" alt="Windows Screenshot" width="100%">
+<p align="center"><em>Windows</em></p>
+</td>
+</tr>
+</table>
 
 # Support
 
