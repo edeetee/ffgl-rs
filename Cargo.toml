@@ -32,4 +32,8 @@ tracing = { version = "0.1.40", features = ["log"] }
 anyhow = "1.0.79"
 
 [profile.release]
-panic = 'abort'
+debug = false
+# strip = true
+# lto = true
+# codegen-units = 1
+panic = "abort"
