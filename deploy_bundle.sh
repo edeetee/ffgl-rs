@@ -12,12 +12,18 @@ case "$(uname -s)" in
     Darwin*)
         PLATFORM="macos"
         LIB_PATH="target/$PROFILE/lib$LIB_NAME.dylib"
-        FFGL_DIRS="$HOME/Library/Graphics/FreeFrame Plug-Ins $HOME/Documents/Resolume Arena/Extra Effects"
+        FFGL_DIRS=(
+            "$HOME/Library/Graphics/FreeFrame Plug-Ins"
+            "$HOME/Documents/Resolume Arena/Extra Effects"
+        )
         ;;
     CYGWIN*|MINGW32*|MINGW64*|MSYS*)
         PLATFORM="windows"
         LIB_PATH="target/$PROFILE/$LIB_NAME.dll"
-        FFGL_DIRS="$USERPROFILE/Documents/Resolume Arena/Extra Effects $APPDATA/Resolume Arena/Extra Effects"
+        FFGL_DIRS=(
+            "$USERPROFILE/Documents/Resolume Arena/Extra Effects"
+            "$APPDATA/Resolume Arena/Extra Effects"
+        )
         ;;
     *)
         echo "Unsupported platform: $(uname -s)"
@@ -30,7 +36,7 @@ if [ ! -f "$LIB_PATH" ]; then
     exit 1
 fi
 
-for FFGL_DIR in $FFGL_DIRS; do
+for FFGL_DIR in "${FFGL_DIRS[@]}"; do
     if [ "$PLATFORM" = "macos" ]; then
         # macOS: Create bundle
         OUT_BUNDLE_DIR="$FFGL_DIR/$BUNDLE_NAME.bundle"
