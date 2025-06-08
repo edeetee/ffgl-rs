@@ -6,11 +6,10 @@ FFGL (Resolume & VDMX plugin) framework for rust.
 
 # Support
 
-- ! Currently Macos only
-  - Wouldn't require too much to get working on windows, someone just needs to test and create the build script
+- Windows and macOS !!!
 - FFGL 2 (resolume)
-- VDMX 5 (Currently borked)
-- ISF Shader support
+- VDMX 5 (Currently broken)
+- ISF Shader validation and quick compilation to FFGL plugin
 
 Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any questions!
 
@@ -32,8 +31,6 @@ Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any
 
 VDMX 5 is currently broken
 
-Windows is not supported
-
 <details>
 <summary>Using a #define macro outside global scope is not supported</summary>
 
@@ -50,13 +47,19 @@ Windows is not supported
 
 </details>
 
-# Installation
+# Setup
 
 ## macOS
 
 1. Install [rust](https://www.rustup.rs/): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 2. Install xcode build tools: `xcode-select --install`
 3. May need to accept the xcode license: `sudo xcodebuild -license`
+
+## Windows
+
+1. Install [rust](https://www.rustup.rs/): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+2. Install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+3. ??? Maybe other steps? It worked on my Windows 10 machine but I haven't tested it on a fresh windows install.
 
 # Usage
 
