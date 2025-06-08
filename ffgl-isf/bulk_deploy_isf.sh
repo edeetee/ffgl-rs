@@ -15,6 +15,11 @@ while getopts "e" opt; do
   esac
 done
 
+ISF_DIRECTORIES=(
+    "$(dirname $0)/ffgl-isf/isf-extras"
+    "$(dirname $0)/ffgl-isf/projectileobjects-MiscISFShaders"
+)
+
 ISF_LIB_FILES=(
     "Channel Slide"
     "Dither-Bayer"
@@ -46,18 +51,41 @@ deploy() {
     fi
 }
 
-for ISF_FILE in $(pwd $0)/ffgl-isf/isf-extras/*.fs
+for ISF_DIR in "${ISF_DIRECTORIES[@]}"
 do
-    if [ "$ERROR_LOGS_ONLY" = false ]; then
-        echo "Deploying $ISF_FILE"
+    if [ ! -d "$ISF_DIR" ]; then
+        if [ "$ERROR_LOGS_ONLY" = false ]; then
+            echo "⚠️ Skipping directory $ISF_DIR (not found)"
+        fi
+        continue
     fi
-    deploy "$ISF_FILE" || true
+
+    for ISF_FILE in "$ISF_DIR"/*.fs
+    do
+        if [ ! -f "$ISF_FILE" ]; then
+            continue
+        fi
+        
+        if [ "$ERROR_LOGS_ONLY" = false ]; then
+            echo "Deploying $ISF_FILE"
+        fi
+        deploy "$ISF_FILE" || true
+    done
 done
 
-for ISF_FILE in "${ISF_LIB_FILES[@]}"
+for ISF_FILE_NAME in "${ISF_LIB_FILES[@]}"
 do
+    ISF_FILE="/Library/Graphics/ISF/$ISF_FILE_NAME.fs"
+    
+    if [ ! -f "$ISF_FILE" ]; then
+        if [ "$ERROR_LOGS_ONLY" = false ]; then
+            echo "⚠️ Skipping $ISF_FILE (not found)"
+        fi
+        continue
+    fi
+
     if [ "$ERROR_LOGS_ONLY" = false ]; then
         echo "Deploying $ISF_FILE"
     fi
-    deploy "/Library/Graphics/ISF/$ISF_FILE.fs" "v " || true
+    deploy "$ISF_FILE" "v " || true
 done
