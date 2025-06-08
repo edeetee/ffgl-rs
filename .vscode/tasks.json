@@ -7,6 +7,28 @@
       "problemMatcher": ["$rustc"],
       "group": "build",
       "label": "rust: cargo build"
+    },
+    {
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/build-common && cargo build",
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "label": "build isf validator"
+    },
+    {
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/build-common && cargo run --bin isf_validator \"${input:isfFilePath}\"",
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "label": "run isf validator"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "isfFilePath",
+      "description": "Path to ISF shader file to validate",
+      "default": "",
+      "type": "promptString"
     }
   ]
 }

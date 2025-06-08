@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use glsl::{
     parser::Parse,
     syntax::TranslationUnit,
@@ -64,4 +66,17 @@ pub fn transform_glsl(src: &str, version: GlslVersion) -> String {
     version.visit_mut(&mut parsed);
 
     translation_unit_to_string(&parsed)
+}
+
+pub trait DisplayResult<T> {
+    fn expect_d(self, msg: &str) -> T;
+}
+
+impl<T, E: Display> DisplayResult<T> for Result<T, E> {
+    fn expect_d(self, msg: &str) -> T {
+        match self {
+            Ok(v) => v,
+            Err(e) => panic!("{}: {}", msg, e),
+        }
+    }
 }

@@ -12,6 +12,14 @@
 
       // "program": "/Applications/Resolume Arena/Arena.app/Contents/MacOS/Arena",
       "sourceLanguages": ["rust"]
+    },
+    {
+      "name": "Debug ISF Validator",
+      "type": "lldb",
+      "request": "attach",
+      "pid": "${command:pickMyProcess}",
+      "sourceLanguages": ["rust"],
+      "preLaunchTask": "build isf validator"
     }
   ]
 }
