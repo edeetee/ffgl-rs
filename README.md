@@ -40,7 +40,8 @@ Please get in contact with me at [vis@edt.nz](mailto:vis@edt.nz) if you have any
 
 ## Known issues:
 
-VDMX 5 is currently broken
+- VDMX 5 is currently broken
+- Seems like Windows is failing to handle multiple passes correctly, probably to do with gl context sharing.
 
 <details>
 <summary>Using a #define macro outside global scope is not supported</summary>
@@ -145,7 +146,7 @@ Use this to create an isf plugin. Needs more work to be modular.
 
 # Future work
 
-- Get working on Windows
+- Fix multiple passes on Windows
 - Embed any linked photos into the dylib along with the ISf source
 - Handle multiple passes ✔️
 - Label inputs
