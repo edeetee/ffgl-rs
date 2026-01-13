@@ -106,12 +106,6 @@ void init() {
     VRadius = vertexRadius;
     SRadius = segmentRadius;
 
-    if(ISMOUSE) {
-        U = _mouse.x / RENDERSIZE.x;
-        W = 1.0f - U;
-        V = _mouse.y / RENDERSIZE.y;
-        T = 1.0f - V;
-    }
     float cospin = cos(PI / float(Type)), isinpin = 1.f / sin(PI / float(Type));
     float scospin = sqrt(2.f / 3.f - cospin * cospin), issinpin = 1.f / sqrt(3.f - 4.f * cospin * cospin);
 
@@ -216,6 +210,10 @@ float rand(vec2 co) {
     return fract(cos(dot(co, vec2(4.898f, 7.23f))) * 23421.631f);
 }
 
+float rand1(float co) {
+    return fract(cos(94.898f * co) * 23421.631f);
+}
+
 vec4 rayMarch(in vec3 from, in vec3 dir, in vec2 fragCoord) {
 	// Add some noise to prevent banding
     float totalDistance = Jitter * rand(fragCoord.xy + vec2(TIME));
@@ -251,11 +249,6 @@ vec4 rayMarch(in vec3 from, in vec3 dir, in vec2 fragCoord) {
     return vec4(color, 1.0f);
 }
 
-#define BLACK_AND_WHITE
-#define LINES_AND_FLICKER
-#define BLOTCHES
-#define GRAIN
-
 #define FREQUENCY 10.0
 
 vec2 uv;
@@ -264,10 +257,10 @@ float rnd(float c) {
 }
 
 float randomLine(float seed) {
-    float b = 0.01f * rand(seed);
-    float a = rand(seed + 1.0f);
-    float c = rand(seed + 2.0f) - 0.5f;
-    float mu = rand(seed + 3.0f);
+    float b = 0.01f * rand1(seed);
+    float a = rand1(seed + 1.0f);
+    float c = rand1(seed + 2.0f) - 0.5f;
+    float mu = rand1(seed + 3.0f);
 
     float l = 1.0f;
 
@@ -281,9 +274,9 @@ float randomLine(float seed) {
 
 // Generate some blotches.
 float randomBlotch(float seed) {
-    float x = rand(seed);
-    float y = rand(seed + 1.0f);
-    float s = 0.01f * rand(seed + 2.0f);
+    float x = rand1(seed);
+    float y = rand1(seed + 1.0f);
+    float s = 0.01f * rand1(seed + 2.0f);
 
     vec2 p = vec2(x, y) - uv;
     p.x *= RENDERSIZE.x / RENDERSIZE.y;
@@ -308,7 +301,7 @@ vec3 degrade(vec3 image) {
     float t = float(int(TIME * FREQUENCY));
 
     // Get some image movement
-    vec2 suv = uv + 0.002f * vec2(rand(t), rand(t + 23.0f));
+    vec2 suv = uv + 0.002f * vec2(rand1(t), rand1(t + 23.0f));
 
     // #if BLACK_AND_WHITE = 1
     // // Pass it to B/W
@@ -320,10 +313,10 @@ vec3 degrade(vec3 image) {
 
     // Create a time-varyting vignetting effect
     float vI = 16.0f * (uv.x * (1.0f - uv.x) * uv.y * (1.0f - uv.y));
-    vI *= mix(0.7f, 1.0f, rand(t + 0.5f));
+    vI *= mix(0.7f, 1.0f, rand1(t + 0.5f));
 
     // Add additive flicker
-    vI += 1.0f + 0.4f * rand(t + 8.f);
+    vI += 1.0f + 0.4f * rand1(t + 8.f);
 
     // Add a fixed vignetting (independent of the flicker)
     vI *= pow(16.0f * uv.x * (1.0f - uv.x) * uv.y * (1.0f - uv.y), 0.4f);

@@ -4,6 +4,8 @@ uniform int FRAMEINDEX = 0;
 uniform float FRAMEDELTA = 0.0f;
 uniform float TIME = 0.0f;
 
+#define TIMEDELTA FRAMEDELTA
+
 vec2 RENDERSIZE = res;
 vec2 isf_FragCoord = gl_FragCoord.xy;
 vec2 isf_FragNormCoord = isf_FragCoord.xy / RENDERSIZE;

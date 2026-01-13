@@ -5,13 +5,10 @@
     ],
     "DESCRIPTION": "Automatically converted from https://www.shadertoy.com/view/Xst3Dj by cornusammonis.  Fluid-like continuous cellular automata.",
     "IMPORTED": {
-        "iChannel1": {
-            "NAME": "iChannel1",
-            "PATH": "f735bee5b64ef98879dc618b016ecf7939a5756040c2cde21ccb15e69a6e1cfb.png"
-        }
+
     },
-    "INPUTS": [
-        {
+    "INPUTS": [       
+     {
             "LABEL": "RESET",
             "NAME": "reset",
             "TYPE": "event"
@@ -29,6 +26,14 @@
     ]
 }
 */
+
+float rand(vec2 co) {
+    return fract(cos(dot(co, vec2(4.898f, 7.23f))) * 23421.631f);
+}
+
+vec3 rand3(in vec2 p) {
+    return fract(vec3(sin(p.x * 591.32f + p.y * 154.077f), cos(p.x * 391.32f + p.y * 49.077f), sin(p.x * 910.34442f + p.y * -9999.077f)));
+}
 
 void main() {
     if(PASSINDEX == 0) {
@@ -99,7 +104,7 @@ void main() {
 
 	    // initialize with noise
         if(FRAMEINDEX < 10 || reset) {
-            gl_FragColor = -0.5f + IMG_NORM_PIXEL(iChannel1, mod(gl_FragCoord.xy / RENDERSIZE.xy, 1.0f));
+            gl_FragColor = -0.5f + vec4(rand3(gl_FragCoord.xy) * 0.5f, 1.0f);
         } else {
             gl_FragColor = clamp(vec4(a, b, div, 1), -1.f, 1.f);
         }

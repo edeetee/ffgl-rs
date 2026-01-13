@@ -9,7 +9,7 @@ license.workspace = true
 
 [dependencies]
 isf = "0.1.0"
-glsl = "6.0.1"
+glsl = "7.0.0"
 
 [lib]
 name = "build_common"

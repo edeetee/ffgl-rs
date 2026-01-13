@@ -1,9 +1,18 @@
-// Created by Stephane Cuillerdier - @Aiekick/2016
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-// Tuned via XShade (http://www.funparadigm.com/xshade/)
-
-/* 
-	Based on shane shader : https://www.shadertoy.com/view/ll2SRy
+/*{
+    "INPUTS": [
+        {
+            "DEFAULT": 0.2,
+            "NAME": "scale",
+            "TYPE": "float"
+        },
+        {
+            "DEFAULT": 0.1,
+            "NAME": "camSpacing",
+            "TYPE": "float"
+        }
+    ],
+    "ISFVSN": "2"
+}
 */
 
 mat3 getRotZMat(float a) {
@@ -21,14 +30,20 @@ float map(vec3 p) {
     return length(p.xy);
 }
 
+#define PI 3.14159
+
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = (fragCoord - iResolution.xy * .5f) / iResolution.y;
+    vec2 uv = (fragCoord - RENDERSIZE.xy * .5f) / RENDERSIZE.y * scale * 10.0f;
+
     vec3 rd = normalize(vec3(uv, (1.f - dot(uv, uv) * .5f) * .5f));
-    vec3 ro = vec3(0, 0, iTime * 1.26f), col = vec3(0), sp;
-    float cs = cos(iTime * 0.375f), si = sin(iTime * 0.375f);
+
+    vec3 ro = vec3(0, 0, TIME * 1.26f), col = vec3(0), sp;
+    float cs = cos(TIME * 0.375f), si = sin(TIME * 0.375f);
+
     rd.xz = mat2(cs, si, -si, cs) * rd.xz;
-    float t = 0.06f, layers = 0.f, d = 0.f, aD;
+    float t = camSpacing * 5.0f, layers = 0.f, d = 0.f, aD;
     float thD = 0.02f;
+
     for(float i = 0.f; i < 250.f; i++) {
         if(layers > 15.f || col.x > 1.f || t > 5.6f)
             break;
@@ -41,8 +56,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         }
         t += max(d * .7f, thD * 1.5f) * dstepf;
     }
+
     col = max(col, 0.f);
     col = mix(col, vec3(min(col.x * 1.5f, 1.f), pow(col.x, 2.5f), pow(col.x, 12.f)), dot(sin(rd.yzx * 8.f + sin(rd.zxy * 8.f)), vec3(.1666f)) + 0.4f);
     col = mix(col, vec3(col.x * col.x * .85f, col.x, col.x * col.x * 0.3f), dot(sin(rd.yzx * 4.f + sin(rd.zxy * 4.f)), vec3(.1666f)) + 0.25f);
     fragColor = vec4(clamp(col, 0.f, 1.f), 1.0f);
+}
+
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
 }

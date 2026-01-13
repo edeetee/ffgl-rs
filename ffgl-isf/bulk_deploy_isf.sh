@@ -16,8 +16,8 @@ while getopts "e" opt; do
 done
 
 ISF_DIRECTORIES=(
-    "$(dirname $0)/ffgl-isf/isf-extras"
-    "$(dirname $0)/ffgl-isf/projectileobjects-MiscISFShaders"
+    "$(dirname $0)/isf-extras"
+    "$(dirname $0)/projectileobjects-MiscISFShaders"
 )
 
 ISF_LIB_FILES=(
@@ -26,9 +26,9 @@ ISF_LIB_FILES=(
     "Truchet Tile"
     # "CMYK Halftone-Lookaround"
     "CMYK Halftone"
-    "Sorting Smear"
-    "Thermal Camera"
-    "Random Freeze"
+    # "Sorting Smear"
+    # "Thermal Camera"
+    # "Random Freeze"
     "Multi-Pixellate"
     "Dot Screen"
     # "Noise" Customised

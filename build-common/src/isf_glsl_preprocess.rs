@@ -68,13 +68,15 @@ pub fn compile_isf_fragment(def: &Isf, source: &str, glsl_version: GlslVersion) 
 
     let source = format!("{ver_prefix}\n{prefix}\n{source}");
 
-    let mut shader = ShaderStage::parse(source).unwrap_or_else(|e| {
-        println!("Failed to parse compiled isf shader: {e}");
+    let mut shader = ShaderStage::parse(&source).unwrap_or_else(|e| {
+        eprintln!("Failed to parse compiled isf shader: {e}");
 
         if e.info.contains("#define") && e.info.contains("expected '}', found #") {
-            println!("?! '#define' preprocessors are not supported outside of the global scope");
-            println!("?! Ensure that all #define directives are outside of functions");
+            eprintln!("?! '#define' preprocessors are not supported outside of the global scope");
+            eprintln!("?! Ensure that all #define directives are outside of functions");
         }
+
+        eprintln!("======= COMPILED GLSL ========\n{}", source);
 
         panic!();
     });

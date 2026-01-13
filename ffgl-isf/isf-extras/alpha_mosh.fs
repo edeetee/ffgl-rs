@@ -95,11 +95,9 @@ void main() {
         vec4 delta = IMG_NORM_PIXEL(BufferB, mod(uv, 1.0f));
 
         if(abs(delta.x - delta.w) < threshold)
-            discard;
-
-	    //if ((RAND_STATE(gl_FragCoord.xy) % 5000u) % uint(FRAMEINDEX) < 200u) discard;
-
-        gl_FragColor = IMG_NORM_PIXEL(BufferA, mod(uv, 1.0f));
+            gl_FragColor = vec4(0.0f);
+        else
+            gl_FragColor = IMG_NORM_PIXEL(BufferA, mod(uv, 1.0f));
     }
 
 }
