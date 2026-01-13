@@ -17,7 +17,8 @@
         },
         {
             "NAME": "zoom",
-            "TYPE": "float"
+            "TYPE": "float",
+            "DEFAULT": 0.3
         }
     ],
     "ISFVSN": "2"
